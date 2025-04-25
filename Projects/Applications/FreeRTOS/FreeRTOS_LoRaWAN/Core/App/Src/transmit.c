@@ -2,58 +2,100 @@
 #include "sys_app.h"
 #include "LmHandlerTypes.h"
 #include "LmHandler.h"
-#include "CayenneLpp.h"
 #include "lora_app.h"
+#include "CayenneLpp.h"
 
 static uint8_t tx_buffer[LORAWAN_APP_DATA_BUFFER_MAX_SIZE];
 static uint8_t tx_buffer_idx = 0;
-static LmHandlerAppData_t tx_app_data = { LORAWAN_USER_APP_PORT, 0, buffer };
+static LmHandlerAppData_t tx_app_data = { LORAWAN_USER_APP_PORT, 0, tx_buffer };
 
 void Tx_Reset_Buffer_Idx(void)
 {
-	tx_buffer_idx = 0;
+    tx_buffer_idx = 0;
 }
 
-void Tx_Add_Data(const uint8_t data_id, const uint8_t data_size, )
+bool Tx_Add_Data(const LppData* const lpp_data)
 {
-	if (tx_buffer_idx + tx_data_size > LORAWAN_APP_DATA_BUFFER_MAX_SIZE)
-	{
-		return;
+	uint8_t byte_count = 2; // Sensor id and data type
+
+	switch (lpp_data->data_type) {
+	    case LPP_DIGITAL_INPUT:
+	    case LPP_DIGITAL_OUTPUT:
+	    	byte_count += 1;
+	        break;
+
+	    case LPP_ANALOG_INPUT:
+	    case LPP_ANALOG_OUTPUT:
+	    	byte_count += 2;
+	        break;
+
+		case LPP_LUMINOSITY: // Not implemented
+		case LPP_PRESENCE: // Not implemented
+		case LPP_TEMPERATURE: // Not implemented
+		case LPP_RELATIVE_HUMIDITY: // Not implemented
+		case LPP_ACCELEROMETER: // Not implemented
+		case LPP_BAROMETRIC_PRESSURE: // Not implemented
+		case LPP_GYROMETER: // Not implemented
+		case LPP_GPS: // Not implemented
+	    default:
+	    	break;
 	}
 
-	tx_buffer[tx_buffer_idx++] = data_id;
-	tx_buffer[]
+	if (tx_buffer_idx + byte_count > LORAWAN_APP_DATA_BUFFER_MAX_SIZE)
+	{
+		return false;
+	}
+
+	tx_buffer[tx_buffer_idx++] = lpp_data->sensor_id;
+	tx_buffer[tx_buffer_idx++] = lpp_data->data_type;
+
+	switch(lpp_data->type)
+	{
+	case LPP_DIGITAL_INPUT:
+	case LPP_DIGITAL_OUTPUT:
+		tx_buffer[tx_buffer_idx++] = lpp_data->data.digital_value;
+		break;
+
+	case LPP_ANALOG_INPUT:
+	case LPP_ANALOG_OUTPUT:
+		lpp_data->data.analog_value *= 100;
+		tx_buffer[tx_buffer_idx++] = (uint8_t)((lpp_data->data.analog_value >> 8) & 0xFF);
+		tx_buffer[tx_buffer_idx++] = (uint8_t)(lpp_data->data.analog_value & 0xFF);
+		break;
+
+	case LPP_LUMINOSITY: // Not implemented
+	case LPP_PRESENCE: // Not implemented
+	case LPP_TEMPERATURE: // Not implemented
+	case LPP_RELATIVE_HUMIDITY: // Not implemented
+	case LPP_ACCELEROMETER: // Not implemented
+	case LPP_BAROMETRIC_PRESSURE: // Not implemented
+	case LPP_GYROMETER: // Not implemented
+	case LPP_GPS: // Not implemented
+	default:
+		break;
+	}
+
+	return true;
 }
 
-void Transmit_Data(void)
+void Tx_Transmit_Data(void)
 {
-  buffer_idx = 0;
+//  tx_buffer[tx_buffer_idx++] = 0; // Sensor id (unique within the same data type)
+//  tx_buffer[tx_buffer_idx++] = LPP_DIGITAL_INPUT; // Data type
+//  tx_buffer[tx_buffer_idx++] = GetBatteryLevel(); // Data
 
-  uint8_t channel = 0;
-  UTIL_TIMER_Time_t nextTxIn = 0;
-//  uint8_t batteryLevel = GetBatteryLevel();
+	Tx_Reset_Buffer_Idx();
 
-//  AppDataBuffer;
-//  AppData.BufferSize
+	LppData data;
+	data.sensor_id = 0;
+	data.data_type = LPP_DIGITAL_OUTPUT;
+	(void)Tx_Add_Data(&data);
 
-//  CayenneLppReset();
-//  CayenneLppAddBarometricPressure(channel++, 0);
-//  CayenneLppAddDigitalInput(channel++, GetBatteryLevel());
+	tx_app_data.BufferSize = tx_buffer_idx;
 
-  if ((buffer_idx + LPP_DIGITAL_INPUT_SIZE) > LORAWAN_APP_DATA_BUFFER_MAX_SIZE)
-  {
-    return 0;
-  }
-  CayenneLppBuffer[CayenneLppCursor++] = channel;
-  CayenneLppBuffer[CayenneLppCursor++] = LPP_DIGITAL_INPUT;
-  CayenneLppBuffer[CayenneLppCursor++] = value;
-  /* USER CODE BEGIN CayenneLppAddDigitalInput_2 */
-
-  CayenneLppCopy(app_data.Buffer);
-  app_data.BufferSize = CayenneLppGetSize();
-
-  if (LmHandlerSend(&app_data, LORAWAN_DEFAULT_CONFIRMED_MSG_STATE, &nextTxIn, false) != LORAMAC_HANDLER_SUCCESS)
-  {
+	UTIL_TIMER_Time_t nextTxIn = 0;
+	if (LmHandlerSend(&tx_app_data, LORAWAN_DEFAULT_CONFIRMED_MSG_STATE, &nextTxIn, false) != LORAMAC_HANDLER_SUCCESS)
+	{
 	// Error handling? re-send already happens automatically
-  }
+	}
 }
