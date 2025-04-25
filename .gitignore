@@ -4,3 +4,6 @@
 [Rr]elease
 [Dd]ebug
 .launch
+
+# Device id file
+Projects/Applications/FreeRTOS/FreeRTOS_LoRaWAN/LoRaWAN/App/se-identity.h
