@@ -10,4 +10,4 @@
 #include "LmHandler.h"
 #include "LmHandlerTypes.h"
 
-void Process_Rx_Data(LmHandlerAppData_t *appData, LmHandlerRxParams_t *params);
+void Process_Rx_Data(const LmHandlerAppData_t *app_data, const LmHandlerRxParams_t *params);
