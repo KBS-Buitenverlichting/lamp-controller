@@ -1,3 +1,9 @@
+/*
+ * transmit_test.h
+ *
+ *  Created on: Apr 25, 2025
+ *      Author: Bjorn Wakker
+ */
 #pragma once
 
 #include "stdint.h"
@@ -6,7 +12,7 @@
 struct LppData
 {
 	uint8_t sensor_id; // Has to be different from sensors with the same type
-	uint8_t data_type;
+	uint8_t data_type; // Data type to indicate what type of sensor the data is from
 	union {
 		uint8_t digital_value;
 		int16_t analog_value;

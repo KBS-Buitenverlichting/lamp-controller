@@ -1,3 +1,9 @@
+/*
+ * transmit_test.h
+ *
+ *  Created on: Apr 25, 2025
+ *      Author: Bjorn Wakker
+ */
 #include "transmit.h"
 #include "sys_app.h"
 #include "LmHandlerTypes.h"
@@ -14,10 +20,12 @@ void Tx_Reset_Buffer_Idx(void)
     tx_buffer_idx = 0;
 }
 
+// Adds data to the buffer
 bool Tx_Add_Data(const struct LppData* const lpp_data)
 {
 	uint8_t byte_count = 2; // Sensor id and data type
 
+	// Calculate the number of bytes
 	switch (lpp_data->data_type) {
 	    case LPP_DIGITAL_INPUT:
 	    case LPP_DIGITAL_OUTPUT:
@@ -41,11 +49,13 @@ bool Tx_Add_Data(const struct LppData* const lpp_data)
 	    	break;
 	}
 
+	// Check if it fits in the buffer
 	if (tx_buffer_idx + byte_count > LORAWAN_APP_DATA_BUFFER_MAX_SIZE)
 	{
 		return false;
 	}
 
+	// Add the data to the buffer
 	tx_buffer[tx_buffer_idx++] = lpp_data->sensor_id;
 	tx_buffer[tx_buffer_idx++] = lpp_data->data_type;
 
@@ -82,11 +92,13 @@ bool Tx_Add_Data(const struct LppData* const lpp_data)
 
 void Tx_Transmit_Data(void)
 {
+	// Update the size before sending
 	tx_app_data.BufferSize = tx_buffer_idx;
 
+	// Send the data
 	UTIL_TIMER_Time_t nextTxIn = 0;
 	if (LmHandlerSend(&tx_app_data, LORAWAN_DEFAULT_CONFIRMED_MSG_STATE, &nextTxIn, false) != LORAMAC_HANDLER_SUCCESS)
 	{
-	// Error handling? re-send already happens automatically as it runs on a timer
+	    // Error handling? re-send already happens automatically as it runs on a timer
 	}
 }
