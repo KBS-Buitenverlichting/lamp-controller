@@ -12,6 +12,7 @@ Korte beschrijving van wat er is veranderd.
 - [ ] De code volgt de afgesproken conventies (zie hieronder)
 - [ ] FO is bijgewerkt (of n.v.t.)
 - [ ] TO is bijgewerkt (of n.v.t.)
+- [ ] Leeswijzer is bijgewerkt (of n.v.t.)
 - [ ] FO en TO zijn nagekeken door reviewer
 - [ ] Geen TODO's
 - [ ] Geen ongebruikte code
