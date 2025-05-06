@@ -96,8 +96,8 @@ void Tx_Transmit_Data(void)
 	tx_app_data.BufferSize = tx_buffer_idx;
 
 	// Send the data
-	UTIL_TIMER_Time_t nextTxIn = 0;
-	if (LmHandlerSend(&tx_app_data, LORAWAN_DEFAULT_CONFIRMED_MSG_STATE, &nextTxIn, false) != LORAMAC_HANDLER_SUCCESS)
+	UTIL_TIMER_Time_t next_tx_in = 0;
+	if (LmHandlerSend(&tx_app_data, LORAWAN_DEFAULT_CONFIRMED_MSG_STATE, &next_tx_in, false) != LORAMAC_HANDLER_SUCCESS)
 	{
 	    // Error handling? re-send already happens automatically as it runs on a timer
 	}

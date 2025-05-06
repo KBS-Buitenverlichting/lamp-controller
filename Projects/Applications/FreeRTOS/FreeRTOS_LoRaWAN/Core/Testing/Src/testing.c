@@ -22,7 +22,7 @@ void Main_Test(void)
 	// Go through all unit tests and report their status
 	for (uint8_t i = 0; i < sizeof(test_functions) / sizeof(test_functions[0]); i++)
 	{
-		uint8_t result = test_functions[i]();
+		const uint8_t result = test_functions[i]();
 
 		if (result == 0)
 		{
