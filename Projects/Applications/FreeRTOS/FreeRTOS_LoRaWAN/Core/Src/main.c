@@ -23,6 +23,10 @@
 #include "app_lorawan.h"
 #include "sys_app.h"
 
+#ifdef TESTING
+#include "testing.h"
+#endif
+
 /* Private variables ---------------------------------------------------------*/
 LPTIM_HandleTypeDef hlptim1;
 
@@ -62,6 +66,7 @@ int32_t LED_control(int value);
 /* USER CODE END PV */
 osThreadId LED_TaskHandle;
 osThreadId LoRaWAN_TaskHandle;
+
 /* Private function prototypes -----------------------------------------------*/
 void StartLoRaWANTask(void const * argument);
 void StartLedTask(void const * argument);
@@ -97,6 +102,10 @@ int main(void)
   /* Configure the system clock */
   SystemClock_Config();
 
+#ifdef TESTING
+  SystemApp_Init();
+  Main_Test();
+#else
   /* USER CODE BEGIN SysInit */
   MX_GPIO_Init();
   MX_LPTIM1_Init();
@@ -120,6 +129,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
+#endif
 }
 
 /**
@@ -240,6 +250,10 @@ void StartLoRaWANTask(void const * argument)
   /* init code for LoRaWAN */
   MX_LoRaWAN_Init();
   /* USER CODE BEGIN 5 */
+#ifdef TESTING
+  Main_Test();
+#endif
+
   /* Infinite loop */
   for(;;)
   {

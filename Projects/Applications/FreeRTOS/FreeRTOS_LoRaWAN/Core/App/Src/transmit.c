@@ -5,9 +5,9 @@
 #include "lora_app.h"
 #include "CayenneLpp.h"
 
-static uint8_t tx_buffer[LORAWAN_APP_DATA_BUFFER_MAX_SIZE];
-static uint8_t tx_buffer_idx = 0;
-static LmHandlerAppData_t tx_app_data = { LORAWAN_USER_APP_PORT, 0, tx_buffer };
+uint8_t tx_buffer[LORAWAN_APP_DATA_BUFFER_MAX_SIZE];
+uint8_t tx_buffer_idx = 0;
+LmHandlerAppData_t tx_app_data = { LORAWAN_USER_APP_PORT, 0, tx_buffer };
 
 void Tx_Reset_Buffer_Idx(void)
 {
@@ -82,16 +82,6 @@ bool Tx_Add_Data(const struct LppData* const lpp_data)
 
 void Tx_Transmit_Data(void)
 {
-	// Fill with data code block
-	Tx_Reset_Buffer_Idx();
-
-	struct LppData data;
-	data.sensor_id = 0;
-	data.data_type = LPP_DIGITAL_OUTPUT;
-	data.data.digital_value = GetBatteryLevel();
-	(void)Tx_Add_Data(&data);
-	// Fill with data code block
-
 	tx_app_data.BufferSize = tx_buffer_idx;
 
 	UTIL_TIMER_Time_t nextTxIn = 0;
