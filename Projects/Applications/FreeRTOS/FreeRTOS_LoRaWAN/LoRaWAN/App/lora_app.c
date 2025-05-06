@@ -339,7 +339,7 @@ static void OnRxData(LmHandlerAppData_t *appData, LmHandlerRxParams_t *params)
 
 static void SendTxData(void)
 {
-  Transmit_Data();
+  Tx_Transmit_Data();
 }
 
 static void OnTxTimerEvent(void *context)

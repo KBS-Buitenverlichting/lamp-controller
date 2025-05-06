@@ -14,7 +14,7 @@ void Tx_Reset_Buffer_Idx(void)
     tx_buffer_idx = 0;
 }
 
-bool Tx_Add_Data(const LppData* const lpp_data)
+bool Tx_Add_Data(const struct LppData* const lpp_data)
 {
 	uint8_t byte_count = 2; // Sensor id and data type
 
@@ -49,7 +49,7 @@ bool Tx_Add_Data(const LppData* const lpp_data)
 	tx_buffer[tx_buffer_idx++] = lpp_data->sensor_id;
 	tx_buffer[tx_buffer_idx++] = lpp_data->data_type;
 
-	switch(lpp_data->type)
+	switch(lpp_data->data_type)
 	{
 	case LPP_DIGITAL_INPUT:
 	case LPP_DIGITAL_OUTPUT:
@@ -58,10 +58,12 @@ bool Tx_Add_Data(const LppData* const lpp_data)
 
 	case LPP_ANALOG_INPUT:
 	case LPP_ANALOG_OUTPUT:
-		lpp_data->data.analog_value *= 100;
-		tx_buffer[tx_buffer_idx++] = (uint8_t)((lpp_data->data.analog_value >> 8) & 0xFF);
-		tx_buffer[tx_buffer_idx++] = (uint8_t)(lpp_data->data.analog_value & 0xFF);
+	{
+		uint16_t value = lpp_data->data.analog_value * 100; // Multiply by 100 to conform to formatting (see CayenneLpp.h)
+		tx_buffer[tx_buffer_idx++] = (uint8_t)((value >> 8) & 0xFF);
+		tx_buffer[tx_buffer_idx++] = (uint8_t)(value & 0xFF);
 		break;
+	}
 
 	case LPP_LUMINOSITY: // Not implemented
 	case LPP_PRESENCE: // Not implemented
@@ -80,22 +82,21 @@ bool Tx_Add_Data(const LppData* const lpp_data)
 
 void Tx_Transmit_Data(void)
 {
-//  tx_buffer[tx_buffer_idx++] = 0; // Sensor id (unique within the same data type)
-//  tx_buffer[tx_buffer_idx++] = LPP_DIGITAL_INPUT; // Data type
-//  tx_buffer[tx_buffer_idx++] = GetBatteryLevel(); // Data
-
+	// Fill with data code block
 	Tx_Reset_Buffer_Idx();
 
-	LppData data;
+	struct LppData data;
 	data.sensor_id = 0;
 	data.data_type = LPP_DIGITAL_OUTPUT;
+	data.data.digital_value = GetBatteryLevel();
 	(void)Tx_Add_Data(&data);
+	// Fill with data code block
 
 	tx_app_data.BufferSize = tx_buffer_idx;
 
 	UTIL_TIMER_Time_t nextTxIn = 0;
 	if (LmHandlerSend(&tx_app_data, LORAWAN_DEFAULT_CONFIRMED_MSG_STATE, &nextTxIn, false) != LORAMAC_HANDLER_SUCCESS)
 	{
-	// Error handling? re-send already happens automatically
+	// Error handling? re-send already happens automatically as it runs on a timer
 	}
 }
