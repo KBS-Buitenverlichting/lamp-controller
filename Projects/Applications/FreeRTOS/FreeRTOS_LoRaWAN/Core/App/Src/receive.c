@@ -1,27 +1,7 @@
 #include "receive.h"
 #include "sys_app.h" // Used for APP_LOG to write output to serial
 
-void Interpret_Message(uint8_t *Buffer, uint8_t BufferSize){
-	if(Buffer[0]==0xAB){
-		switch(Buffer[1]){
-			case 0x00:
-				APP_LOG(TS_OFF, VLEVEL_M,"Zet lamp uit");
-				break;
-			case 0x01:
-				APP_LOG(TS_OFF, VLEVEL_M,"Zet lamp aan");
-				break;
-			case 0x02:
-				APP_LOG(TS_OFF, VLEVEL_M,"Stel lamp in op bewegingssensor");
-				break;
-			case 0x03:
-				APP_LOG(TS_OFF, VLEVEL_M,"Verander helderheid naar ");
-				APP_LOG(TS_OFF, VLEVEL_M, "%02X ",Buffer[2]);
-				break;
-			case 0x04:
-				APP_LOG(TS_OFF, VLEVEL_M,"Rapporteer status batterij");
-			}
-	}
-}
+void Interpret_Message(uint8_t *Buffer, uint8_t BufferSize);
 
 void Process_Rx_Data(const LmHandlerAppData_t *const app_data, const LmHandlerRxParams_t *const params)
 {
@@ -32,4 +12,39 @@ void Process_Rx_Data(const LmHandlerAppData_t *const app_data, const LmHandlerRx
     }
     APP_LOG(TS_OFF, VLEVEL_M, "\r\n");
     Interpret_Message(app_data->Buffer, app_data->BufferSize);
+}
+
+void Interpret_Message(uint8_t *Buffer, uint8_t BufferSize)
+{
+    if (BufferSize < 2) {
+        APP_LOG(TS_OFF, VLEVEL_M, "Message too short to interpret\n");
+        return;
+    }
+    if (Buffer[0] == 0xAB) {
+        switch (Buffer[1]) {
+            case 0x00:
+                APP_LOG(TS_OFF, VLEVEL_M, "Lamp on!\n");
+                break;
+            case 0x01:
+                APP_LOG(TS_OFF, VLEVEL_M, "Lamp off!\n");
+                break;
+            case 0x02:
+                APP_LOG(TS_OFF, VLEVEL_M, "Select movement sensor!\n");
+                break;
+            case 0x03:
+                if (BufferSize < 3) {
+                    APP_LOG(TS_OFF, VLEVEL_M, "Brightness command does not include brightness\n");
+                } else {
+                    APP_LOG(TS_OFF, VLEVEL_M, "Change brightness to %02X!\n", Buffer[2]);
+                }
+                break;
+            case 0x04:
+                APP_LOG(TS_OFF, VLEVEL_M, "Report battery state!\n");
+                break;
+            default:
+                APP_LOG(TS_OFF, VLEVEL_M, "Unknown AB command: %02X\n", Buffer[1]);
+        }
+    } else {
+        APP_LOG(TS_OFF, VLEVEL_M, "Unknown message type: %02X\n", Buffer[0]);
+    }
 }
