@@ -9,6 +9,7 @@ void Process_Rx_Data(const LmHandlerAppData_t *const app_data,
 	for (uint8_t i = 0; i < app_data->BufferSize; i++) {
 		APP_LOG(TS_OFF, VLEVEL_M, "%02X ", app_data->Buffer[i]);
 	}
+
 	APP_LOG(TS_OFF, VLEVEL_M, "\r\n");
 	Interpret_Message(app_data->Buffer, app_data->BufferSize);
 }
@@ -18,6 +19,7 @@ void Interpret_Message(uint8_t *Buffer, uint8_t BufferSize) {
 		APP_LOG(TS_OFF, VLEVEL_M, "Message too short to interpret\n");
 		return;
 	}
+
 	if (Buffer[0] == 0xAB) {
 		switch (Buffer[1]) {
 		case 0x00:
@@ -31,8 +33,7 @@ void Interpret_Message(uint8_t *Buffer, uint8_t BufferSize) {
 			break;
 		case 0x03:
 			if (BufferSize < 3) {
-				APP_LOG(TS_OFF, VLEVEL_M,
-						"Brightness command does not include brightness\n");
+				APP_LOG(TS_OFF, VLEVEL_M, "Brightness command does not include brightness\n");
 			} else {
 				APP_LOG(TS_OFF, VLEVEL_M, "Change brightness to %02X!\n",Buffer[2]);
 			}
