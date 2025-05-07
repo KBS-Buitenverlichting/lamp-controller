@@ -23,19 +23,23 @@ void Interpret_Message(uint8_t *Buffer, uint8_t BufferSize) {
 	if (Buffer[0] == 0xAB) {
 		switch (Buffer[1]) {
 		case 0x00:
-			APP_LOG(TS_OFF, VLEVEL_M, "Lamp on!\n");
+			APP_LOG(TS_OFF, VLEVEL_M, "Lamp off\n");
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
 			break;
 		case 0x01:
-			APP_LOG(TS_OFF, VLEVEL_M, "Lamp off!\n");
+			APP_LOG(TS_OFF, VLEVEL_M, "Lamp on\n");
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
 			break;
 		case 0x02:
 			APP_LOG(TS_OFF, VLEVEL_M, "Select motion sensor!\n");
 			break;
 		case 0x03:
 			if (BufferSize < 3) {
-				APP_LOG(TS_OFF, VLEVEL_M, "Brightness command does not include brightness\n");
+				APP_LOG(TS_OFF, VLEVEL_M,
+						"Brightness command does not include brightness\n");
 			} else {
-				APP_LOG(TS_OFF, VLEVEL_M, "Change brightness to %02X!\n",Buffer[2]);
+				APP_LOG(TS_OFF, VLEVEL_M, "Change brightness to %02X!\n",
+						Buffer[2]);
 			}
 			break;
 		case 0x04:
