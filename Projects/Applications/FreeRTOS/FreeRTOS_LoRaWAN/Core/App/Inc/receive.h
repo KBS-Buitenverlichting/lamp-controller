@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "stm32wlxx_hal.h"
 #include "LmHandler.h"
 #include "LmHandlerTypes.h"
 
