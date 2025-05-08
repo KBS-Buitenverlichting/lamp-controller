@@ -40,6 +40,7 @@
 
 /* USER CODE BEGIN Includes */
 #include "transmit.h"
+#include "receive.h"
 /* USER CODE END Includes */
 
 /* External variables ---------------------------------------------------------*/
@@ -313,20 +314,7 @@ static void OnRxData(LmHandlerAppData_t *appData, LmHandlerRxParams_t *params)
         }
         break;
       case LORAWAN_USER_APP_PORT:
-        if (appData->BufferSize == 1)
-        {
-          AppLedStateOn = appData->Buffer[0] & 0x01;
-          if (AppLedStateOn == RESET)
-          {
-            APP_LOG(TS_OFF, VLEVEL_H,   "LED OFF\r\n");
-            BSP_LED_Off(LED_RED) ;
-          }
-          else
-          {
-            APP_LOG(TS_OFF, VLEVEL_H, "LED ON\r\n");
-            BSP_LED_On(LED_RED) ;
-          }
-        }
+    	Process_Rx_Data(appData, params);
         break;
 
       default:
