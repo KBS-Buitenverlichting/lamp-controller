@@ -29,7 +29,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 LPTIM_HandleTypeDef hlptim1;
-
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -43,7 +42,7 @@ int32_t LED_control(int value);
 void Lamp_GPIO_Init(void);
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "serial_interface.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -67,11 +66,13 @@ void Lamp_GPIO_Init(void);
 /* USER CODE END PV */
 osThreadId LED_TaskHandle;
 osThreadId LoRaWAN_TaskHandle;
+osThreadId Serial_TaskHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 void StartLoRaWANTask(void const *argument);
 void StartLedTask(void const *argument);
 void SystemClock_Config(void);
+void SendSerialDataTask(void const *argument);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -110,6 +111,7 @@ int main(void) {
 	MX_GPIO_Init();
 	MX_LPTIM1_Init();
 	Lamp_GPIO_Init();
+	//MX_USART1_UART_Init();
 	/* USER CODE END SysInit */
 
 	/* Initialize all configured peripherals */
@@ -118,6 +120,8 @@ int main(void) {
 	LED_TaskHandle = osThreadCreate(osThread(LED_Task), NULL);
 	osThreadDef(LoRaWAN_Task, StartLoRaWANTask, osPriorityNormal, 0, 1024);
 	LoRaWAN_TaskHandle = osThreadCreate(osThread(LoRaWAN_Task), NULL);
+	osThreadDef(Serial_Task, SendSerialDataTask, osPriorityNormal, 0, 256);
+	Serial_TaskHandle = osThreadCreate(osThread(Serial_Task), NULL);
 	osKernelStart();
 	/* USER CODE END 2 */
 #endif
@@ -252,22 +256,20 @@ int32_t LED_control(int value) {
 /* USER CODE END 4 */
 /* USER CODE BEGIN 4 */
 
-void StartLoRaWANTask(void const * argument)
-{
-    /* init code for LoRaWAN */
-    MX_LoRaWAN_Init();
-    /* USER CODE BEGIN 5 */
+void StartLoRaWANTask(void const *argument) {
+	/* init code for LoRaWAN */
+	MX_LoRaWAN_Init();
+	/* USER CODE BEGIN 5 */
 #ifdef TESTING
     Main_Test();
 #endif
 
-  /* Infinite loop */
-    for(;;)
-    {
-        MX_LoRaWAN_Process();
-        osDelay(10);
-    }
-  /* USER CODE END 5 */
+	/* Infinite loop */
+	for (;;) {
+		MX_LoRaWAN_Process();
+		osDelay(10);
+	}
+	/* USER CODE END 5 */
 }
 /* USER CODE END 4 */
 void StartLedTask(void const *argument) {
@@ -277,6 +279,14 @@ void StartLedTask(void const *argument) {
 		osDelay(500);
 		LED_control(1);
 		osDelay(500);
+	}
+}
+
+void SendSerialDataTask(void const *argument) {
+	for (;;) {
+		uint8_t message[] = "Hello LoRa-E5!\r\n";
+		Send_Serial_Data(message);
+		osDelay(1000);
 	}
 }
 /**

@@ -6,8 +6,8 @@
  */
 #include "serial_interface.h"
 
-void Send_Serial_Data(const uint8_t* data, size_t length) {
-    HAL_UART_Transmit(&huart2, (uint8_t*)data, length, HAL_MAX_DELAY);
+void Send_Serial_Data(const uint8_t* data) {
+    APP_PRINTF(data);
 }
 
 uint8_t* Receive_Serial_Data(uint8_t* buffer, size_t max_length, size_t* received_length) {
