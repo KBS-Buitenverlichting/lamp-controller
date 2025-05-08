@@ -120,6 +120,7 @@ int main(void) {
 	LoRaWAN_TaskHandle = osThreadCreate(osThread(LoRaWAN_Task), NULL);
 	osKernelStart();
 	/* USER CODE END 2 */
+#endif
 
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
