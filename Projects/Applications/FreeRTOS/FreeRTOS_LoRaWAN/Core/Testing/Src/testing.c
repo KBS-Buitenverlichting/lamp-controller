@@ -10,7 +10,7 @@
 #include "transmit_test.h"
 
 const uint8_t (*test_functions[])(void) = {
-	Tx_Reset_Buffer_Idx_Test,
+	Tx_Reset_Buffer_Index_Test,
 	Tx_Add_Data_Test,
 	// More tests here
 };

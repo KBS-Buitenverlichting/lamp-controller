@@ -39,6 +39,6 @@ struct LppData
 	} data;
 };
 
-void Tx_Reset_Buffer_Idx(void);
+void Tx_Reset_Buffer_Index(void);
 bool Tx_Add_Data(const struct LppData* const data);
 void Tx_Transmit_Data(void);

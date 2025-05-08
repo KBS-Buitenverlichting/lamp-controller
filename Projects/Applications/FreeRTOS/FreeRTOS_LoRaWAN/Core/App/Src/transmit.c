@@ -15,7 +15,7 @@ uint8_t tx_buffer[LORAWAN_APP_DATA_BUFFER_MAX_SIZE];
 uint8_t tx_buffer_index = 0;
 LmHandlerAppData_t tx_app_data = { LORAWAN_USER_APP_PORT, 0, tx_buffer };
 
-void Tx_Reset_Buffer_Idx(void)
+void Tx_Reset_Buffer_Index(void)
 {
     tx_buffer_index = 0;
 }

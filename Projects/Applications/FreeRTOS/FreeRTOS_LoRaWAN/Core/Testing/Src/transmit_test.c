@@ -24,27 +24,27 @@ void Transmit_Test_Init(void)
 	}
 }
 
-uint8_t Tx_Reset_Buffer_Idx_Test(void)
+uint8_t Tx_Reset_Buffer_Index_Test(void)
 {
 	Transmit_Test_Init();
 
 	// Test case 1, test lower boundary
 	tx_buffer_index = 0;
-	Tx_Reset_Buffer_Idx();
+	Tx_Reset_Buffer_Index();
 
 	if (tx_buffer_index != 0)
 		return 1;
 
 	// Test case 2, test random value
 	tx_buffer_index = 53;
-	Tx_Reset_Buffer_Idx();
+	Tx_Reset_Buffer_Index();
 
 	if (tx_buffer_index != 0)
 		return 2;
 
 	// Test case 3, test upper boundary
 	tx_buffer_index = 255;
-	Tx_Reset_Buffer_Idx();
+	Tx_Reset_Buffer_Index();
 
 	if (tx_buffer_index != 0)
 		return 3;
