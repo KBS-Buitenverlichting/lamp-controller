@@ -45,6 +45,45 @@ void Interpret_Message(uint8_t *Buffer, uint8_t BufferSize) {
 		case 0x04:
 			APP_LOG(TS_OFF, VLEVEL_M, "Report battery state!\n");
 			break;
+		case 0x05:
+			if (BufferSize < 9){
+				APP_LOG(TS_OFF, VLEVEL_M, "Time/date command input is to short!\n");
+			} else {
+				APP_LOG(TS_OFF, VLEVEL_M, "Update time/ date!\n");
+
+				uint8_t hour = Buffer[2];
+				uint8_t minute = Buffer[3];
+				uint8_t second = Buffer[4];
+				uint8_t year = Buffer[5];      // Assume offset from 2000
+				uint8_t weekday = Buffer[6];   // 1 = Monday, 7 = Sunday
+				uint8_t month = Buffer[7];     // 1–12
+				uint8_t day = Buffer[8];       // 1–31
+
+				const char* weekday_names[] = {
+				    "Forbidden", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+				};
+
+				const char* weekday_str = "Unknown";
+				if (weekday <= 7) {
+				    weekday_str = weekday_names[weekday];
+				}
+
+				APP_LOG(TS_OFF, VLEVEL_M, "Time: %02u:%02u:%02u\r\n", hour, minute, second);
+				APP_LOG(TS_OFF, VLEVEL_M, "Date: %s %02u-%02u-%04u\r\n", weekday_str, day, month, 2000 + year);
+			}
+			break;
+		case 0x06:
+			APP_LOG(TS_OFF, VLEVEL_M, "Set time schedule!\n");
+			break;
+		case 0x07:
+			APP_LOG(TS_OFF, VLEVEL_M, "Present all time schedules!\n");
+			break;
+		case 0x08:
+			APP_LOG(TS_OFF, VLEVEL_M, "Change time schedule!\n");
+			break;
+		case 0x09:
+			APP_LOG(TS_OFF, VLEVEL_M, "Delete time schedule!\n");
+			break;
 		default:
 			APP_LOG(TS_OFF, VLEVEL_M, "Unknown AB command: %02X\n", Buffer[1]);
 		}
@@ -52,3 +91,4 @@ void Interpret_Message(uint8_t *Buffer, uint8_t BufferSize) {
 		APP_LOG(TS_OFF, VLEVEL_M, "Unknown message type: %02X\n", Buffer[0]);
 	}
 }
+
