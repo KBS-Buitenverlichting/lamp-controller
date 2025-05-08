@@ -6,112 +6,42 @@
  */
 #include "transmit_test.h"
 #include "transmit.h"
-#include "LmHandler.h"
 #include "lora_app.h"
-#include "CayenneLpp.h"
 
 extern uint8_t tx_buffer[LORAWAN_APP_DATA_BUFFER_MAX_SIZE];
-extern uint8_t tx_buffer_index;
+extern uint8_t tx_buffer_size;
 
-// Initialization function used for all unit tests
-void Transmit_Test_Init(void)
+uint8_t Tx_Set_Buffer_Test(void)
 {
-	tx_buffer_index = 0;
+	// Test case 1
+	Tx_Set_Buffer(0xC0, 0x00, 0, 0);
 
-	for (uint8_t i = 0; i < LORAWAN_APP_DATA_BUFFER_MAX_SIZE; i++)
-	{
-		tx_buffer[i] = 0;
-	}
-}
+	if (tx_buffer_size != 2)
+		return 11;
 
-uint8_t Tx_Reset_Buffer_Index_Test(void)
-{
-	Transmit_Test_Init();
+	if (tx_buffer[0] != 0xC0 || tx_buffer[1] != 0x00)
+		return 12;
 
-	// Test case 1, test lower boundary
-	tx_buffer_index = 0;
-	Tx_Reset_Buffer_Index();
+	// Test case 2
+	const uint8_t param[] = { 0x80 };
+	Tx_Set_Buffer(0xC1, 0x00, &param, 1);
 
-	if (tx_buffer_index != 0)
-		return 1;
-
-	// Test case 2, test random value
-	tx_buffer_index = 53;
-	Tx_Reset_Buffer_Index();
-
-	if (tx_buffer_index != 0)
-		return 2;
-
-	// Test case 3, test upper boundary
-	tx_buffer_index = 255;
-	Tx_Reset_Buffer_Index();
-
-	if (tx_buffer_index != 0)
-		return 3;
-
-	return 0;
-}
-
-uint8_t Tx_Add_Data_Test(void)
-{
-	Transmit_Test_Init();
-	struct LppData data;
-
-	// Test case 1, test a digital value
-	data.sensor_id = 0;
-	data.data_type = LPP_DIGITAL_OUTPUT;
-	data.data.digital_value = 0xD2;
-
-	if (!Tx_Add_Data(&data))
-		return 11; // Err on 1.1
-
-	if (tx_buffer_index != 3)
-		return 12; // Err on 1.2
-
-	if (tx_buffer[2] != data.data.digital_value)
-		return 13; // Err on 1.3
-
-	// Test case 2, test an analog value
-	data.sensor_id = 0;
-	data.data_type = LPP_ANALOG_OUTPUT;
-	data.data.analog_value = 0xAFAF;
-
-	if (!Tx_Add_Data(&data))
+	if (tx_buffer_size != 3)
 		return 21;
 
-	if (tx_buffer_index != 7)
+	if (tx_buffer[0] != 0xC1 || tx_buffer[1] != 0x00 || tx_buffer[2] != 0x80)
 		return 22;
 
-	data.data.analog_value *= 100; // Multiply by 100 for formatting
+	// Test case 3
+	const uint8_t params[] = { 0x00, 0x01, 0x02 };
+	Tx_Set_Buffer(0xFF, 0x05, &params, 3);
 
-	if (tx_buffer[5] != ((data.data.analog_value >> 8) & 0xFF) || tx_buffer[6] != (data.data.analog_value & 0xFF))
-		return 23;
-
-	// Test case 3, test overwrite
-	data.sensor_id = 0;
-	data.data_type = LPP_DIGITAL_INPUT;
-	data.data.digital_value = 0x0E;
-
-	tx_buffer_index = 0;
-
-	if (!Tx_Add_Data(&data))
+	if (tx_buffer_size != 5)
 		return 31;
 
-	if (tx_buffer_index != 3)
+	if (tx_buffer[0] != 0xFF || tx_buffer[1] != 0x05 || tx_buffer[2] != 0x00 || tx_buffer[3] != 0x01 || tx_buffer[4] != 0x02)
 		return 32;
-
-	if (tx_buffer[2] != data.data.digital_value)
-		return 33;
-
-	// Test case 4, test overflow
-	data.sensor_id = 0;
-	data.data_type = LPP_DIGITAL_INPUT;
-	data.data.digital_value = 0x0E;
-
-	tx_buffer_index = LORAWAN_APP_DATA_BUFFER_MAX_SIZE - 2;
-
-	if (Tx_Add_Data(&data))
-		return 4;
 
 	return 0;
 }
+

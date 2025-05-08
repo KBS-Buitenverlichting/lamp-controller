@@ -1,4 +1,6 @@
 #include "receive.h"
+#include "transmit.h"
+#include "message_format.h"
 #include "sys_app.h" // Used for APP_LOG to write output to serial
 
 void Interpret_Message(uint8_t *Buffer, uint8_t BufferSize);
@@ -20,20 +22,20 @@ void Interpret_Message(uint8_t *Buffer, uint8_t BufferSize) {
 		return;
 	}
 
-	if (Buffer[0] == 0xAB) {
+	if (Buffer[0] == INSTRUCTION_IN) {
 		switch (Buffer[1]) {
-		case 0x00:
+		case LAMP_OFF:
 			APP_LOG(TS_OFF, VLEVEL_M, "Lamp off\n");
 			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
 			break;
-		case 0x01:
+		case LAMP_ON:
 			APP_LOG(TS_OFF, VLEVEL_M, "Lamp on\n");
 			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
 			break;
-		case 0x02:
+		case ACTIVATE_MOTION_SENSOR:
 			APP_LOG(TS_OFF, VLEVEL_M, "Select motion sensor!\n");
 			break;
-		case 0x03:
+		case CHANGE_BRIGHTNESS:
 			if (BufferSize < 3) {
 				APP_LOG(TS_OFF, VLEVEL_M,
 						"Brightness command does not include brightness\n");
@@ -42,11 +44,22 @@ void Interpret_Message(uint8_t *Buffer, uint8_t BufferSize) {
 						Buffer[2]);
 			}
 			break;
-		case 0x04:
+		case SEND_BATTERY_STATUS:
 			APP_LOG(TS_OFF, VLEVEL_M, "Report battery state!\n");
+			break;
+		case SYNCHRONIZE_TIME_AND_DATE:
+			break;
+		case SET_TIMESLOT:
+			break;
+		case SHOW_TIMETABLE:
+			break;
+		case CHANGE_TIMESLOT:
+			break;
+		case REMOVE_TIMESLOT:
 			break;
 		default:
 			APP_LOG(TS_OFF, VLEVEL_M, "Unknown AB command: %02X\n", Buffer[1]);
+			break;
 		}
 	} else {
 		APP_LOG(TS_OFF, VLEVEL_M, "Unknown message type: %02X\n", Buffer[0]);
