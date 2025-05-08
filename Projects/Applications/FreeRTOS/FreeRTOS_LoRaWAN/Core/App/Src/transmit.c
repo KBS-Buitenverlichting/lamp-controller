@@ -12,12 +12,12 @@
 #include "CayenneLpp.h"
 
 uint8_t tx_buffer[LORAWAN_APP_DATA_BUFFER_MAX_SIZE];
-uint8_t tx_buffer_idx = 0;
+uint8_t tx_buffer_index = 0;
 LmHandlerAppData_t tx_app_data = { LORAWAN_USER_APP_PORT, 0, tx_buffer };
 
 void Tx_Reset_Buffer_Idx(void)
 {
-    tx_buffer_idx = 0;
+    tx_buffer_index = 0;
 }
 
 // Adds data to the buffer
@@ -50,28 +50,28 @@ bool Tx_Add_Data(const struct LppData* const lpp_data)
 	}
 
 	// Check if it fits in the buffer
-	if (tx_buffer_idx + byte_count > LORAWAN_APP_DATA_BUFFER_MAX_SIZE)
+	if (tx_buffer_index + byte_count > LORAWAN_APP_DATA_BUFFER_MAX_SIZE)
 	{
 		return false;
 	}
 
 	// Add the data to the buffer
-	tx_buffer[tx_buffer_idx++] = lpp_data->sensor_id;
-	tx_buffer[tx_buffer_idx++] = lpp_data->data_type;
+	tx_buffer[tx_buffer_index++] = lpp_data->sensor_id;
+	tx_buffer[tx_buffer_index++] = lpp_data->data_type;
 
 	switch(lpp_data->data_type)
 	{
 	case LPP_DIGITAL_INPUT:
 	case LPP_DIGITAL_OUTPUT:
-		tx_buffer[tx_buffer_idx++] = lpp_data->data.digital_value;
+		tx_buffer[tx_buffer_index++] = lpp_data->data.digital_value;
 		break;
 
 	case LPP_ANALOG_INPUT:
 	case LPP_ANALOG_OUTPUT:
 	{
 		uint16_t value = lpp_data->data.analog_value * 100; // Multiply by 100 to conform to formatting (see CayenneLpp.h)
-		tx_buffer[tx_buffer_idx++] = (uint8_t)((value >> 8) & 0xFF);
-		tx_buffer[tx_buffer_idx++] = (uint8_t)(value & 0xFF);
+		tx_buffer[tx_buffer_index++] = (uint8_t)((value >> 8) & 0xFF);
+		tx_buffer[tx_buffer_index++] = (uint8_t)(value & 0xFF);
 		break;
 	}
 
@@ -93,7 +93,7 @@ bool Tx_Add_Data(const struct LppData* const lpp_data)
 void Tx_Transmit_Data(void)
 {
 	// Update the size before sending
-	tx_app_data.BufferSize = tx_buffer_idx;
+	tx_app_data.BufferSize = tx_buffer_index;
 
 	// Send the data
 	UTIL_TIMER_Time_t next_tx_in = 0;

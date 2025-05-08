@@ -11,12 +11,12 @@
 #include "CayenneLpp.h"
 
 extern uint8_t tx_buffer[LORAWAN_APP_DATA_BUFFER_MAX_SIZE];
-extern uint8_t tx_buffer_idx;
+extern uint8_t tx_buffer_index;
 
 // Initialization function used for all unit tests
 void Transmit_Test_Init(void)
 {
-	tx_buffer_idx = 0;
+	tx_buffer_index = 0;
 
 	for (uint8_t i = 0; i < LORAWAN_APP_DATA_BUFFER_MAX_SIZE; i++)
 	{
@@ -29,24 +29,24 @@ uint8_t Tx_Reset_Buffer_Idx_Test(void)
 	Transmit_Test_Init();
 
 	// Test case 1, test lower boundary
-	tx_buffer_idx = 0;
+	tx_buffer_index = 0;
 	Tx_Reset_Buffer_Idx();
 
-	if (tx_buffer_idx != 0)
+	if (tx_buffer_index != 0)
 		return 1;
 
 	// Test case 2, test random value
-	tx_buffer_idx = 53;
+	tx_buffer_index = 53;
 	Tx_Reset_Buffer_Idx();
 
-	if (tx_buffer_idx != 0)
+	if (tx_buffer_index != 0)
 		return 2;
 
 	// Test case 3, test upper boundary
-	tx_buffer_idx = 255;
+	tx_buffer_index = 255;
 	Tx_Reset_Buffer_Idx();
 
-	if (tx_buffer_idx != 0)
+	if (tx_buffer_index != 0)
 		return 3;
 
 	return 0;
@@ -65,7 +65,7 @@ uint8_t Tx_Add_Data_Test(void)
 	if (!Tx_Add_Data(&data))
 		return 11; // Err on 1.1
 
-	if (tx_buffer_idx != 3)
+	if (tx_buffer_index != 3)
 		return 12; // Err on 1.2
 
 	if (tx_buffer[2] != data.data.digital_value)
@@ -79,7 +79,7 @@ uint8_t Tx_Add_Data_Test(void)
 	if (!Tx_Add_Data(&data))
 		return 21;
 
-	if (tx_buffer_idx != 7)
+	if (tx_buffer_index != 7)
 		return 22;
 
 	data.data.analog_value *= 100; // Multiply by 100 for formatting
@@ -92,12 +92,12 @@ uint8_t Tx_Add_Data_Test(void)
 	data.data_type = LPP_DIGITAL_INPUT;
 	data.data.digital_value = 0x0E;
 
-	tx_buffer_idx = 0;
+	tx_buffer_index = 0;
 
 	if (!Tx_Add_Data(&data))
 		return 31;
 
-	if (tx_buffer_idx != 3)
+	if (tx_buffer_index != 3)
 		return 32;
 
 	if (tx_buffer[2] != data.data.digital_value)
@@ -108,7 +108,7 @@ uint8_t Tx_Add_Data_Test(void)
 	data.data_type = LPP_DIGITAL_INPUT;
 	data.data.digital_value = 0x0E;
 
-	tx_buffer_idx = LORAWAN_APP_DATA_BUFFER_MAX_SIZE - 2;
+	tx_buffer_index = LORAWAN_APP_DATA_BUFFER_MAX_SIZE - 2;
 
 	if (Tx_Add_Data(&data))
 		return 4;
