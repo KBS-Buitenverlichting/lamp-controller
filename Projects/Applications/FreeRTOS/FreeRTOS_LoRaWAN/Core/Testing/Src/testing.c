@@ -5,9 +5,6 @@
  *      Author: Bjorn Wakker
  */
 #include "testing.h"
-#include "sys_app.h"
-#include "stdint.h"
-#include "transmit_test.h"
 
 const uint8_t (*test_functions[])(void) = {
 	Tx_Set_Buffer_Test

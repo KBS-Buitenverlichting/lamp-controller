@@ -5,9 +5,6 @@
  *      Author: Bjorn Wakker
  */
 #include "transmit.h"
-#include "LmHandlerTypes.h"
-#include "LmHandler.h"
-#include "lora_app.h"
 
 uint8_t tx_buffer[LORAWAN_APP_DATA_BUFFER_MAX_SIZE];
 uint8_t tx_buffer_size = 0;

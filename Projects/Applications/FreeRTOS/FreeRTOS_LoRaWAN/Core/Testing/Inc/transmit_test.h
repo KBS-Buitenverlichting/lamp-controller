@@ -7,5 +7,7 @@
 #pragma once
 
 #include "stdint.h"
+#include "transmit.h"
+#include "lora_app.h"
 
 uint8_t Tx_Set_Buffer_Test(void);

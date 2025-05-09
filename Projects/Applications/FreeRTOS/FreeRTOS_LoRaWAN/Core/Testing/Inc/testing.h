@@ -6,4 +6,8 @@
  */
 #pragma once
 
+#include "sys_app.h"
+#include "stdint.h"
+#include "transmit_test.h"
+
 void Main_Test(void);

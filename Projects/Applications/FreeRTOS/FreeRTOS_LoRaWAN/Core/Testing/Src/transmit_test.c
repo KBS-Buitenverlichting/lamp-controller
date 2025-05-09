@@ -5,8 +5,6 @@
  *      Author: Bjorn Wakker
  */
 #include "transmit_test.h"
-#include "transmit.h"
-#include "lora_app.h"
 
 extern uint8_t tx_buffer[LORAWAN_APP_DATA_BUFFER_MAX_SIZE];
 extern uint8_t tx_buffer_size;
