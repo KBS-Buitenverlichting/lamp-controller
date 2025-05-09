@@ -7,38 +7,9 @@
 #pragma once
 
 #include "stdint.h"
-#include "stdbool.h"
+#include "LmHandlerTypes.h"
+#include "LmHandler.h"
+#include "lora_app.h"
 
-struct LppData
-{
-	uint8_t sensor_id; // Has to be different from sensors with the same type
-	uint8_t data_type; // Data type to indicate what type of sensor the data is from
-	union {
-		uint8_t digital_value;
-		int16_t analog_value;
-		uint16_t luminosity;
-		uint8_t presence;
-		int16_t temperature;
-		uint8_t relative_humidity;
-		struct {
-			int16_t x;
-			int16_t y;
-			int16_t z;
-		} accelerometer;
-		uint16_t barometricPressure;
-		struct {
-			int16_t x;
-			int16_t y;
-			int16_t z;
-		} gyrometer;
-		struct {
-			int32_t lat;
-			int32_t lon;
-			int32_t alt;
-		} gps;
-	} data;
-};
-
-void Tx_Reset_Buffer_Index(void);
-bool Tx_Add_Data(const struct LppData* const data);
+void Tx_Set_Buffer(const uint8_t identifier, const uint8_t subtype, const uint8_t* const parameters, const uint8_t nr_of_parameter_bytes);
 void Tx_Transmit_Data(void);

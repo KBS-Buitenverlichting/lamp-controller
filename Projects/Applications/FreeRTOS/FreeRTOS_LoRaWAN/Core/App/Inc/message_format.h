@@ -1,0 +1,52 @@
+/*
+ * message_format.h
+ *
+ *  Created on: May 8, 2025
+ *      Author: Bjorn Wakker
+ */
+#pragma once
+
+#include "lora_app.h"
+
+#define IDENTIFIER_BYTE 0
+#define IDENTIFIER_BYTE_COUNT 1
+#define SUBTYPE_BYTE 1
+#define SUBTYPE_BYTE_COUNT 1
+#define PARAMETERS_START_BYTE 2
+#define PARAMETER_MAX_BYTES (LORAWAN_APP_DATA_BUFFER_MAX_SIZE - 2)
+
+#define MESSAGE_MIN_BYTES (IDENTIFIER_BYTE_COUNT + SUBTYPE_BYTE_COUNT)
+
+enum Identifiers
+{
+	INSTRUCTION_IN = 0xAB,
+	RESPONSE_OUT = 0xC0,
+	RESPONSE_OUT_WITH_DATA = 0xC1,
+	MESSAGE_OUT = 0xD1
+};
+
+enum InstructionSubtypes
+{
+	LAMP_OFF = 0x00,
+	LAMP_ON = 0x01,
+	ACTIVATE_MOTION_SENSOR = 0x02,
+	CHANGE_BRIGHTNESS = 0x03,
+	SEND_BATTERY_STATUS = 0x04,
+	SYNCHRONIZE_TIME_AND_DATE = 0x05,
+	SET_TIMESLOT = 0x06,
+	SHOW_TIMETABLE = 0x07,
+	CHANGE_TIMESLOT = 0x08,
+	REMOVE_TIMESLOT = 0x09
+};
+
+enum ResponseSubtypes
+{
+	INSTRUCTION_COMPLETED = 0x00,
+	INVALID_DATA = 0x01,
+	MISSING_DATA = 0x02
+};
+
+enum ResponseWithDataSubtypes
+{
+	RESPONDING_TO_INSTRUCTION = 0x00
+};
