@@ -51,9 +51,8 @@ void Tx_Transmit_Data(void)
 	tx_app_data.BufferSize = tx_buffer_size;
 
 	// Send the data
-	if (LmHandlerSend(&tx_app_data, LORAWAN_DEFAULT_CONFIRMED_MSG_STATE, NULL, false) != LORAMAC_HANDLER_SUCCESS)
+	if (LmHandlerSend(&tx_app_data, LORAWAN_DEFAULT_CONFIRMED_MSG_STATE, NULL, false) == LORAMAC_HANDLER_SUCCESS)
 	{
-	    return;
+		Tx_Clear_Buffer();
 	}
-	Tx_Clear_Buffer();
 }
