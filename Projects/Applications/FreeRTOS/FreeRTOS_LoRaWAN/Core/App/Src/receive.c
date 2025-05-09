@@ -44,7 +44,11 @@ void Interpret_Message(uint8_t *Buffer, uint8_t BufferSize) {
 			}
 			break;
 		case SEND_BATTERY_STATUS:
-			APP_LOG(TS_OFF, VLEVEL_M, "Report battery state!\n");
+			{
+				APP_LOG(TS_OFF, VLEVEL_M, "Report battery state!\n");
+				const uint8_t params[] = { GetBatteryLevel() };
+				Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION, &params, 1);
+			}
 			break;
 		case SYNCHRONIZE_TIME_AND_DATE:
 			break;
