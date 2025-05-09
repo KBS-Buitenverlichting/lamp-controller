@@ -54,7 +54,7 @@ extern "C" {
 #define VDD_MIN                     1800
 
 /* USER CODE BEGIN EC */
-
+#define VDD_MAX						3600
 /* USER CODE END EC */
 
 /* External variables --------------------------------------------------------*/

@@ -25,7 +25,7 @@ void Tx_Clear_Buffer(void)
 	tx_buffer_size = 0;
 }
 
-void Tx_Set_Buffer(const uint8_t identifier, const uint8_t subtype, const uint8_t* const parameters, const uint8_t nr_of_parameter_bytes)
+void Tx_Set_Buffer(const Identifier identifier, const uint8_t subtype, const uint8_t* const parameters, const uint8_t nr_of_parameter_bytes)
 {
 	// Check if the message is not to long
 	if (nr_of_parameter_bytes > LORAWAN_APP_DATA_BUFFER_MAX_SIZE)
@@ -43,6 +43,12 @@ void Tx_Set_Buffer(const uint8_t identifier, const uint8_t subtype, const uint8_
 	}
 
 	tx_buffer_size = MESSAGE_MIN_BYTES + nr_of_parameter_bytes;
+}
+
+void Tx_Set_Ack(const InstructionSubtype instruction)
+{
+	const uint8_t params[] = { instruction };
+	Tx_Set_Buffer(RESPONSE_OUT, INSTRUCTION_COMPLETED, &params, 1);
 }
 
 void Tx_Transmit_Data(void)

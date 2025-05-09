@@ -12,3 +12,4 @@
 
 uint8_t Tx_Clear_Buffer_Test(void);
 uint8_t Tx_Set_Buffer_Test(void);
+uint8_t Tx_Set_Ack_Test(void);

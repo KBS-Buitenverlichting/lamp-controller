@@ -75,3 +75,16 @@ uint8_t Tx_Set_Buffer_Test(void)
 	return 0;
 }
 
+uint8_t Tx_Set_Ack_Test(void)
+{
+	// Test case 1
+	Tx_Set_Ack(LAMP_ON);
+
+	if (tx_buffer_size != 3)
+		return 11;
+
+	if (tx_buffer[IDENTIFIER_BYTE] != RESPONSE_OUT || tx_buffer[SUBTYPE_BYTE] != INSTRUCTION_COMPLETED || tx_buffer[PARAMETERS_START_BYTE] != LAMP_ON)
+		return 12;
+
+	return 0;
+}
