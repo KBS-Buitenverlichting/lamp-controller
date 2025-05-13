@@ -53,10 +53,9 @@ void Tx_Set_Ack(const InstructionSubtype instruction)
 
 void Tx_Transmit_Data(void)
 {
-	// Update the size
 	tx_app_data.BufferSize = tx_buffer_size;
 
-	// Send the data
+	// Send the data, clear buffer on successfull send
 	if (LmHandlerSend(&tx_app_data, LORAWAN_DEFAULT_CONFIRMED_MSG_STATE, NULL, false) == LORAMAC_HANDLER_SUCCESS)
 	{
 		Tx_Clear_Buffer();

@@ -32,7 +32,7 @@ void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
 			APP_LOG(TS_OFF, VLEVEL_M, "Select motion sensor!\n");
 			break;
 		case CHANGE_BRIGHTNESS:
-			if (buffer_size <= MESSAGE_MIN_BYTES) {
+			if (buffer_size < MESSAGE_MIN_BYTES + BRIGHTNESS_PARAMS_BYTE_COUNT) {
 				APP_LOG(TS_OFF, VLEVEL_M,
 						"Brightness command does not include brightness\n");
 			} else {
@@ -43,13 +43,13 @@ void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
 		case SEND_BATTERY_STATUS:
 			APP_LOG(TS_OFF, VLEVEL_M, "Report battery state!\n");
 			{
-				const uint8_t params[] = { SEND_BATTERY_STATUS, Get_Battery_Percentage() };
+				const uint8_t params[] = { SEND_BATTERY_STATUS, Get_Battery_Level() };
 				Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION, &params, 2);
 			}
 			break;
 		case SET_BATTERY_VREF:
 			APP_LOG(TS_OFF, VLEVEL_M, "Setting battery min and max vref\n");
-			if (buffer_size <= MESSAGE_MIN_BYTES) {
+			if (buffer_size < MESSAGE_MIN_BYTES + BATTERY_VREF_PARAMS_BYTE_COUNT) {
 				const uint8_t params[] = { SET_BATTERY_VREF };
 				Tx_Set_Buffer(RESPONSE_OUT, MISSING_DATA, &params, 1);
 			}
@@ -57,14 +57,14 @@ void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
 			{
 				uint16_t min_vref = (buffer[PARAMETERS_START_BYTE] << 8) & buffer[PARAMETERS_START_BYTE + 1];
 				uint16_t max_vref = (buffer[PARAMETERS_START_BYTE + 2] << 8) & buffer[PARAMETERS_START_BYTE + 3];
-				Warnings result = Set_Battery_Vref(min_vref, max_vref);
+				Warning result = Set_Battery_Vref(min_vref, max_vref);
 				if (result == NO_WARNING)
 				{
 					Tx_Set_Ack(SET_BATTERY_VREF);
 				}
 				else
 				{
-					const uint8_t params[] = { SET_BATTERY_VREF, warning };
+					const uint8_t params[] = { SET_BATTERY_VREF, result };
 					Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_WARNING, &params, 2);
 				}
 			}
