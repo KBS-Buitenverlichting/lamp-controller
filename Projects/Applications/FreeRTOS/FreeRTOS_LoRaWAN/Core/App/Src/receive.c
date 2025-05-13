@@ -65,6 +65,7 @@ void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
 			{
 				uint16_t min_vref = (buffer[PARAMETERS_START_BYTE] << 8) | buffer[PARAMETERS_START_BYTE + 1];
 				uint16_t max_vref = (buffer[PARAMETERS_START_BYTE + 2] << 8) | buffer[PARAMETERS_START_BYTE + 3];
+				APP_LOG(TS_OFF, VLEVEL_M, "min: %u    max: %u\r\n");
 				Warning result = Set_Battery_Vref(min_vref, max_vref);
 				if (result == NO_WARNING)
 				{
