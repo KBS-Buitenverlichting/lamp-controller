@@ -22,6 +22,7 @@
 #include "cmsis_os.h"
 #include "app_lorawan.h"
 #include "sys_app.h"
+#include "lamp_state.h"
 
 #ifdef TESTING
 #include "testing.h"
@@ -110,6 +111,7 @@ int main(void) {
 	MX_GPIO_Init();
 	MX_LPTIM1_Init();
 	Lamp_GPIO_Init();
+	LampState_Init();
 	/* USER CODE END SysInit */
 
 	/* Initialize all configured peripherals */
@@ -118,6 +120,8 @@ int main(void) {
 	LED_TaskHandle = osThreadCreate(osThread(LED_Task), NULL);
 	osThreadDef(LoRaWAN_Task, StartLoRaWANTask, osPriorityNormal, 0, 1024);
 	LoRaWAN_TaskHandle = osThreadCreate(osThread(LoRaWAN_Task), NULL);
+	osThreadDef(LampStateTask, StartLampStateTask, osPriorityNormal, 0, 256);
+	osThreadCreate(osThread(LampStateTask), NULL);
 	osKernelStart();
 	/* USER CODE END 2 */
 #endif

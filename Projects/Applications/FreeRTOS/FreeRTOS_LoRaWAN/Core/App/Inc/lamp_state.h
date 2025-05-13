@@ -8,6 +8,13 @@
 #pragma once
 
 #include "stdint.h"
+#include "message_format.h"
+#include "cmsis_os.h"
+#include "sys_app.h"
+#include "FreeRTOS.h"
+#include "queue.h"
+#include "semphr.h"
+#include "main.h"  // for GPIO control
 
 typedef enum {
     Off,
@@ -15,9 +22,11 @@ typedef enum {
     MotionSensor
 }LampState;
 
-void Set_State_LampState(LampState State);
+void LampState_Init(void);
+void Send_LampState(LampState new_state);
 LampState Get_State_LampState(void);
-void Set_Brightness(uint8_t Brightness);
+const char* LampState_ToString(LampState state);
+void StartLampStateTask(void const *argument);
+void Send_Brightness(uint8_t brightness);
 uint8_t Get_Brightness(void);
-const char* LampState_ToString(LampState state); //print LampState, for testing purposes =)
 

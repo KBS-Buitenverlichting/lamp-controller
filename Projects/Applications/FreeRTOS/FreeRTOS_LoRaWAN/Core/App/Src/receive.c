@@ -3,8 +3,11 @@
 #include "sys_app.h" // Used for APP_LOG to write output to serial
 #include "lamp_state.h"
 
+#define TIME_DATE_BUFFERSIZE 9
+
 void Interpret_Message(uint8_t *Buffer, uint8_t BufferSize);
 
+/// Brief: Handles incoming LoRaWAN data and calls message interpreter.
 void Process_Rx_Data(const LmHandlerAppData_t *const app_data,
 		const LmHandlerRxParams_t *const params) {
 	APP_LOG(TS_OFF, VLEVEL_M, "Received payload (hex): ");
@@ -16,6 +19,7 @@ void Process_Rx_Data(const LmHandlerAppData_t *const app_data,
 	Interpret_Message(app_data->Buffer, app_data->BufferSize);
 }
 
+/// Brief: Interprets received message and executes corresponding command.
 void Interpret_Message(uint8_t *Buffer, uint8_t BufferSize) {
 	if (BufferSize < MESSAGE_MIN_BYTES) {
 		APP_LOG(TS_OFF, VLEVEL_M, "Message too short to interpret\n");
@@ -25,36 +29,25 @@ void Interpret_Message(uint8_t *Buffer, uint8_t BufferSize) {
 	if (Buffer[IDENTIFIER_BYTE] == INSTRUCTION_IN) {
 		switch (Buffer[SUBTYPE_BYTE]) {
 		case LAMP_OFF:
-			APP_LOG(TS_OFF, VLEVEL_M, "Lamp off\r\n");
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-			Set_State_LampState(Off);
+			Send_LampState(Off);
 			break;
 		case LAMP_ON:
-			APP_LOG(TS_OFF, VLEVEL_M, "Lamp on\r\n");
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
-			Set_State_LampState(On);
+			Send_LampState(On);
 			break;
 		case ACTIVATE_MOTION_SENSOR:
-			APP_LOG(TS_OFF, VLEVEL_M, "Select motion sensor!\r\n");
-			Set_State_LampState(MotionSensor);
+			Send_LampState(MotionSensor);
 			break;
 		case CHANGE_BRIGHTNESS:
-			if (BufferSize <= MESSAGE_MIN_BYTES) {
-				APP_LOG(TS_OFF, VLEVEL_M,
-						"Brightness command does not include brightness\r\n");
-			} else {
-				APP_LOG(TS_OFF, VLEVEL_M, "Change brightness to %u!\r\n", Buffer[PARAMETERS_START_BYTE]);
-				Set_Brightness(Buffer[PARAMETERS_START_BYTE]);
-			}
-			break;
+		    Send_Brightness(Buffer[PARAMETERS_START_BYTE]);
+		    break;
 		case SEND_BATTERY_STATUS:
-			APP_LOG(TS_OFF, VLEVEL_M, "Report battery state!\n");
+			APP_LOG(TS_OFF, VLEVEL_M, "Report battery state!\r\n");
 			break;
 		case SYNCHRONIZE_TIME_AND_DATE:
-			if (BufferSize < 9) {
-				APP_LOG(TS_OFF, VLEVEL_M, "Time/date command input is to short!\n");
+			if (BufferSize < TIME_DATE_BUFFERSIZE) {
+				APP_LOG(TS_OFF, VLEVEL_M, "Time/date command input is to short!\r\n");
 			} else {
-				APP_LOG(TS_OFF, VLEVEL_M, "Update time/ date!\n");
+				APP_LOG(TS_OFF, VLEVEL_M, "Update time/ date!\r\n");
 
 				uint8_t Hour = Buffer[2];
 				uint8_t Minute = Buffer[3];
@@ -79,26 +72,23 @@ void Interpret_Message(uint8_t *Buffer, uint8_t BufferSize) {
 			}
 			break;
 		case SET_TIMESLOT:
-			APP_LOG(TS_OFF, VLEVEL_M, "Set time schedule!\n");
+			APP_LOG(TS_OFF, VLEVEL_M, "Set time schedule!\r\n");
 			break;
 		case SHOW_TIMETABLE:
-			APP_LOG(TS_OFF, VLEVEL_M, "Show time table!\n");
+			APP_LOG(TS_OFF, VLEVEL_M, "Show time table!\r\n");
 			break;
 		case CHANGE_TIMESLOT:
-			APP_LOG(TS_OFF, VLEVEL_M, "Change timeslot!\n");
+			APP_LOG(TS_OFF, VLEVEL_M, "Change timeslot!\r\n");
 			break;
 		case REMOVE_TIMESLOT:
-			APP_LOG(TS_OFF, VLEVEL_M, "Remove timeslot!\n");
+			APP_LOG(TS_OFF, VLEVEL_M, "Remove timeslot!\r\n");
 			break;
 		default:
-			APP_LOG(TS_OFF, VLEVEL_M, "Unknown AB command: %02X\n", Buffer[SUBTYPE_BYTE]);
+			APP_LOG(TS_OFF, VLEVEL_M, "Unknown AB command: %02X\r\n", Buffer[SUBTYPE_BYTE]);
 			break;
 		}
 	} else {
-		APP_LOG(TS_OFF, VLEVEL_M, "Unknown message type: %02X\n", Buffer[IDENTIFIER_BYTE]);
+		APP_LOG(TS_OFF, VLEVEL_M, "Unknown message type: %02X\r\n", Buffer[IDENTIFIER_BYTE]);
 	}
-
-	APP_LOG(TS_OFF, VLEVEL_M, "Current lamp state: %s\r\n", LampState_ToString(Get_State_LampState()));
-	APP_LOG(TS_OFF, VLEVEL_M, "Current brightness: %03u\r\n", Get_Brightness());
 }
 
