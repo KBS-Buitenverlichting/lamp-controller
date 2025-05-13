@@ -27,18 +27,18 @@
 RTC_HandleTypeDef hrtc;
 
 void RTC_Init_AlarmB(void) {
-	RTC_AlarmTypeDef sAlarmB = {0};
-	RTC_TimeTypeDef sTimeB = {0};
+	RTC_AlarmTypeDef alarm_b = {0};
+	RTC_TimeTypeDef cur_time = {0};
 
-	HAL_RTC_GetTime(&hrtc, &sTimeB, FORMAT_BCD);
+	HAL_RTC_GetTime(&hrtc, &cur_time, FORMAT_BCD);
 
-	sAlarmB.AlarmTime.SubSeconds = 0;
-	sAlarmB.AlarmTime.Seconds = sTimeB.Seconds + 0x10;
+	alarm_b.AlarmTime.SubSeconds = 0;
+	alarm_b.AlarmTime.Seconds = cur_time.Seconds + 0x10;
 
 
-	sAlarmB.AlarmMask = RTC_ALARMMASK_DATEWEEKDAY | RTC_ALARMMASK_HOURS | RTC_ALARMMASK_MINUTES;
-	sAlarmB.Alarm = RTC_ALARM_B;
-	if (HAL_RTC_SetAlarm_IT(&hrtc, &sAlarmB, FORMAT_BCD) != HAL_OK) {
+	alarm_b.AlarmMask = RTC_ALARMMASK_DATEWEEKDAY | RTC_ALARMMASK_HOURS | RTC_ALARMMASK_MINUTES;
+	alarm_b.Alarm = RTC_ALARM_B;
+	if (HAL_RTC_SetAlarm_IT(&hrtc, &alarm_b, FORMAT_BCD) != HAL_OK) {
 		Error_Handler();
 	}
 }
