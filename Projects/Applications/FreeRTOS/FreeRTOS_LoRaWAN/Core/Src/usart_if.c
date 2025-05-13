@@ -290,9 +290,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart2)
 #ifdef USE_USB_SERIAL
   if ((NULL != RxCpltCallback) && (HAL_UART_ERROR_NONE == huart2->ErrorCode))
   {
-	//RxCpltCallback(&charRx, 1, 0);
+	RxCpltCallback(&charRx, 1, 0);
   }
-  vcom_Trace(&charRx, 1);
   HAL_UART_Receive_IT(huart2, &charRx, 1);
 #else
   if ((NULL != RxCpltCallback) && (HAL_UART_ERROR_NONE == huart2->ErrorCode))

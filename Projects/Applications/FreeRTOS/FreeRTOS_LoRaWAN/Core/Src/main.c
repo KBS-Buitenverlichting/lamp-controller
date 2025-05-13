@@ -296,7 +296,7 @@ void SerialSetupTask(void const *argument) {
 }
 
 void rx_done(uint8_t *rxChar, uint16_t size, uint8_t error) {
-	vcom_Trace(&rxChar, 1);
+	vcom_Trace(rxChar, 1);
 }
 
 void tx_done(void *arg) {
