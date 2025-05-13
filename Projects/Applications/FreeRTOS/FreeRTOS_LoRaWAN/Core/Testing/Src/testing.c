@@ -7,7 +7,9 @@
 #include "testing.h"
 
 const uint8_t (*test_functions[])(void) = {
-	Tx_Set_Buffer_Test
+	Tx_Clear_Buffer_Test,
+	Tx_Set_Buffer_Test,
+	Tx_Set_Ack_Test
 };
 
 void Main_Test(void)
