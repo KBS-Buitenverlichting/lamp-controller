@@ -26,7 +26,7 @@
 
 RTC_HandleTypeDef hrtc;
 
-void RTC_InitAlarmB(void) {
+void RTC_Init_AlarmB(void) {
 	RTC_AlarmTypeDef sAlarmB = {0};
 	RTC_TimeTypeDef sTimeB = {0};
 
@@ -94,7 +94,7 @@ void MX_RTC_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN RTC_Init 2 */
-  RTC_InitAlarmB();
+  RTC_Init_AlarmB();
 
   /* USER CODE END RTC_Init 2 */
 
