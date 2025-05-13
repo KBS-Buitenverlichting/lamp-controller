@@ -21,7 +21,6 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "app_lorawan.h"
-#include "sys_app.h"
 
 #ifdef TESTING
 #include "testing.h"
@@ -40,9 +39,12 @@ static void MX_LPTIM1_Init(void);
 /* USER CODE BEGIN PFP */
 int32_t LED_control(int value);
 void Lamp_GPIO_Init(void);
+void rx_done(uint8_t *rxChar, uint16_t size, uint8_t error);
+void tx_done(void *arg);
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "serial_interface.h"
+#include "usart_if.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -72,7 +74,7 @@ osThreadId Serial_TaskHandle;
 void StartLoRaWANTask(void const *argument);
 void StartLedTask(void const *argument);
 void SystemClock_Config(void);
-void SendSerialDataTask(void const *argument);
+void SerialSetupTask(void const *argument);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -120,7 +122,7 @@ int main(void) {
 	LED_TaskHandle = osThreadCreate(osThread(LED_Task), NULL);
 	osThreadDef(LoRaWAN_Task, StartLoRaWANTask, osPriorityNormal, 0, 1024);
 	LoRaWAN_TaskHandle = osThreadCreate(osThread(LoRaWAN_Task), NULL);
-	osThreadDef(Serial_Task, SendSerialDataTask, osPriorityNormal, 0, 256);
+	osThreadDef(Serial_Task, SerialSetupTask, osPriorityNormal, 0, 128);
 	Serial_TaskHandle = osThreadCreate(osThread(Serial_Task), NULL);
 	osKernelStart();
 	/* USER CODE END 2 */
@@ -282,13 +284,24 @@ void StartLedTask(void const *argument) {
 	}
 }
 
-void SendSerialDataTask(void const *argument) {
-	for (;;) {
-		uint8_t message[] = "Hello LoRa-E5!\r\n";
-		Send_Serial_Data(message);
-		osDelay(1000);
+void SerialSetupTask(void const *argument) {
+	for (int i = 0; i < 2; i ++) {
+		vcom_Init(tx_done);
+		vcom_ReceiveInit(HAL_UART_RxCpltCallback);
+
+		vcom_Trace_DMA("Serial setup done!\r\n", 20);
+		osDelay(2000);
 	}
 }
+
+void rx_done(uint8_t *rxChar, uint16_t size, uint8_t error) {
+	// TODO: implement
+}
+
+void tx_done(void *arg) {
+	// TODO: implement
+}
+
 /**
  * @brief  This function is executed in case of error occurrence.
  * @retval None
