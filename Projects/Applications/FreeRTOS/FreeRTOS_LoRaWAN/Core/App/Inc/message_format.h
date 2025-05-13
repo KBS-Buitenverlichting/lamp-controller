@@ -55,7 +55,8 @@ typedef enum ResponseSubtypes
 typedef enum ResponseWithDataSubtypes
 {
 	RESPONDING_TO_INSTRUCTION = 0x00,
-	RESPONDING_TO_INSTRUCTION_WARNING = 0x01
+	RESPONDING_TO_INSTRUCTION_WARNING = 0x01,
+	RESPONDING_TO_INSTRUCTION_ERROR = 0x02
 } ResponseWithDataSubtypes;
 
 typedef enum Warnings
@@ -65,3 +66,9 @@ typedef enum Warnings
 	MIN_VREF_ABOVE_MAX_VDD_BOARD = 0x51,
 	MAX_VREF_ABOVE_MAX_VDD_BOARD = 0x52
 } Warning;
+
+typedef enum Errors
+{
+	NO_ERROR = 0x00,
+	VREFS_NOT_INITIALIZED = 0x50
+};

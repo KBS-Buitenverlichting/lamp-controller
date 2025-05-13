@@ -7,12 +7,14 @@
 #include "battery.h"
 
 static uint16_t battery_min_vref = 0; // Battery voltage when empty
-static uint16_t battery_max_vref = 0; // Battery voltage when full
+static uint16_t battery_max_vref = UINT16_MAX; // Battery voltage when full
+static bool vrefs_initialized = false; // Keeps track of if the voltage vrefs have been initialized
 
 Warning Set_Battery_Vref(const uint16_t min_vref, const uint16_t max_vref)
 {
 	battery_min_vref = min_vref;
 	battery_max_vref = max_vref;
+	vrefs_initialized = true;
 
 	if (min_vref < VDD_MIN) // Possibly not enough charge for the board
 	{
@@ -28,6 +30,11 @@ Warning Set_Battery_Vref(const uint16_t min_vref, const uint16_t max_vref)
 	}
 
 	return NO_WARNING;
+}
+
+bool Vrefs_Initialized(void)
+{
+	return vrefs_initialized;
 }
 
 uint8_t Get_Battery_Level(void)

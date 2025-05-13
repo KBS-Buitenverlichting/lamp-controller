@@ -43,8 +43,16 @@ void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
 		case SEND_BATTERY_STATUS:
 			APP_LOG(TS_OFF, VLEVEL_M, "Report battery state!\r\n");
 			{
-				const uint8_t params[] = { SEND_BATTERY_STATUS, Get_Battery_Level() };
-				Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION, &params, 2);
+				if (Vrefs_Initialized())
+				{
+					const uint8_t params[] = { SEND_BATTERY_STATUS, Get_Battery_Level() };
+					Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION, &params, 2);
+				}
+				else
+				{
+					const uint8_t params[] = { SEND_BATTERY_STATUS, VREFS_NOT_INITIALIZED };
+					Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, &params, 2);
+				}
 			}
 			break;
 		case SET_BATTERY_VREF:
