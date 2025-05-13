@@ -27,6 +27,7 @@
 #include "stm32_lpm.h"
 #include "utilities_def.h"
 #include "stm32wlxx_ll_rtc.h"
+#include "sys_app.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -232,7 +233,7 @@ UTIL_TIMER_Status_t TIMER_IF_StartTimer(uint32_t timeout)
   /* starts timer*/
   sAlarm.BinaryAutoClr = RTC_ALARMSUBSECONDBIN_AUTOCLR_NO;
   sAlarm.AlarmTime.SubSeconds = UINT32_MAX - timeout;
-  sAlarm.AlarmMask = RTC_ALARMMASK_NONE;
+  sAlarm.AlarmMask = RTC_ALARMMASK_ALL;
   sAlarm.AlarmSubSecondMask = RTC_ALARMSUBSECONDBINMASK_NONE;
   sAlarm.Alarm = RTC_ALARM_A;
   if (HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BCD) != HAL_OK)
@@ -383,6 +384,29 @@ void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
   /* USER CODE BEGIN HAL_RTC_AlarmAEventCallback_Last */
 
   /* USER CODE END HAL_RTC_AlarmAEventCallback_Last */
+}
+
+// alarm used for scheduling
+void HAL_RTCEx_AlarmBEventCallback(RTC_HandleTypeDef *hrtc) {
+	RTC_AlarmTypeDef sAlarmB = {0};
+	RTC_TimeTypeDef sTimeB = {0};
+
+	// test code
+	HAL_RTC_GetTime(hrtc, &sTimeB, FORMAT_BCD);
+
+	HAL_RTC_GetAlarm(hrtc, &sAlarmB, RTC_ALARM_B, FORMAT_BCD);
+	APP_PRINTF("The alarm went off at %02X minutes and %02X seconds\n", sTimeB.Minutes, sTimeB.Seconds);
+	sAlarmB.AlarmTime.Seconds = sTimeB.Seconds + 0x20;
+
+	if (sAlarmB.AlarmTime.Seconds >= 0x60) {
+		sAlarmB.AlarmTime.Seconds = 0x10;
+	}
+
+	sAlarmB.AlarmMask = RTC_ALARMMASK_DATEWEEKDAY | RTC_ALARMMASK_HOURS | RTC_ALARMMASK_MINUTES;
+
+
+	while (HAL_RTC_SetAlarm_IT(hrtc, &sAlarmB, FORMAT_BCD) != HAL_OK) {
+	}
 }
 
 void HAL_RTCEx_SSRUEventCallback(RTC_HandleTypeDef *hrtc)

@@ -19,12 +19,29 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "rtc.h"
-
+#include "timer_if.h"
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
 
 RTC_HandleTypeDef hrtc;
+
+void RTC_InitAlarmB(void) {
+	RTC_AlarmTypeDef sAlarmB = {0};
+	RTC_TimeTypeDef sTimeB = {0};
+
+	HAL_RTC_GetTime(&hrtc, &sTimeB, FORMAT_BCD);
+
+	sAlarmB.AlarmTime.SubSeconds = 0;
+	sAlarmB.AlarmTime.Seconds = sTimeB.Seconds + 0x10;
+
+
+	sAlarmB.AlarmMask = RTC_ALARMMASK_DATEWEEKDAY | RTC_ALARMMASK_HOURS | RTC_ALARMMASK_MINUTES;
+	sAlarmB.Alarm = RTC_ALARM_B;
+	if (HAL_RTC_SetAlarm_IT(&hrtc, &sAlarmB, FORMAT_BCD) != HAL_OK) {
+		Error_Handler();
+	}
+}
 
 /* RTC init function */
 void MX_RTC_Init(void)
@@ -48,7 +65,8 @@ void MX_RTC_Init(void)
   hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
   hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
   hrtc.Init.OutPutPullUp = RTC_OUTPUT_PULLUP_NONE;
-  hrtc.Init.BinMode = RTC_BINARY_ONLY;
+  hrtc.Init.BinMode = RTC_BINARY_MIX;
+  hrtc.Init.BinMixBcdU = RTC_BINARY_MIX_BCDU_2; // compensate for prescaler being 4x speed
   if (HAL_RTC_Init(&hrtc) != HAL_OK)
   {
     Error_Handler();
@@ -68,14 +86,15 @@ void MX_RTC_Init(void)
   */
   sAlarm.BinaryAutoClr = RTC_ALARMSUBSECONDBIN_AUTOCLR_NO;
   sAlarm.AlarmTime.SubSeconds = 0x0;
-  sAlarm.AlarmMask = RTC_ALARMMASK_NONE;
+  sAlarm.AlarmMask = RTC_ALARMMASK_ALL;
   sAlarm.AlarmSubSecondMask = RTC_ALARMSUBSECONDBINMASK_NONE;
   sAlarm.Alarm = RTC_ALARM_A;
-  if (HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, 0) != HAL_OK)
+  if (HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BCD) != HAL_OK)
   {
     Error_Handler();
   }
   /* USER CODE BEGIN RTC_Init 2 */
+  RTC_InitAlarmB();
 
   /* USER CODE END RTC_Init 2 */
 
