@@ -285,9 +285,25 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart2)
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart2)
 {
   /* USER CODE BEGIN HAL_UART_RxCpltCallback_1 */
-	  vcom_Trace(&charRx, 1);
-	  HAL_UART_Receive_IT(huart2, &charRx, 1);
+
   /* USER CODE END HAL_UART_RxCpltCallback_1 */
+#ifdef USE_USB_SERIAL
+  if ((NULL != RxCpltCallback) && (HAL_UART_ERROR_NONE == huart2->ErrorCode))
+  {
+	//RxCpltCallback(&charRx, 1, 0);
+  }
+  vcom_Trace(&charRx, 1);
+  HAL_UART_Receive_IT(huart2, &charRx, 1);
+#else
+  if ((NULL != RxCpltCallback) && (HAL_UART_ERROR_NONE == huart2->ErrorCode))
+  {
+    RxCpltCallback(&charRx, 1, 0);
+  }
+  HAL_UART_Receive_IT(huart2, &charRx, 1);
+#endif
+  /* USER CODE BEGIN HAL_UART_RxCpltCallback_2 */
+
+  /* USER CODE END HAL_UART_RxCpltCallback_2 */
 }
 
 /* USER CODE BEGIN EF */
