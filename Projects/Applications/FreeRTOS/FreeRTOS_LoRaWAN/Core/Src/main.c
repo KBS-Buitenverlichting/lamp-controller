@@ -285,17 +285,18 @@ void StartLedTask(void const *argument) {
 }
 
 void SerialSetupTask(void const *argument) {
+	char message[] = "Serial setup done!\r\n";
 	for (int i = 0; i < 2; i ++) {
 		vcom_Init(tx_done);
-		vcom_ReceiveInit(HAL_UART_RxCpltCallback);
+		vcom_ReceiveInit(rx_done);
 
-		vcom_Trace_DMA("Serial setup done!\r\n", 20);
+		vcom_Trace_DMA(message, strlen(message));
 		osDelay(2000);
 	}
 }
 
 void rx_done(uint8_t *rxChar, uint16_t size, uint8_t error) {
-	// TODO: implement
+	vcom_Trace(&rxChar, 1);
 }
 
 void tx_done(void *arg) {
