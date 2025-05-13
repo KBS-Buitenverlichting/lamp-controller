@@ -292,9 +292,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart2)
   {
 	RxCpltCallback(&charRx, 1, 0);
   }
-  char buffer[32];
-  snprintf(buffer, sizeof(buffer), "Ontvangen: %c\r\n", charRx);
-  vcom_Trace_DMA(buffer, strlen(buffer));
+  vcom_Trace_DMA(&charRx, 1);
   HAL_UART_Receive_IT(huart2, &charRx, 1);
 #else
   if ((NULL != RxCpltCallback) && (HAL_UART_ERROR_NONE == huart2->ErrorCode))
