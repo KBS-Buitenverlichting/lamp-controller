@@ -5,7 +5,7 @@
 
 #define TIME_DATE_BUFFERSIZE 9
 
-void Interpret_Message(uint8_t *Buffer, uint8_t BufferSize);
+void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size);
 
 /// Brief: Handles incoming LoRaWAN data and calls message interpreter.
 void Process_Rx_Data(const LmHandlerAppData_t *const app_data,
@@ -38,7 +38,7 @@ void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
       Send_LampState(MotionSensor);
       break;
     case CHANGE_BRIGHTNESS:
-      Send_Brightness(Buffer[PARAMETERS_START_BYTE]);
+      Send_Brightness(buffer[PARAMETERS_START_BYTE]);
       break;
     case SEND_BATTERY_STATUS:
       APP_LOG(TS_OFF, VLEVEL_M, "Report battery state!\r\n");
@@ -76,18 +76,18 @@ void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
       }
       break;
     case SYNCHRONIZE_TIME_AND_DATE:
-      if (BufferSize < TIME_DATE_BUFFERSIZE) {
+      if (buffer_size < TIME_DATE_BUFFERSIZE) {
         APP_LOG(TS_OFF, VLEVEL_M, "Time/date command input is to short!\r\n");
       } else {
         APP_LOG(TS_OFF, VLEVEL_M, "Update time/ date!\r\n");
 
-        uint8_t Hour = Buffer[2];
-        uint8_t Minute = Buffer[3];
-        uint8_t Second = Buffer[4];
-        uint8_t Year = Buffer[5];    // Assume offset from 2000
-        uint8_t Weekday = Buffer[6]; // 1 = Monday, 7 = Sunday
-        uint8_t Month = Buffer[7];   // 1–12
-        uint8_t Day = Buffer[8];     // 1–31
+        uint8_t Hour = buffer[2];
+        uint8_t Minute = buffer[3];
+        uint8_t Second = buffer[4];
+        uint8_t Year = buffer[5];    // Assume offset from 2000
+        uint8_t Weekday = buffer[6]; // 1 = Monday, 7 = Sunday
+        uint8_t Month = buffer[7];   // 1–12
+        uint8_t Day = buffer[8];     // 1–31
 
         const char *Weekday_Names[] = {"Forbidden", "Monday",   "Tuesday",
                                        "Wednesday", "Thursday", "Friday",
@@ -119,11 +119,11 @@ void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
       break;
     default:
       APP_LOG(TS_OFF, VLEVEL_M, "Unknown AB command: %02X\r\n",
-              Buffer[SUBTYPE_BYTE]);
+              buffer[SUBTYPE_BYTE]);
       break;
     }
   } else {
     APP_LOG(TS_OFF, VLEVEL_M, "Unknown message type: %02X\r\n",
-            Buffer[IDENTIFIER_BYTE]);
+            buffer[IDENTIFIER_BYTE]);
   }
 }
