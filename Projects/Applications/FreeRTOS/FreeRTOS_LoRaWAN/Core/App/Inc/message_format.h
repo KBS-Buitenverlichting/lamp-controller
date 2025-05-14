@@ -71,4 +71,4 @@ typedef enum Errors
 {
 	NO_ERROR = 0x00,
 	VREFS_NOT_INITIALIZED = 0x50
-};
+} Error;

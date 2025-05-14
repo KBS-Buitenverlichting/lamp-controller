@@ -46,12 +46,12 @@ void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
 				if (Vrefs_Initialized())
 				{
 					const uint8_t params[] = { SEND_BATTERY_STATUS, Get_Battery_Level() };
-					Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION, &params, 2);
+					Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION, (const uint8_t* const)&params, 2);
 				}
 				else
 				{
 					const uint8_t params[] = { SEND_BATTERY_STATUS, VREFS_NOT_INITIALIZED };
-					Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, &params, 2);
+					Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, 2);
 				}
 			}
 			break;
@@ -59,7 +59,7 @@ void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
 			APP_LOG(TS_OFF, VLEVEL_M, "Setting battery min and max vref\r\n");
 			if (buffer_size < MESSAGE_MIN_BYTES + BATTERY_VREF_PARAMS_BYTE_COUNT) {
 				const uint8_t params[] = { SET_BATTERY_VREF };
-				Tx_Set_Buffer(RESPONSE_OUT, MISSING_DATA, &params, 1);
+				Tx_Set_Buffer(RESPONSE_OUT, MISSING_DATA, (const uint8_t* const)&params, 1);
 			}
 			else
 			{
@@ -74,7 +74,7 @@ void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
 				else
 				{
 					const uint8_t params[] = { SET_BATTERY_VREF, result };
-					Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_WARNING, &params, 2);
+					Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_WARNING, (const uint8_t* const)&params, 2);
 				}
 			}
 			break;

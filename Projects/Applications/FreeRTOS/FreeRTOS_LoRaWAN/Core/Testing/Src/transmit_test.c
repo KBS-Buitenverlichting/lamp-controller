@@ -54,7 +54,7 @@ uint8_t Tx_Set_Buffer_Test(void)
 
 	// Test case 2
 	const uint8_t param[] = { 0x80 };
-	Tx_Set_Buffer(0xC1, 0x00, &param, 1);
+	Tx_Set_Buffer(0xC1, 0x00, (const uint8_t* const)&param, 1);
 
 	if (tx_buffer_size != 3)
 		return 21;
@@ -64,7 +64,7 @@ uint8_t Tx_Set_Buffer_Test(void)
 
 	// Test case 3
 	const uint8_t params[] = { 0x00, 0x01, 0x02 };
-	Tx_Set_Buffer(0xFF, 0x05, &params, 3);
+	Tx_Set_Buffer(0xFF, 0x05, (const uint8_t* const)&params, 3);
 
 	if (tx_buffer_size != 5)
 		return 31;
