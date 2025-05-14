@@ -5,8 +5,6 @@
 
 #define TIME_DATE_BUFFERSIZE 9
 
-void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size);
-
 /// Brief: Handles incoming LoRaWAN data and calls message interpreter.
 void Process_Rx_Data(const LmHandlerAppData_t *const app_data,
                      const LmHandlerRxParams_t *const params) {
