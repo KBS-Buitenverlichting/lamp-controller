@@ -6,15 +6,26 @@
  */
 #include "serial_interface.h"
 
-void Send_Serial_Data(const uint8_t* data) {
-    APP_PRINTF(data);
+uint8_t rx_buffer[RX_BUFFER_SIZE];
+uint8_t rx_buffer_index = 0;
+
+void Print_Rx_Buffer(void) {
+    if (rx_buffer_index > 0) {
+        vcom_Trace_DMA(rx_buffer, rx_buffer_index);
+        rx_buffer_index = 0;
+    }
 }
 
-uint8_t* Receive_Serial_Data(uint8_t* buffer, size_t max_length, size_t* received_length) {
-    if (HAL_UART_Receive(&huart2, buffer, max_length, 1000) == HAL_OK) {
-        *received_length = max_length;
+void Add_To_Rx_Buffer(uint8_t *rxChar) {
+    if (rx_buffer_index < RX_BUFFER_SIZE) {
+        rx_buffer[rx_buffer_index++] = *rxChar;
+
+        if (*rxChar == '\n') {
+            Print_Rx_Buffer();
+        }
     } else {
-        *received_length = 0;
+        Print_Rx_Buffer();
+        rx_buffer[0] = *rxChar;
+        rx_buffer_index = 1;
     }
-    return buffer;
 }
