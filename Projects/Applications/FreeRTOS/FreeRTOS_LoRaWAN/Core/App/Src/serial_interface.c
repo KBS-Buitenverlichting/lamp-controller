@@ -11,6 +11,7 @@ uint8_t rx_buffer_index = 0;
 
 void Print_Rx_Buffer(void) {
     if (rx_buffer_index > 0) {
+    	vcom_Trace("Ontvangen: ", 11);
         vcom_Trace_DMA(rx_buffer, rx_buffer_index);
         rx_buffer_index = 0;
     }
