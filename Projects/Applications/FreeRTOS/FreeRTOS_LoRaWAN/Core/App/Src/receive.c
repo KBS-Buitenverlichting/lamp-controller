@@ -1,17 +1,20 @@
 #include "receive.h"
+#include "lamp_state.h"
 #include "sys_app.h" // Used for APP_LOG to write output to serial
 
+/// Brief: Handles incoming LoRaWAN data and calls message interpreter.
 void Process_Rx_Data(const LmHandlerAppData_t *const app_data,
-		const LmHandlerRxParams_t *const params) {
-	APP_LOG(TS_OFF, VLEVEL_M, "Received payload (hex): ");
-	for (uint8_t i = 0; i < app_data->BufferSize; i++) {
-		APP_LOG(TS_OFF, VLEVEL_M, "%02X ", app_data->Buffer[i]);
-	}
-	APP_LOG(TS_OFF, VLEVEL_M, "\r\n");
+                     const LmHandlerRxParams_t *const params) {
+  APP_LOG(TS_OFF, VLEVEL_M, "Received payload (hex): ");
+  for (uint8_t i = 0; i < app_data->BufferSize; i++) {
+    APP_LOG(TS_OFF, VLEVEL_M, "%02X ", app_data->Buffer[i]);
+  }
+  APP_LOG(TS_OFF, VLEVEL_M, "\r\n");
 
-	Interpret_Message(app_data->Buffer, app_data->BufferSize);
+  Interpret_Message(app_data->Buffer, app_data->BufferSize);
 }
 
+/// Brief: Interprets received message and executes corresponding command.
 void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
 	if (buffer_size < MESSAGE_MIN_BYTES) {
 		APP_LOG(TS_OFF, VLEVEL_M, "Message too short to interpret\r\n");
@@ -62,18 +65,19 @@ void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
 void Handle_Lamp_Off_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
 	APP_LOG(TS_OFF, VLEVEL_M, "Lamp off\r\n");
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+	Send_LampState(OFF);
 }
 
 void Handle_Lamp_On_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
 	APP_LOG(TS_OFF, VLEVEL_M, "Lamp on\r\n");
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+	Send_LampState(ON);
 }
 
 void Handle_Activate_Motion_Sensor_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
 	APP_LOG(TS_OFF, VLEVEL_M, "Select motion sensor\r\n");
+	Send_LampState(MOTION_SENSOR);
 }
 
 void Handle_Change_Brightness_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
@@ -81,8 +85,8 @@ void Handle_Change_Brightness_Instruction(const uint8_t *const buffer, const uin
 	if (buffer_size < MESSAGE_MIN_BYTES + BRIGHTNESS_PARAMS_BYTE_COUNT) {
 		APP_LOG(TS_OFF, VLEVEL_M, "Brightness command does not include brightness\n");
 	} else {
-		APP_LOG(TS_OFF, VLEVEL_M, "Change brightness to %02X!\n",
-		buffer[PARAMETERS_START_BYTE]);
+		APP_LOG(TS_OFF, VLEVEL_M, "Change brightness to %02X!\n", buffer[PARAMETERS_START_BYTE]);
+		Send_Brightness(buffer[PARAMETERS_START_BYTE]);
 	}
 }
 
@@ -133,6 +137,32 @@ void Handle_Set_Battery_Vrefs_Instruction(const uint8_t *const buffer, const uin
 void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
 	APP_LOG(TS_OFF, VLEVEL_M, "Sync time and date\r\n");
+	if (buffer_size < TIME_DATE_BYTE_COUNT) {
+        APP_LOG(TS_OFF, VLEVEL_M, "Time/date command input is to short!\r\n");
+    } else {
+        APP_LOG(TS_OFF, VLEVEL_M, "Update time/ date!\r\n");
+
+        uint8_t hour = buffer[2];
+        uint8_t minute = buffer[3];
+        uint8_t second = buffer[4];
+        uint8_t year = buffer[5];    // Assume offset from 2000
+        uint8_t weekday = buffer[6]; // 1 = Monday, 7 = Sunday
+        uint8_t month = buffer[7];   // 1–12
+        uint8_t day = buffer[8];     // 1–31
+
+        const char *weekday_names[] = {"Forbidden", "Monday",   "Tuesday",
+                                       "Wednesday", "Thursday", "Friday",
+                                       "Saturday",  "Sunday"};
+
+        const char *weekday_str = "Unknown";
+
+        if (weekday <= 7) {
+            weekday_str = weekday_names[weekday];
+        }
+
+        APP_LOG(TS_OFF, VLEVEL_M, "Time: %02u:%02u:%02u\r\n", hour, minute, second);
+        APP_LOG(TS_OFF, VLEVEL_M, "Date: %s %02u-%02u-%04u\r\n", weekday_str, day, month, 2000 + year);
+    }
 }
 
 void Handle_Set_Timeslot_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
