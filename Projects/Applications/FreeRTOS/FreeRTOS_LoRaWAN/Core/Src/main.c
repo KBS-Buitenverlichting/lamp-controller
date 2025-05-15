@@ -120,7 +120,7 @@ int main(void) {
 	LED_TaskHandle = osThreadCreate(osThread(LED_Task), NULL);
 	osThreadDef(LoRaWAN_Task, StartLoRaWANTask, osPriorityNormal, 0, 1024);
 	LoRaWAN_TaskHandle = osThreadCreate(osThread(LoRaWAN_Task), NULL);
-	osThreadDef(LampStateTask, StartLampStateTask, osPriorityNormal, 0, 256);
+	osThreadDef(LampStateTask, Start_LampState_Task, osPriorityNormal, 0, 256);
 	osThreadCreate(osThread(LampStateTask), NULL);
 	osKernelStart();
 	/* USER CODE END 2 */

@@ -27,13 +27,13 @@ void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
   if (buffer[IDENTIFIER_BYTE] == INSTRUCTION_IN) {
     switch (buffer[SUBTYPE_BYTE]) {
     case LAMP_OFF:
-      Send_LampState(Off);
+      Send_LampState(OFF);
       break;
     case LAMP_ON:
-      Send_LampState(On);
+      Send_LampState(ON);
       break;
     case ACTIVATE_MOTION_SENSOR:
-      Send_LampState(MotionSensor);
+      Send_LampState(MOTIONSENSOR);
       break;
     case CHANGE_BRIGHTNESS:
       Send_Brightness(buffer[PARAMETERS_START_BYTE]);
@@ -79,13 +79,13 @@ void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
       } else {
         APP_LOG(TS_OFF, VLEVEL_M, "Update time/ date!\r\n");
 
-        uint8_t Hour = buffer[2];
-        uint8_t Minute = buffer[3];
-        uint8_t Second = buffer[4];
-        uint8_t Year = buffer[5];    // Assume offset from 2000
-        uint8_t Weekday = buffer[6]; // 1 = Monday, 7 = Sunday
-        uint8_t Month = buffer[7];   // 1–12
-        uint8_t Day = buffer[8];     // 1–31
+        uint8_t hour = buffer[2];
+        uint8_t minute = buffer[3];
+        uint8_t second = buffer[4];
+        uint8_t year = buffer[5];    // Assume offset from 2000
+        uint8_t weekday = buffer[6]; // 1 = Monday, 7 = Sunday
+        uint8_t month = buffer[7];   // 1–12
+        uint8_t day = buffer[8];     // 1–31
 
         const char *Weekday_Names[] = {"Forbidden", "Monday",   "Tuesday",
                                        "Wednesday", "Thursday", "Friday",

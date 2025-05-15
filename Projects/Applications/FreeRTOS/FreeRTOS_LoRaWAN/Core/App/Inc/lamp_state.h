@@ -17,16 +17,16 @@
 #include "main.h"  // for GPIO control
 
 typedef enum {
-    Off,
-    On,
-    MotionSensor
+    OFF,
+    ON,
+    MOTIONSENSOR
 }LampState;
 
 void LampState_Init(void);
-void Send_LampState(LampState new_state);
+void Send_LampState(const LampState new_state);
 LampState Get_State_LampState(void);
-const char* LampState_ToString(LampState state);
-void StartLampStateTask(void const *argument);
-void Send_Brightness(uint8_t brightness);
+const char* LampState_ToString(const LampState state);
+void Start_LampState_Task(void const *argument);
+void Send_Brightness(const LampState brightness);
 uint8_t Get_Brightness(void);
 
