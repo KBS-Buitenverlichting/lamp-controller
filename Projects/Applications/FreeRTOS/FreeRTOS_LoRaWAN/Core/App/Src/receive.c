@@ -2,9 +2,6 @@
 #include "lamp_state.h"
 #include "sys_app.h" // Used for APP_LOG to write output to serial
 
-
-#define TIME_DATE_BUFFERSIZE 9
-
 /// Brief: Handles incoming LoRaWAN data and calls message interpreter.
 void Process_Rx_Data(const LmHandlerAppData_t *const app_data,
                      const LmHandlerRxParams_t *const params) {
@@ -33,7 +30,7 @@ void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
       Send_LampState(ON);
       break;
     case ACTIVATE_MOTION_SENSOR:
-      Send_LampState(MOTIONSENSOR);
+      Send_LampState(MOTION_SENSOR);
       break;
     case CHANGE_BRIGHTNESS:
       Send_Brightness(buffer[PARAMETERS_START_BYTE]);
@@ -77,7 +74,7 @@ void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
 			}
 			break;
     case SYNCHRONIZE_TIME_AND_DATE:
-      if (buffer_size < TIME_DATE_BUFFERSIZE) {
+      if (buffer_size < TIME_DATE_BYTE_COUNT) {
         APP_LOG(TS_OFF, VLEVEL_M, "Time/date command input is to short!\r\n");
       } else {
         APP_LOG(TS_OFF, VLEVEL_M, "Update time/ date!\r\n");

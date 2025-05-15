@@ -19,7 +19,7 @@
 typedef enum {
     OFF,
     ON,
-    MOTIONSENSOR
+    MOTION_SENSOR
 }LampState;
 
 void LampState_Init(void);

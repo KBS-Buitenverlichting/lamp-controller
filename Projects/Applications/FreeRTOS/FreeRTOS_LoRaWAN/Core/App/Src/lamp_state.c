@@ -10,7 +10,7 @@
 #define MAX_BRIGHTNESS 255
 #define MIN_BRIGHTNESS 0
 
-static LampState current_lamp_state = MOTIONSENSOR;
+static LampState current_lamp_state = MOTION_SENSOR;
 static uint8_t current_brightness = MAX_BRIGHTNESS;
 
 static SemaphoreHandle_t state_mutex;
@@ -47,7 +47,7 @@ const char* LampState_ToString(const LampState state) {
     switch (state) {
         case OFF: return "Off";
         case ON: return "On";
-        case MOTIONSENSOR: return "Motion Sensor";
+        case MOTION_SENSOR: return "Motion Sensor";
         default: return "Unknown";
     }
 }
@@ -97,7 +97,7 @@ void Start_LampState_Task(void const *argument) {
 	            	APP_LOG(TS_OFF, VLEVEL_M, "Lamp on\r\n");
 	                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
 	                break;
-	            case MOTIONSENSOR:
+	            case MOTION_SENSOR:
 	            	APP_LOG(TS_OFF, VLEVEL_M, "Select motion sensor!\r\n");
 	                break;
 	        }
