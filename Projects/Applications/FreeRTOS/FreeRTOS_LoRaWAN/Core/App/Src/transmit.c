@@ -48,7 +48,7 @@ void Tx_Set_Buffer(const Identifier identifier, const uint8_t subtype, const uin
 void Tx_Set_Ack(const InstructionSubtype instruction)
 {
 	const uint8_t params[] = { instruction };
-	Tx_Set_Buffer(RESPONSE_OUT, INSTRUCTION_COMPLETED, &params, 1);
+	Tx_Set_Buffer(RESPONSE_OUT, INSTRUCTION_COMPLETED, (const uint8_t* const)&params, 1);
 }
 
 void Tx_Transmit_Data(void)

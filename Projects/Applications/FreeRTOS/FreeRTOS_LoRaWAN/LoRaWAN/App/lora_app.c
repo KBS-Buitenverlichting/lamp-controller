@@ -164,19 +164,19 @@ static UTIL_TIMER_Object_t TxTimer;
 
 /* USER CODE BEGIN PV */
 /**
-  * @brief User application buffer
+  * @brief User application buffer (UNUSED)
   */
-static uint8_t AppDataBuffer[LORAWAN_APP_DATA_BUFFER_MAX_SIZE];
+//static uint8_t AppDataBuffer[LORAWAN_APP_DATA_BUFFER_MAX_SIZE];
 
 /**
-  * @brief User application data structure
+  * @brief User application data structure (UNUSED)
   */
-static LmHandlerAppData_t AppData = { 0, 0, AppDataBuffer };
+//static LmHandlerAppData_t AppData = { 0, 0, AppDataBuffer };
 
 /**
-  * @brief Specifies the state of the application LED
+  * @brief Specifies the state of the application LED (UNUSED)
   */
-static uint8_t AppLedStateOn = RESET;
+//static uint8_t AppLedStateOn = RESET;
 
 /* Exported functions ---------------------------------------------------------*/
 /* USER CODE BEGIN EF */
