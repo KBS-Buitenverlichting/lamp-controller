@@ -122,12 +122,12 @@ void Handle_Set_Battery_Vrefs_Instruction(const uint8_t *const buffer, const uin
 
 	if (result != NO_WARNING)
 	{
-		const uint8_t params[] = { SET_BATTERY_VREF, result };
+		const uint8_t params[] = { SET_BATTERY_VREFS, result };
 		Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_WARNING, (const uint8_t* const)&params, sizeof(params));
 		return;
 	}
 
-	Tx_Set_Ack(SET_BATTERY_VREF);
+	Tx_Set_Ack(SET_BATTERY_VREFS);
 }
 
 void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
