@@ -37,7 +37,7 @@ LampState Get_State_LampState(void) {
     LampState copy = OFF;
     if (xSemaphoreTake(state_mutex, portMAX_DELAY) == pdTRUE) {
         copy = current_lamp_state;
-        xSemaphoreGive(StateMutex);
+        xSemaphoreGive(state_mutex);
     }
     return copy;
 }
@@ -70,7 +70,7 @@ uint8_t Get_Brightness(void) {
     uint8_t copy = MAX_BRIGHTNESS;
     if (xSemaphoreTake(state_mutex, portMAX_DELAY) == pdTRUE) {
         copy = current_brightness;
-        xSemaphoreGive(StateMutex);
+        xSemaphoreGive(state_mutex);
     }
     return copy;
 }

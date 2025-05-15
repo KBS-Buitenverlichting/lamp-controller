@@ -90,20 +90,20 @@ void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
         uint8_t month = buffer[7];   // 1–12
         uint8_t day = buffer[8];     // 1–31
 
-        const char *Weekday_Names[] = {"Forbidden", "Monday",   "Tuesday",
+        const char *weekday_names[] = {"Forbidden", "Monday",   "Tuesday",
                                        "Wednesday", "Thursday", "Friday",
                                        "Saturday",  "Sunday"};
 
-        const char *Weekday_Str = "Unknown";
+        const char *weekday_str = "Unknown";
 
-        if (Weekday <= 7) {
-          Weekday_Str = Weekday_Names[Weekday];
+        if (weekday <= 7) {
+          weekday_str = weekday_names[weekday];
         }
 
-        APP_LOG(TS_OFF, VLEVEL_M, "Time: %02u:%02u:%02u\r\n", Hour, Minute,
-                Second);
-        APP_LOG(TS_OFF, VLEVEL_M, "Date: %s %02u-%02u-%04u\r\n", Weekday_Str,
-                Day, Month, 2000 + Year);
+        APP_LOG(TS_OFF, VLEVEL_M, "Time: %02u:%02u:%02u\r\n", hour, minute,
+                second);
+        APP_LOG(TS_OFF, VLEVEL_M, "Date: %s %02u-%02u-%04u\r\n", weekday_str,
+                day, month, 2000 + year);
       }
       break;
     case SET_TIMESLOT:
