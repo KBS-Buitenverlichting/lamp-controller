@@ -90,19 +90,16 @@ void Start_LampState_Task(void const *argument) {
 
 	        switch (current_lamp_state) {
 	            case OFF:
-	            	APP_LOG(TS_OFF, VLEVEL_M, "Lamp off\r\n");
 	                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
 	                break;
 	            case ON:
-	            	APP_LOG(TS_OFF, VLEVEL_M, "Lamp on\r\n");
 	                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
 	                break;
 	            case MOTION_SENSOR:
-	            	APP_LOG(TS_OFF, VLEVEL_M, "Select motion sensor!\r\n");
 	                break;
+	            default:
+	            	break;
 	        }
-
-	        APP_LOG(TS_OFF, VLEVEL_M, "Lamp state changed to: %s\r\n", LampState_ToString(current_lamp_state));
 	    }
 
 	    // Check for brightness change
