@@ -49,14 +49,14 @@ typedef enum ResponseSubtypes
 	INSTRUCTION_COMPLETED = 0x00,
 	INVALID_DATA = 0x01,
 	MISSING_DATA = 0x02
-} ResponseSubtypes;
+} ResponseSubtype;
 
 typedef enum ResponseWithDataSubtypes
 {
 	RESPONDING_TO_INSTRUCTION = 0x00,
 	RESPONDING_TO_INSTRUCTION_WARNING = 0x01,
 	RESPONDING_TO_INSTRUCTION_ERROR = 0x02
-} ResponseWithDataSubtypes;
+} ResponseWithDataSubtype;
 
 typedef enum Warnings
 {
