@@ -5,10 +5,20 @@
  *      Author: jacco
  */
 
+#include <stdlib.h>
 #include "schedules.h"
 
 ScheduleList schedules = {0};
 
-void insertSchedule() {
-	// insert the schedule in the correct place based on start date/time
-};
+void Insert_Schedule_After(ScheduleNode* schedule, ScheduleNode* newSchedule) {
+	newSchedule->next = schedule->next;
+	schedule->next = newSchedule;
+	schedules.size++;
+}
+
+void Remove_Schedule(ScheduleNode* schedule) {
+	if (schedules.size > 1) {
+
+	}
+	schedules.size--;
+}

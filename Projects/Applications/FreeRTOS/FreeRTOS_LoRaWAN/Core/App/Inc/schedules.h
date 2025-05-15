@@ -37,5 +37,5 @@ typedef struct ScheduleList {
 	ScheduleNode* first;
 } ScheduleList;
 
-
-
+void Insert_Schedule_After(ScheduleNode* schedule, ScheduleNode* newSchedule);
+void Remove_Schedule(ScheduleNode* schedule);
