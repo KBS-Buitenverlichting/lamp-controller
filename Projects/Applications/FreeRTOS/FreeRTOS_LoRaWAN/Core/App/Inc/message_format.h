@@ -21,6 +21,7 @@
 // Instruction parameter byte counts
 #define BRIGHTNESS_PARAMS_BYTE_COUNT 1
 #define BATTERY_VREF_PARAMS_BYTE_COUNT 4
+#define TIME_DATE_BYTE_COUNT 9
 
 typedef enum Identifiers
 {
