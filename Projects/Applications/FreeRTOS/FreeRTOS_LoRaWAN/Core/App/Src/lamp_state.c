@@ -90,11 +90,15 @@ void Start_LampState_Task(void const *argument) {
 
 	        switch (current_lamp_state) {
 	            case OFF:
-	                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-	                break;
+//	                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+//	            	DAC->DHR8R1 = 0x00;
+	            	DAC->CR &= ~(DAC_CR_EN1);
+	            	break;
 	            case ON:
-	                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
-	                break;
+//	                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+//	            	DAC->DHR8R1 = 0x9B;
+	            	DAC->CR |= DAC_CR_EN1;
+	            	break;
 	            case MOTION_SENSOR:
 	                break;
 	            default:
