@@ -7,21 +7,35 @@
 
 #pragma once
 
-// #include "lamp_state.h"
+#include "lamp_state.h"
 #include "rtc.h"
 
-#define MAX_SCHEDULE_LIST_LENGTH 10
+#define SCHEDULE_LIST_MAX_LENGTH 10
+
+typedef enum ScheduleFuncStatus {
+	SCHEDULE_FUNC_OK,
+	SCHEDULE_FUNC_ERROR
+} ScheduleFuncStatus;
+
+// more size-efficient than the RTC TimeTypeDef and DateTypeDef types
+typedef struct ScheduleTimestamp {
+	uint8_t year;
+	uint8_t month;
+	uint8_t weekday;
+	uint8_t date;
+	uint8_t hours;
+	uint8_t minutes;
+	uint8_t seconds;
+} ScheduleTimestamp;
 
 typedef struct LampConfig {
-	// LampState lamp_state;
+	LampState lamp_state;
 	uint8_t brightness;
 } LampConfig;
 
 typedef struct Schedule {
-	RTC_DateTypeDef start_date;
-	RTC_TimeTypeDef start_time;
-	RTC_DateTypeDef end_date;
-	RTC_TimeTypeDef end_time;
+	ScheduleTimestamp time_start;
+	ScheduleTimestamp time_end;
 	LampConfig lamp_config;
 } Schedule;
 
@@ -37,5 +51,13 @@ typedef struct ScheduleList {
 	ScheduleNode* first;
 } ScheduleList;
 
-void Insert_Schedule_After(ScheduleNode* schedule, ScheduleNode* newSchedule);
-void Remove_Schedule(ScheduleNode* schedule);
+
+void ScheduleTimestamp_To_RTC_DateTime(const ScheduleTimestamp* const timestamp, RTC_DateTypeDef* const out_date, RTC_TimeTypeDef* const out_time);
+ScheduleTimestamp RTC_DateTime_To_ScheduleTimestamp(const RTC_DateTypeDef* const date, const RTC_TimeTypeDef* const time);
+
+
+Schedule Schedule_Get_First(void);
+ScheduleFuncStatus Schedule_Insert_First(Schedule new_schedule);
+ScheduleFuncStatus Schedule_Insert_After(ScheduleNode* schedule, ScheduleNode* newSchedule);
+ScheduleFuncStatus Schedule_Remove_First(void);
+ScheduleFuncStatus Schedule_Remove_After(ScheduleNode* schedule_node);
