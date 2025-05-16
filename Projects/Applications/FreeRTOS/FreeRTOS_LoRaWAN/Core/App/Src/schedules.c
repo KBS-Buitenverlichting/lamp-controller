@@ -8,9 +8,20 @@
 #include <stdlib.h>
 #include "schedules.h"
 
-ScheduleList schedules = {0};
+ScheduleList schedules = { 0 };
 
-void ScheduleTimestamp_To_RTC_DateTime(const ScheduleTimestamp* const timestamp, RTC_DateTypeDef* const out_date, RTC_TimeTypeDef* const out_time) {
+uint8_t ScheduleList_Get_Size(void) {
+	return schedules.size;
+}
+
+void ScheduleList_Clear(void) {
+	while (schedules.first != NULL) {
+		ScheduleList_Remove_First();
+	}
+}
+
+void ScheduleTimestamp_To_RTC_DateTime(const ScheduleTimestamp *const timestamp,
+		RTC_DateTypeDef *const out_date, RTC_TimeTypeDef *const out_time) {
 	out_date->Year = timestamp->year;
 	out_date->Month = timestamp->month;
 	out_date->WeekDay = timestamp->weekday;
@@ -21,40 +32,38 @@ void ScheduleTimestamp_To_RTC_DateTime(const ScheduleTimestamp* const timestamp,
 	out_time->Seconds = timestamp->seconds;
 }
 
-ScheduleTimestamp RTC_DateTime_To_ScheduleTimestamp(const RTC_DateTypeDef* const date, const RTC_TimeTypeDef* const time) {
-	ScheduleTimestamp timestamp = {
-		.year = date->Year,
-		.month = date->Month,
-		.weekday = date->WeekDay,
-		.date = date->Date,
-		.hours = time->Hours,
-		.minutes = time->Minutes,
-		.seconds = time->Seconds
-	};
+ScheduleTimestamp RTC_DateTime_To_ScheduleTimestamp(
+		const RTC_DateTypeDef *const date, const RTC_TimeTypeDef *const time) {
+	ScheduleTimestamp timestamp = { .year = date->Year, .month = date->Month,
+			.weekday = date->WeekDay, .date = date->Date, .hours = time->Hours,
+			.minutes = time->Minutes, .seconds = time->Seconds };
 	return timestamp;
 }
 
-Schedule Schedule_Get_First(void) {
-	return schedules.first->schedule;
+ScheduleNode* ScheduleList_Get_First_Node(void) {
+	return schedules.first;
 }
 
-ScheduleFuncStatus Schedule_Insert_First(Schedule new_schedule) {
+ScheduleFuncStatus ScheduleList_Insert_First(Schedule new_schedule) {
 	if (schedules.size == SCHEDULE_LIST_MAX_LENGTH) {
 		return SCHEDULE_FUNC_ERROR;
 	}
-	ScheduleNode* new_schedule_node = (ScheduleNode*) malloc(sizeof(ScheduleNode));
+	ScheduleNode *new_schedule_node = (ScheduleNode*) malloc(
+			sizeof(ScheduleNode));
 	new_schedule_node->schedule = new_schedule;
-	new_schedule_node->next = schedules->first;
-	schedules->first = new_schedule_node;
+	new_schedule_node->next = schedules.first;
+	schedules.first = new_schedule_node;
 	schedules.size++;
 	return SCHEDULE_FUNC_OK;
 }
 
-ScheduleFuncStatus Schedule_Insert_After(ScheduleNode* schedule_node, Schedule new_schedule) {
+ScheduleFuncStatus ScheduleList_Insert_After(ScheduleNode *schedule_node,
+		Schedule new_schedule) {
 	if (schedules.size == SCHEDULE_LIST_MAX_LENGTH) {
 		return SCHEDULE_FUNC_ERROR;
 	}
-	ScheduleNode* new_schedule_node = (ScheduleNode*) malloc(sizeof(ScheduleNode));
+	ScheduleNode *new_schedule_node = (ScheduleNode*) malloc(
+			sizeof(ScheduleNode));
 	new_schedule_node->schedule = new_schedule;
 	new_schedule_node->next = schedule_node->next;
 	schedule_node->next = new_schedule_node;
@@ -62,19 +71,19 @@ ScheduleFuncStatus Schedule_Insert_After(ScheduleNode* schedule_node, Schedule n
 	return SCHEDULE_FUNC_OK;
 }
 
-ScheduleFuncStatus Schedule_Remove_First(void) {
-	if (schedules->first == NULL) {
+ScheduleFuncStatus ScheduleList_Remove_First(void) {
+	if (schedules.first == NULL) {
 		return SCHEDULE_FUNC_ERROR;
 	}
-	ScheduleNode* node_to_remove = schedules->first;
-	schedules->first = schedules->first.next;
+	ScheduleNode *node_to_remove = schedules.first;
+	schedules.first = schedules.first->next;
 	free(node_to_remove);
 	schedules.size--;
 	return SCHEDULE_FUNC_OK;
 }
 
-ScheduleFuncStatus Schedule_Remove_After(ScheduleNode* schedule_node) {
-	ScheduleNode* node_to_remove = schedule_node->next;
+ScheduleFuncStatus ScheduleList_Remove_After(ScheduleNode *schedule_node) {
+	ScheduleNode *node_to_remove = schedule_node->next;
 	if (node_to_remove == NULL) {
 		return SCHEDULE_FUNC_ERROR;
 	}

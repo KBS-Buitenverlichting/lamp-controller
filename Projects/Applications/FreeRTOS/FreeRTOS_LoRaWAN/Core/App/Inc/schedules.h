@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "lamp_state.h"
 #include "rtc.h"
+#include "lamp_state.h"
 
 #define SCHEDULE_LIST_MAX_LENGTH 10
 
@@ -52,12 +52,14 @@ typedef struct ScheduleList {
 } ScheduleList;
 
 
+uint8_t ScheduleList_Get_Size(void);
+void ScheduleList_Clear(void);
+
 void ScheduleTimestamp_To_RTC_DateTime(const ScheduleTimestamp* const timestamp, RTC_DateTypeDef* const out_date, RTC_TimeTypeDef* const out_time);
 ScheduleTimestamp RTC_DateTime_To_ScheduleTimestamp(const RTC_DateTypeDef* const date, const RTC_TimeTypeDef* const time);
 
-
-Schedule Schedule_Get_First(void);
-ScheduleFuncStatus Schedule_Insert_First(Schedule new_schedule);
-ScheduleFuncStatus Schedule_Insert_After(ScheduleNode* schedule, ScheduleNode* newSchedule);
-ScheduleFuncStatus Schedule_Remove_First(void);
-ScheduleFuncStatus Schedule_Remove_After(ScheduleNode* schedule_node);
+ScheduleNode* ScheduleList_Get_First_Node(void);
+ScheduleFuncStatus ScheduleList_Insert_First(Schedule new_schedule);
+ScheduleFuncStatus ScheduleList_Insert_After(ScheduleNode* schedule_node, Schedule new_schedule);
+ScheduleFuncStatus ScheduleList_Remove_First(void);
+ScheduleFuncStatus ScheduleList_Remove_After(ScheduleNode* schedule_node);
