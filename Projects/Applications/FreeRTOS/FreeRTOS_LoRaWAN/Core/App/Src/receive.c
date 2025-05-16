@@ -1,6 +1,7 @@
 #include "receive.h"
 #include "lamp_state.h"
 #include "sys_app.h" // Used for APP_LOG to write output to serial
+#include "rtc.h"
 
 /// Brief: Handles incoming LoRaWAN data and calls message interpreter.
 void Process_Rx_Data(const LmHandlerAppData_t *const app_data,
@@ -137,32 +138,54 @@ void Handle_Set_Battery_Vrefs_Instruction(const uint8_t *const buffer, const uin
 void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
 	APP_LOG(TS_OFF, VLEVEL_M, "Sync time and date\r\n");
+
 	if (buffer_size < TIME_DATE_BYTE_COUNT) {
-        APP_LOG(TS_OFF, VLEVEL_M, "Time/date command input is to short!\r\n");
-    } else {
-        APP_LOG(TS_OFF, VLEVEL_M, "Update time/ date!\r\n");
+		APP_LOG(TS_OFF, VLEVEL_M, "Time/date command input is too short!\r\n");
+	} else {
+		APP_LOG(TS_OFF, VLEVEL_M, "Update time/date!\r\n");
 
-        uint8_t hour = buffer[2];
-        uint8_t minute = buffer[3];
-        uint8_t second = buffer[4];
-        uint8_t year = buffer[5];    // Assume offset from 2000
-        uint8_t weekday = buffer[6]; // 1 = Monday, 7 = Sunday
-        uint8_t month = buffer[7];   // 1–12
-        uint8_t day = buffer[8];     // 1–31
+		uint8_t hour = buffer[2];
+		uint8_t minute = buffer[3];
+		uint8_t second = buffer[4];
+		uint8_t year = buffer[5];    // Assume offset from 2000
+		uint8_t weekday = buffer[6]; // 1 = Monday, 7 = Sunday
+		uint8_t month = buffer[7];   // 1–12
+		uint8_t day = buffer[8];     // 1–31
 
-        const char *weekday_names[] = {"Forbidden", "Monday",   "Tuesday",
-                                       "Wednesday", "Thursday", "Friday",
-                                       "Saturday",  "Sunday"};
+		RTC_TimeTypeDef sTime = {0};
+		RTC_DateTypeDef sDate = {0};
 
-        const char *weekday_str = "Unknown";
+		sTime.Hours = buffer[2];
+		sTime.Minutes = buffer[3];
+		sTime.Seconds = buffer[4];
+		sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+		sTime.StoreOperation = RTC_STOREOPERATION_RESET;
 
-        if (weekday <= 7) {
-            weekday_str = weekday_names[weekday];
-        }
+		sDate.WeekDay = buffer[6];
+		sDate.Month = buffer[7];
+		sDate.Date = buffer[8];
+		sDate.Year = buffer[5];
 
-        APP_LOG(TS_OFF, VLEVEL_M, "Time: %02u:%02u:%02u\r\n", hour, minute, second);
-        APP_LOG(TS_OFF, VLEVEL_M, "Date: %s %02u-%02u-%04u\r\n", weekday_str, day, month, 2000 + year);
-    }
+		if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
+			APP_LOG(TS_OFF, VLEVEL_M, "Failed to set RTC time!\r\n");
+			Error_Handler();
+		}
+
+		if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {
+			APP_LOG(TS_OFF, VLEVEL_M, "Failed to set RTC date!\r\n");
+			Error_Handler();
+		}
+
+		const char *weekday_names[] = {"Forbidden", "Monday",   "Tuesday",
+									   "Wednesday", "Thursday", "Friday",
+									   "Saturday",  "Sunday"};
+
+		const char *weekday_str = (weekday <= 7) ? weekday_names[weekday] : "Unknown";
+
+		APP_LOG(TS_OFF, VLEVEL_M, "Time from TTN: %02u:%02u:%02u\r\n", hour, minute, second);
+		APP_LOG(TS_OFF, VLEVEL_M, "Date from TTN: %s %02u-%02u-%04u\r\n", weekday_str, day, month, 2000 + year);
+		Print_Current_RTC_Time();
+	}
 }
 
 void Handle_Set_Timeslot_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
@@ -178,4 +201,22 @@ void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_
 void Handle_Remove_Timeslot_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
 	APP_LOG(TS_OFF, VLEVEL_M, "Remove timeslot\r\n");
+}
+
+void Print_Current_RTC_Time(void)
+{
+    RTC_TimeTypeDef sTime;
+    RTC_DateTypeDef sDate;
+
+    HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+    HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+
+    APP_LOG(TS_OFF, VLEVEL_M, "RTC Now: %02u:%02u:%02u on %02u-%02u-%04u (Weekday %u)\r\n",
+            sTime.Hours,
+            sTime.Minutes,
+            sTime.Seconds,
+            sDate.Date,
+            sDate.Month,
+            2000 + sDate.Year,
+            sDate.WeekDay);
 }
