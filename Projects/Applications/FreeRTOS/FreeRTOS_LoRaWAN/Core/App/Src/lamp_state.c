@@ -7,7 +7,7 @@
 
 #include "lamp_state.h"
 
-#define MAX_BRIGHTNESS 255
+#define MAX_BRIGHTNESS UINT8_MAX
 #define MIN_BRIGHTNESS 0
 
 static LampState current_lamp_state = MOTION_SENSOR;
@@ -60,7 +60,7 @@ void Send_LampState(const LampState new_state) {
 }
 
 /// Brief: Sends a new brightness value to the queue.
-void Send_Brightness(const LampState brightness) {
+void Send_Brightness(const uint8_t brightness) {
     if (xQueueSend(brightness_queue, &brightness, 0) != pdPASS) {
         APP_LOG(TS_OFF, VLEVEL_M, "Failed to enqueue brightness\r\n");
     }
@@ -90,14 +90,10 @@ void Start_LampState_Task(void const *argument) {
 
 	        switch (current_lamp_state) {
 	            case OFF:
-//	                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-//	            	DAC->DHR8R1 = 0x00;
-	            	DAC->CR &= ~(DAC_CR_EN1);
+	                DAC_Disable();
 	            	break;
 	            case ON:
-//	                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
-//	            	DAC->DHR8R1 = 0x9B;
-	            	DAC->CR |= DAC_CR_EN1;
+	            	DAC_Enable();
 	            	break;
 	            case MOTION_SENSOR:
 	                break;
@@ -108,20 +104,12 @@ void Start_LampState_Task(void const *argument) {
 
 	    // Check for brightness change
 	    if (xQueueReceive(brightness_queue, &incoming_brightness, 0) == pdTRUE) {
-	    	if (incoming_brightness <= MESSAGE_MIN_BYTES) {
-	    		APP_LOG(TS_OFF, VLEVEL_M, "Brightness command does not include brightness\r\n");
-	    	}
-	        if (incoming_brightness > MAX_BRIGHTNESS) {
-	            incoming_brightness = MAX_BRIGHTNESS;
-	            APP_LOG(TS_OFF, VLEVEL_M, "Brightness outside range, brightness is now %u!\r\n", incoming_brightness);
-	        }
 	        if (xSemaphoreTake(state_mutex, portMAX_DELAY) == pdTRUE) {
 	            current_brightness = incoming_brightness;
-	            APP_LOG(TS_OFF, VLEVEL_M, "Change brightness to %u!\r\n", incoming_brightness);
 	            xSemaphoreGive(state_mutex);
 	        }
 
-	        APP_LOG(TS_OFF, VLEVEL_M, "Brightness changed to: %u\r\n", current_brightness);
+	        DAC_Set_Brightness(current_brightness);
 	    }
 
 	    osDelay(10);  // Give other tasks a chance
