@@ -7,7 +7,26 @@
 #pragma once
 
 #include "stdint.h"
+#include "transmit.h"
+#include "lora_app.h"
 
-void Transmit_Test_Init(void);
-uint8_t Tx_Reset_Buffer_Index_Test(void);
-uint8_t Tx_Add_Data_Test(void);
+/**
+ * @brief Tests the Tx_Clear_Buffer function
+ *
+ * @return if success 0 else the test case it failed on
+ */
+uint8_t Tx_Clear_Buffer_Test(void);
+
+/**
+ * @brief Tests the Tx_Set_Buffer function
+ *
+ * @return if success 0 else the test case it failed on
+ */
+uint8_t Tx_Set_Buffer_Test(void);
+
+/**
+ * @brief Tests the Tx_Set_Ack function
+ *
+ * @return if success 0 else the test case it failed on
+ */
+uint8_t Tx_Set_Ack_Test(void);
