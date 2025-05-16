@@ -55,7 +55,7 @@
 #include "secure-element.h"
 #include "secure-element-nvm.h"
 #include "se-identity.h"
-
+#include "variable_credentials.h"
 /* Private constants ---------------------------------------------------------*/
 /*!
  * MIC computation offset
