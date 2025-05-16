@@ -21,6 +21,7 @@
 // Instruction parameter byte counts
 #define BRIGHTNESS_PARAMS_BYTE_COUNT 1
 #define BATTERY_VREF_PARAMS_BYTE_COUNT 4
+#define TIME_DATE_BYTE_COUNT 9
 
 typedef enum Identifiers
 {
@@ -37,11 +38,10 @@ typedef enum InstructionSubtypes
 	ACTIVATE_MOTION_SENSOR = 0x02,
 	CHANGE_BRIGHTNESS = 0x03,
 	SEND_BATTERY_STATUS = 0x04,
-	SET_BATTERY_VREF = 0x05,
+	SET_BATTERY_VREFS = 0x05,
 	SYNCHRONIZE_TIME_AND_DATE = 0x06,
 	SET_TIMESLOT = 0x07,
 	SHOW_TIMETABLE = 0x08,
-	CHANGE_TIMESLOT = 0x09,
 	REMOVE_TIMESLOT = 0x0A
 } InstructionSubtype;
 
@@ -50,14 +50,14 @@ typedef enum ResponseSubtypes
 	INSTRUCTION_COMPLETED = 0x00,
 	INVALID_DATA = 0x01,
 	MISSING_DATA = 0x02
-} ResponseSubtypes;
+} ResponseSubtype;
 
 typedef enum ResponseWithDataSubtypes
 {
 	RESPONDING_TO_INSTRUCTION = 0x00,
 	RESPONDING_TO_INSTRUCTION_WARNING = 0x01,
 	RESPONDING_TO_INSTRUCTION_ERROR = 0x02
-} ResponseWithDataSubtypes;
+} ResponseWithDataSubtype;
 
 typedef enum Warnings
 {

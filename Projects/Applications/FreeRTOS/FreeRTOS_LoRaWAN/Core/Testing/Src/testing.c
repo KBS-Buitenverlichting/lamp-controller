@@ -30,4 +30,6 @@ void Main_Test(void)
 			APP_LOG(TS_OFF, VLEVEL_M, "Test %d failed on test case %d\r\n", i, result);
 		}
 	}
+
+	APP_LOG(TS_OFF, VLEVEL_M, "Finished unit tests\r\n");
 }
