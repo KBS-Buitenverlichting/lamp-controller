@@ -33,13 +33,16 @@ void DAC_Init(void)
 
 void DAC_Set_Value(const uint16_t value)
 {
-	if (value > VREF)
+	uint16_t max_vref;
+	Get_Batter_Vref(NULL, &max_vref);
+
+	if (value > max_vref)
 	{
 		Error_Handler();
 		return;
 	}
 	/* Normalize from range [0, 3300] to [0, 4096] (convert from voltage to register value) */
-	const uint16_t normalized = (((uint32_t)value * DAC_MAX) / VREF);
+	const uint16_t normalized = (((uint32_t)value * DAC_MAX) / max_vref);
 	DAC->DHR12R1 = (normalized & DAC_DHR12R1_DACC1DHR);
 }
 

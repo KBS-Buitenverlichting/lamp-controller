@@ -12,6 +12,14 @@
 #include "transmit.h"
 
 /**
+ * @brief Returns the set battery voltage references
+ *
+ * @param[out] min_vref The minimum voltage reference
+ * @param[out] max_vref The maximum voltage reference
+ */
+Warning Get_Battery_Vref(uint16_t* const min_vref_out, uint16_t* const max_vref_out);
+
+/**
  * @brief Sets the battery voltages references
  *
  * @param min_vref The minimum voltage reference

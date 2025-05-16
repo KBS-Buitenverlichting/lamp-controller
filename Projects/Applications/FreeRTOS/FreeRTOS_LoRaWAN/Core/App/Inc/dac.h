@@ -13,7 +13,6 @@
 
 
 #define DAC_MAX 4096
-#define VREF 3300 // 3.3V
 #define LED_VMIN 1700 // 1.7V
 #define LED_VMAX 2000 // 2.0V
 

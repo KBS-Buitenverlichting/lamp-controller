@@ -10,6 +10,19 @@ static uint16_t battery_min_vref = 0; // Battery voltage when empty
 static uint16_t battery_max_vref = UINT16_MAX; // Battery voltage when full
 static bool vrefs_initialized = false; // Keeps track of if the voltage vrefs have been initialized
 
+void Get_Battery_Vref(uint16_t* const min_vref_out, uint16_t* const max_vref_out)
+{
+	if (min_vref_out != NULL)
+	{
+		*min_vref_out = battery_min_vref;
+	}
+
+	if (max_vref_out != NULL)
+	{
+		*max_vref_out = battery_max_vref;
+	}
+}
+
 Warning Set_Battery_Vref(const uint16_t min_vref, const uint16_t max_vref)
 {
 	battery_min_vref = min_vref;

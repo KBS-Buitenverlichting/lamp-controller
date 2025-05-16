@@ -94,6 +94,13 @@ void Handle_Change_Brightness_Instruction(const uint8_t *const buffer, const uin
 		return;
 	}
 
+	if (!Vrefs_Initialized())
+	{
+		const uint8_t params[] = { CHANGE_BRIGHTNESS, VREFS_NOT_INITIALIZED };
+		Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
+		return;
+	}
+
 	APP_LOG(TS_OFF, VLEVEL_M, "brightness: %u\r\n", buffer[PARAMETERS_START_BYTE]);
 
 	Send_Brightness(buffer[PARAMETERS_START_BYTE]);
