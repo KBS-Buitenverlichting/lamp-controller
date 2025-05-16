@@ -45,7 +45,7 @@ void rx_done(uint8_t *rxChar, uint16_t size, uint8_t error);
 void tx_done(void *arg);
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "serial_interface.h"
+#include "serial_eui_setter.h"
 #include "usart_if.h"
 /* USER CODE END Includes */
 
