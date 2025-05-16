@@ -103,14 +103,13 @@ uint8_t Test_Schedules_Insert_First(void) {
 	ScheduleList_Clear();
 	Schedule schedule = Create_Test_Schedule();
 	// test
-	if (!(ScheduleList_Insert_First(schedule) == SCHEDULE_FUNC_OK)) {
+	if (ScheduleList_Insert_First(schedule) != SCHEDULE_FUNC_OK) {
 		return 11; // fail on test case 1-1
 	}
-	if (ScheduleList_Get_Size() == 1) {
-		return 0;
-	} else {
+	if (ScheduleList_Get_Size() != 1) {
 		return 12; // fail on test case 1-2
 	}
+	return 0;
 }
 
 uint8_t Test_Schedules_Insert_First_List_Full(void) {
@@ -130,6 +129,22 @@ uint8_t Test_Schedules_Insert_First_List_Full(void) {
 	}
 
 	if(ScheduleList_Get_Size() != SCHEDULE_LIST_MAX_LENGTH) {
+		return 12; // fail on test case 1-2
+	}
+	return 0;
+}
+
+uint8_t Test_Schedules_Insert_After(void) {
+	// setup
+	ScheduleList_Clear();
+	Schedule schedule = Create_Test_Schedule();
+	ScheduleList_Insert_First(schedule);
+	schedule.time_end.hours++;
+	// test
+	if (ScheduleList_Insert_After(ScheduleList_Get_First_Node(), schedule) != SCHEDULE_FUNC_OK) {
+		return 11; // fail on test case 1-1
+	}
+	if (ScheduleList_Get_Size() != 2) {
 		return 12; // fail on test case 1-2
 	}
 	return 0;

@@ -15,5 +15,6 @@ uint8_t Test_Schedules_RTC_DateTime_To_ScheduleTimestamp(void);
 uint8_t Test_Schedules_Clear_ScheduleList(void);
 uint8_t Test_Schedules_Insert_First(void);
 uint8_t Test_Schedules_Insert_First_List_Full(void);
+uint8_t Test_Schedules_Insert_After(void);
 uint8_t Test_Schedules_Remove_From_Empty_List_Error(void);
 uint8_t Test_Schedules_Remove_After(void);

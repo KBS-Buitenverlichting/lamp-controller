@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include "schedules.h"
 
-ScheduleList schedules = { 0 };
+static ScheduleList schedules = { 0 };
 
 uint8_t ScheduleList_Get_Size(void) {
 	return schedules.size;
@@ -57,7 +57,7 @@ ScheduleFuncStatus ScheduleList_Insert_First(Schedule new_schedule) {
 	return SCHEDULE_FUNC_OK;
 }
 
-ScheduleFuncStatus ScheduleList_Insert_After(ScheduleNode *schedule_node,
+ScheduleFuncStatus ScheduleList_Insert_After(ScheduleNode * const schedule_node,
 		Schedule new_schedule) {
 	if (schedules.size == SCHEDULE_LIST_MAX_LENGTH) {
 		return SCHEDULE_FUNC_ERROR;
@@ -82,7 +82,7 @@ ScheduleFuncStatus ScheduleList_Remove_First(void) {
 	return SCHEDULE_FUNC_OK;
 }
 
-ScheduleFuncStatus ScheduleList_Remove_After(ScheduleNode *schedule_node) {
+ScheduleFuncStatus ScheduleList_Remove_After(ScheduleNode * const schedule_node) {
 	ScheduleNode *node_to_remove = schedule_node->next;
 	if (node_to_remove == NULL) {
 		return SCHEDULE_FUNC_ERROR;

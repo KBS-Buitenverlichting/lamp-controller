@@ -17,6 +17,7 @@ const uint8_t (*test_functions[])(void) = {
 	Test_Schedules_Clear_ScheduleList,
 	Test_Schedules_Insert_First,
 	Test_Schedules_Insert_First_List_Full,
+	Test_Schedules_Insert_After,
 	Test_Schedules_Remove_From_Empty_List_Error,
 	Test_Schedules_Remove_After
 };

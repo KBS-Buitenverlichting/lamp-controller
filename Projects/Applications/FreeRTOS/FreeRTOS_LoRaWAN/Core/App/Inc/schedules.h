@@ -60,6 +60,6 @@ ScheduleTimestamp RTC_DateTime_To_ScheduleTimestamp(const RTC_DateTypeDef* const
 
 ScheduleNode* ScheduleList_Get_First_Node(void);
 ScheduleFuncStatus ScheduleList_Insert_First(Schedule new_schedule);
-ScheduleFuncStatus ScheduleList_Insert_After(ScheduleNode* schedule_node, Schedule new_schedule);
+ScheduleFuncStatus ScheduleList_Insert_After(ScheduleNode* const schedule_node, Schedule new_schedule);
 ScheduleFuncStatus ScheduleList_Remove_First(void);
-ScheduleFuncStatus ScheduleList_Remove_After(ScheduleNode* schedule_node);
+ScheduleFuncStatus ScheduleList_Remove_After(ScheduleNode* const schedule_node);
