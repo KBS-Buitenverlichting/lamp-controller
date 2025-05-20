@@ -12,19 +12,18 @@ uint8_t joinEUI[] = { 0x09, 0x08, 0x07, 0x06, 0x05, 0x04, 0x02, 0x01 };
 uint8_t rx_buffer[RX_BUFFER_SIZE];
 uint8_t rx_buffer_index = 0;
 
-void set_devEUI(uint8_t *EUI) {
-	memcpy(devEUI, EUI, sizeof(devEUI));
-}
-
-void set_joinEUI(uint8_t *EUI) {
-	memcpy(joinEUI, EUI, sizeof(joinEUI));
-}
+typedef enum {
+    CMD_UNKNOWN,
+    CMD_DEVEUI,
+    CMD_JOINEUI
+} CommandType;
 
 void Print_Rx_Buffer(void) {
     if (rx_buffer_index > 0) {
-    	//vcom_Trace("Ontvangen: ", 11);
-        //vcom_Trace_DMA(rx_buffer, rx_buffer_index);
-    	Print_EUI("Join", joinEUI);
+    	vcom_Trace((uint8_t *)"Received: ", 10);
+        vcom_Trace(rx_buffer, rx_buffer_index);
+    	Print_EUI("DevEUI=", devEUI);
+    	Print_EUI("JoinEUI=", joinEUI);
         rx_buffer_index = 0;
     }
 }
@@ -34,6 +33,7 @@ void Add_To_Rx_Buffer(uint8_t *rxChar) {
         rx_buffer[rx_buffer_index++] = *rxChar;
 
         if (*rxChar == '\n') {
+            Interpret_Rx_Buffer();
             Print_Rx_Buffer();
         }
     } else {
@@ -44,44 +44,76 @@ void Add_To_Rx_Buffer(uint8_t *rxChar) {
 }
 
 void Print_EUI(const char *label, uint8_t *eui) {
-    char buffer[64];
+    static char buffer[64];
     int len = snprintf(buffer, sizeof(buffer),
-                       "%s: %02X%02X%02X%02X%02X%02X%02X%02X\r\n",
+                       "%s%02X%02X%02X%02X%02X%02X%02X%02X\r\n",
                        label,
                        eui[0], eui[1], eui[2], eui[3],
                        eui[4], eui[5], eui[6], eui[7]);
 
     if (len > 0 && len < sizeof(buffer)) {
-        vcom_Trace_DMA((uint8_t *)buffer, len);
+        vcom_Trace((uint8_t *)buffer, len);
     } else {
         const char *error = "Print_EUI: format overflow\r\n";
-        vcom_Trace_DMA((uint8_t *)error, strlen(error));
+        vcom_Trace((uint8_t *)error, strlen(error));
     }
 }
 
-/*
+void Interpret_Rx_Buffer(void) {
+    if (rx_buffer_index < 16) return;
+
+    CommandType cmdType = CMD_UNKNOWN;
+    char *hexStr = NULL;
+
+    if (strncmp((char *)rx_buffer, "DEVEUI=", 7) == 0) {
+        cmdType = CMD_DEVEUI;
+        hexStr = (char *)(rx_buffer + 7);
+    } else if (strncmp((char *)rx_buffer, "JOINEUI=", 8) == 0) {
+        cmdType = CMD_JOINEUI;
+        hexStr = (char *)(rx_buffer + 8);
+    }
+
+    switch (cmdType) {
+        case CMD_DEVEUI:
+            Handle_DevEUI_Command(hexStr);
+            break;
+        case CMD_JOINEUI:
+            Handle_JoinEUI_Command(hexStr);
+            break;
+        default:
+            vcom_Trace((uint8_t *)"Unknown command\r\n", 20);
+            break;
+    }
+}
+
 static uint8_t hex2byte(const char *hex) {
     uint8_t high = (isdigit(hex[0]) ? hex[0] - '0' : toupper(hex[0]) - 'A' + 10);
     uint8_t low  = (isdigit(hex[1]) ? hex[1] - '0' : toupper(hex[1]) - 'A' + 10);
     return (high << 4) | low;
 }
 
-void Interperet_Rx_Buffer(void) {
-    // Check of buffer de prefix DEVEUI= heeft (case sensitive)
-    if (rx_buffer_index < 14) return; // minimaal 6 + 16 chars + 1 (newline) ?
-
-    if (strncmp((char *)rx_buffer, "DEVEUI=", 7) == 0) {
-        // Daarna moeten 16 hex tekens volgen (8 bytes)
-        char *hexStr = (char *)(rx_buffer + 7);
-
-        uint8_t newDevEUI[8];
-        for (int i = 0; i < 8; i++) {
-            newDevEUI[i] = hex2byte(&hexStr[i * 2]);
-        }
-        set_devEUI(newDevEUI);
+static void Handle_DevEUI_Command(char *hexStr) {
+    uint8_t newDevEUI[8];
+    for (int i = 0; i < 8; i++) {
+        newDevEUI[i] = hex2byte(&hexStr[i * 2]);
     }
-
-    // reset buffer na interpretatie
-    rx_buffer_index = 0;
+    set_devEUI(newDevEUI);
+    Print_EUI("New DevEUI: ", devEUI);
 }
-*/
+
+static void Handle_JoinEUI_Command(char *hexStr) {
+    uint8_t newJoinEUI[8];
+    for (int i = 0; i < 8; i++) {
+        newJoinEUI[i] = hex2byte(&hexStr[i * 2]);
+    }
+    set_joinEUI(newJoinEUI);
+    Print_EUI("New JoinEUI: ", joinEUI);
+}
+
+void set_devEUI(uint8_t *EUI) {
+	memcpy(devEUI, EUI, sizeof(devEUI));
+}
+
+void set_joinEUI(uint8_t *EUI) {
+	memcpy(joinEUI, EUI, sizeof(joinEUI));
+}

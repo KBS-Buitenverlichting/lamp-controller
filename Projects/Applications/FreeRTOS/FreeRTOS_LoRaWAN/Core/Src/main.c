@@ -293,7 +293,7 @@ void rx_done(uint8_t *rxChar, uint16_t size, uint8_t error) {
 }
 
 void tx_done(void *arg) {
-	// TODO: implement
+	Print_Rx_Buffer();
 }
 
 /**
