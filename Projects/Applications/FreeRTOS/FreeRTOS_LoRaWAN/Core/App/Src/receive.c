@@ -2,6 +2,7 @@
 #include "lamp_state.h"
 #include "sys_app.h" // Used for APP_LOG to write output to serial
 #include "rtc.h"
+#include "stm32wlxx_hal_rtc.h"
 
 /// Brief: Handles incoming LoRaWAN data and calls message interpreter.
 void Process_Rx_Data(const LmHandlerAppData_t *const app_data,
@@ -144,6 +145,7 @@ void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, c
 
 	if (buffer_size < TIME_DATE_BYTE_COUNT) {
 		APP_LOG(TS_OFF, VLEVEL_M, "Time/date command input is too short!\r\n");
+		Tx_Set_Ack(MISSING_DATA);
 	} else {
 		APP_LOG(TS_OFF, VLEVEL_M, "Update time/date!\r\n");
 
@@ -163,15 +165,19 @@ void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, c
 
 		if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
 			APP_LOG(TS_OFF, VLEVEL_M, "Failed to set RTC time!\r\n");
+			const uint8_t params[] = { SYNCHRONIZE_TIME_AND_DATE, FAILED_TO_SET_RTC};
+			Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
 			Error_Handler();
 		}
 
 		if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {
 			APP_LOG(TS_OFF, VLEVEL_M, "Failed to set RTC date!\r\n");
+			const uint8_t params[] = { SYNCHRONIZE_TIME_AND_DATE, FAILED_TO_SET_RTC};
+			Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
 			Error_Handler();
 		}
-
-		Print_Current_RTC_Time();
+			Print_Current_RTC_Time();
+			Tx_Set_Ack(SYNCHRONIZE_TIME_AND_DATE);
 	}
 }
 
@@ -192,16 +198,16 @@ void Handle_Remove_Timeslot_Instruction(const uint8_t *const buffer, const uint8
 
 void Print_Current_RTC_Time(void)
 {
-	const char *weekday_names[] = {"Forbidden", "Monday",   "Tuesday",
-								   "Wednesday", "Thursday", "Friday",
-								   "Saturday",  "Sunday"};
-	const char *weekday_str = (sDate.WeekDay <= 7) ? weekday_names[weekday] : "Unknown";
-
-    RTC_TimeTypeDef sTime;
+	RTC_TimeTypeDef sTime;
     RTC_DateTypeDef sDate;
 
     HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
     HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+
+    const char *weekday_names[] = {"Forbidden", "Monday",   "Tuesday",
+    								   "Wednesday", "Thursday", "Friday",
+    								   "Saturday",  "Sunday"};
+    const char *weekday_str = (sDate.WeekDay <= 7) ? weekday_names[sDate.WeekDay] : "Unknown";
 
     APP_LOG(TS_OFF, VLEVEL_M, "RTC Now: %02u:%02u:%02u on %02u-%02u-%04u (Weekday %s)\r\n",
             sTime.Hours,
