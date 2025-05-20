@@ -16,6 +16,7 @@
 #include "semphr.h"
 #include "main.h"  // for GPIO control
 #include "dac.h"
+#include "transmit.h"
 
 typedef enum {
     OFF,

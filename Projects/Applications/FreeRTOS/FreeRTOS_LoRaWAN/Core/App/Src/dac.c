@@ -31,29 +31,31 @@ void DAC_Init(void)
 	DAC_Set_Brightness(UINT8_MAX);
 }
 
-void DAC_Set_Value(const uint16_t value)
+Warning DAC_Set_Value(uint16_t value)
 {
-	uint16_t max_vref;
-	Get_Batter_Vref(NULL, &max_vref);
+	const uint16_t battery_voltage = SYS_GetBatteryLevel();
+	Warning result = NO_WARNING;
 
-	if (value > max_vref)
+	if (value > battery_voltage)
 	{
-		Error_Handler();
-		return;
+		value = battery_voltage;
+		result = BATTERY_BELOW_LAMP_MAX_VDD;
 	}
+
 	/* Normalize from range [0, 3300] to [0, 4096] (convert from voltage to register value) */
-	const uint16_t normalized = (((uint32_t)value * DAC_MAX) / max_vref);
+	const uint16_t normalized = (((uint32_t)value * DAC_MAX) / battery_voltage);
 	DAC->DHR12R1 = (normalized & DAC_DHR12R1_DACC1DHR);
+
+	return result;
 }
 
-void DAC_Set_Brightness(const uint8_t brightness)
+Warning DAC_Set_Brightness(const uint8_t brightness)
 {
 	if (brightness == 0)
 	{
-		DAC_Set_Value(0);
-		return;
+		return DAC_Set_Value(0);
 	}
 	/* Normalize from range [0, 255] to [1700, 2000] (convert from digital value to voltage) */
 	const uint16_t normalized = (((uint32_t)brightness * (LED_VMAX - LED_VMIN)) / UINT8_MAX) + LED_VMIN;
-	DAC_Set_Value(normalized);
+	return DAC_Set_Value(normalized);
 }

@@ -9,8 +9,8 @@
 #include "stdint.h"
 #include "stm32wle5xx.h"
 #include "stm32wlxx_hal.h"
-#include "main.h"
-
+#include "adc_if.h"
+#include "transmit.h"
 
 #define DAC_MAX 4096
 #define LED_VMIN 1700 // 1.7V
@@ -33,12 +33,20 @@ void DAC_Init(void);
 
 /**
  * @brief Normalizes the input value to the stm voltage range and sets it in the DAC register
+ *
+ * @param value The voltage (in mv) to set
+ *
+ * @return A warning may be generated if 'value' is higher than the board its power supply
  */
-void DAC_Set_Value(const uint16_t value);
+Warning DAC_Set_Value(const uint16_t value);
 
 /**
  * @brief Normalizes the brightness to the led its voltage range and calls DAC_Set_Value to set the brightness
  *
+ * @param brightness The brightness to set, where 255 is 100%
+ *
+ * @return A warning may be generated in DAC_Set_Brightness, this will be passed on
+ *
  * @see DAC_Set_Value
  */
-void DAC_Set_Brightness(const uint8_t brightness);
+Warning DAC_Set_Brightness(const uint8_t brightness);

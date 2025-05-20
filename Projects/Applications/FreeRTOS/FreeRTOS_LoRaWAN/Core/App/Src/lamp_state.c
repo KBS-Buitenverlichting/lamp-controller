@@ -109,7 +109,14 @@ void Start_LampState_Task(void const *argument) {
 	            xSemaphoreGive(state_mutex);
 	        }
 
-	        DAC_Set_Brightness(current_brightness);
+	        Warning result = DAC_Set_Brightness(current_brightness);
+
+	    	if (result != NO_WARNING)
+	    	{
+	    		const uint8_t params[] = { CHANGE_BRIGHTNESS, result };
+	    		Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_WARNING, (const uint8_t* const)&params, sizeof(params));
+	    		return;
+	    	}
 	    }
 
 	    osDelay(10);  // Give other tasks a chance
