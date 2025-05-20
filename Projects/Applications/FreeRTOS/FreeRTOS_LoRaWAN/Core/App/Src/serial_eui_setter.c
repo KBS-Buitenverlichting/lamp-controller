@@ -15,7 +15,8 @@ uint8_t rx_buffer_index = 0;
 typedef enum {
     CMD_UNKNOWN,
     CMD_DEVEUI,
-    CMD_JOINEUI
+    CMD_JOINEUI,
+	CMD_JOIN
 } CommandType;
 
 void Print_Rx_Buffer(void) {
@@ -60,17 +61,23 @@ void Print_EUI(const char *label, uint8_t *eui) {
 }
 
 void Interpret_Rx_Buffer(void) {
-    if (rx_buffer_index < 16) return;
+    if (rx_buffer_index < 2 || rx_buffer[0] != '!') {
+        return;
+    }
+
+    char *cmdStart = (char *)(rx_buffer + 1);
 
     CommandType cmdType = CMD_UNKNOWN;
     char *hexStr = NULL;
 
-    if (strncmp((char *)rx_buffer, "DEVEUI=", 7) == 0) {
+    if (strncmp(cmdStart, "DEVEUI=", 7) == 0) {
         cmdType = CMD_DEVEUI;
         hexStr = (char *)(rx_buffer + 7);
-    } else if (strncmp((char *)rx_buffer, "JOINEUI=", 8) == 0) {
+    } else if (strncmp(cmdStart, "JOINEUI=", 8) == 0) {
         cmdType = CMD_JOINEUI;
         hexStr = (char *)(rx_buffer + 8);
+    } else if (strncmp(cmdStart, "JOIN", 4) == 0) {
+        cmdType = CMD_JOIN;
     }
 
     switch (cmdType) {
@@ -80,6 +87,9 @@ void Interpret_Rx_Buffer(void) {
         case CMD_JOINEUI:
             Handle_JoinEUI_Command(hexStr);
             break;
+        case CMD_JOIN:
+        	Handle_Join_Command();
+        	break;
         default:
             vcom_Trace((uint8_t *)"Unknown command\r\n", 20);
             break;
@@ -108,6 +118,11 @@ static void Handle_JoinEUI_Command(char *hexStr) {
     }
     set_joinEUI(newJoinEUI);
     Print_EUI("New JoinEUI: ", joinEUI);
+}
+
+void Handle_Join_Command(void) {
+	LmHandlerJoin(2);
+	vcom_Trace((uint8_t *)"Try join\r\n", 10);
 }
 
 void set_devEUI(uint8_t *EUI) {

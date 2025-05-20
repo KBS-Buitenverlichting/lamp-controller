@@ -13,6 +13,7 @@
 #include "usart.h"
 #include "sys_app.h"
 #include "variable_credentials.h"
+#include "LmHandler.h"
 
 #define RX_BUFFER_SIZE 64
 
@@ -23,5 +24,6 @@ void Print_EUI(const char *label, uint8_t *eui);
 static uint8_t hex2byte(const char *hex);
 static void Handle_DevEUI_Command(char *hexStr);
 static void Handle_JoinEUI_Command(char *hexStr);
+void Handle_Join_Command(void);
 void set_devEUI(uint8_t *EUI);
 void set_joinEUI(uint8_t *EUI);
