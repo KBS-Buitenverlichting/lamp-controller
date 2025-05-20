@@ -42,7 +42,7 @@ static void MX_LPTIM1_Init(void);
 /* USER CODE BEGIN PFP */
 int32_t LED_control(int value);
 void Lamp_GPIO_Init(void);
-void MotionSensor_GPIO_Init(void);
+void Motion_Sensor_GPIO_Init(void);
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -112,7 +112,7 @@ int main(void) {
 	MX_GPIO_Init();
 	MX_LPTIM1_Init();
 	Lamp_GPIO_Init();
-	MotionSensor_GPIO_Init();
+	Motion_Sensor_GPIO_Init();
 	LampState_Init();
 	/* USER CODE END SysInit */
 
@@ -253,7 +253,7 @@ void Lamp_GPIO_Init(void) {
 	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 
-void MotionSensor_GPIO_Init(void) {
+void Motion_Sensor_GPIO_Init(void) {
 	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
 
 	/* GPIO Ports Clock Enable */
