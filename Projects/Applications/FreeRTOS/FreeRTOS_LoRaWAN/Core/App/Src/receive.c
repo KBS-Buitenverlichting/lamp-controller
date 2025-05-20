@@ -67,18 +67,21 @@ void Handle_Lamp_Off_Instruction(const uint8_t *const buffer, const uint8_t buff
 {
 	APP_LOG(TS_OFF, VLEVEL_M, "Lamp off\r\n");
 	Send_LampState(OFF);
+	Tx_Set_Ack(LAMP_OFF);
 }
 
 void Handle_Lamp_On_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
 	APP_LOG(TS_OFF, VLEVEL_M, "Lamp on\r\n");
 	Send_LampState(ON);
+	Tx_Set_Ack(LAMP_ON);
 }
 
 void Handle_Activate_Motion_Sensor_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
 	APP_LOG(TS_OFF, VLEVEL_M, "Select motion sensor\r\n");
 	Send_LampState(MOTION_SENSOR);
+	Tx_Set_Ack(ACTIVATE_MOTION_SENSOR);
 }
 
 void Handle_Change_Brightness_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
