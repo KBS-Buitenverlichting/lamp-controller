@@ -22,11 +22,14 @@ typedef enum {
     MOTION_SENSOR
 }LampState;
 
+extern SemaphoreHandle_t sem_motion_sensor_signal;
+
 void LampState_Init(void);
 void Send_LampState(const LampState new_state);
 LampState Get_State_LampState(void);
 const char* LampState_ToString(const LampState state);
 void Start_LampState_Task(void const *argument);
+void Start_Motion_Sensor_Task(void const *argument);
 void Send_Brightness(const LampState brightness);
 uint8_t Get_Brightness(void);
 

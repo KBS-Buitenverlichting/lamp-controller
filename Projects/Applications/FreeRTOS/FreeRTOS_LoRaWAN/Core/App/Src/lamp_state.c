@@ -17,9 +17,12 @@ static SemaphoreHandle_t state_mutex;
 static QueueHandle_t lamp_state_queue;
 static QueueHandle_t brightness_queue;
 
+SemaphoreHandle_t sem_motion_sensor_signal;
+
 ///Brief: Initializes lamp state and brightness queues and mutex.
 void LampState_Init(void) {
     state_mutex = xSemaphoreCreateMutex();
+    sem_motion_sensor_signal = xSemaphoreCreateBinary();
     lamp_state_queue = xQueueCreate(5, sizeof(LampState));  // queue size = 5 messages
     brightness_queue = xQueueCreate(5, sizeof(uint8_t));
 
@@ -96,6 +99,7 @@ void Start_LampState_Task(void const *argument) {
 	                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
 	                break;
 	            case MOTION_SENSOR:
+					// handled in interrupt
 	                break;
 	            default:
 	            	break;
@@ -121,5 +125,20 @@ void Start_LampState_Task(void const *argument) {
 	    }
 
 	    osDelay(10);  // Give other tasks a chance
+	}
+}
+
+void Start_Motion_Sensor_Task(void const *argument) {
+	for (;;) {
+		if (xSemaphoreTake(sem_motion_sensor_signal, portMAX_DELAY) != pdTRUE) {
+			Error_Handler();
+		}
+		if(Get_State_LampState() == MOTION_SENSOR) {
+			if (GPIOA->IDR & GPIO_PIN_0) {
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+			} else {
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+			}
+		}
 	}
 }
