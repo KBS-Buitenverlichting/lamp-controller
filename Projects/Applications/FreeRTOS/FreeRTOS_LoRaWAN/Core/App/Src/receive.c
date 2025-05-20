@@ -144,14 +144,6 @@ void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, c
 	} else {
 		APP_LOG(TS_OFF, VLEVEL_M, "Update time/date!\r\n");
 
-		uint8_t hour = buffer[2];
-		uint8_t minute = buffer[3];
-		uint8_t second = buffer[4];
-		uint8_t year = buffer[5];    // Assume offset from 2000
-		uint8_t weekday = buffer[6]; // 1 = Monday, 7 = Sunday
-		uint8_t month = buffer[7];   // 1–12
-		uint8_t day = buffer[8];     // 1–31
-
 		RTC_TimeTypeDef sTime = {0};
 		RTC_DateTypeDef sDate = {0};
 
@@ -176,14 +168,6 @@ void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, c
 			Error_Handler();
 		}
 
-		const char *weekday_names[] = {"Forbidden", "Monday",   "Tuesday",
-									   "Wednesday", "Thursday", "Friday",
-									   "Saturday",  "Sunday"};
-
-		const char *weekday_str = (weekday <= 7) ? weekday_names[weekday] : "Unknown";
-
-		APP_LOG(TS_OFF, VLEVEL_M, "Time from TTN: %02u:%02u:%02u\r\n", hour, minute, second);
-		APP_LOG(TS_OFF, VLEVEL_M, "Date from TTN: %s %02u-%02u-%04u\r\n", weekday_str, day, month, 2000 + year);
 		Print_Current_RTC_Time();
 	}
 }
@@ -205,18 +189,23 @@ void Handle_Remove_Timeslot_Instruction(const uint8_t *const buffer, const uint8
 
 void Print_Current_RTC_Time(void)
 {
+	const char *weekday_names[] = {"Forbidden", "Monday",   "Tuesday",
+								   "Wednesday", "Thursday", "Friday",
+								   "Saturday",  "Sunday"};
+	const char *weekday_str = (sDate.WeekDay <= 7) ? weekday_names[weekday] : "Unknown";
+
     RTC_TimeTypeDef sTime;
     RTC_DateTypeDef sDate;
 
     HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
     HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
 
-    APP_LOG(TS_OFF, VLEVEL_M, "RTC Now: %02u:%02u:%02u on %02u-%02u-%04u (Weekday %u)\r\n",
+    APP_LOG(TS_OFF, VLEVEL_M, "RTC Now: %02u:%02u:%02u on %02u-%02u-%04u (Weekday %s)\r\n",
             sTime.Hours,
             sTime.Minutes,
             sTime.Seconds,
             sDate.Date,
             sDate.Month,
             2000 + sDate.Year,
-            sDate.WeekDay);
+            weekday_str);
 }
