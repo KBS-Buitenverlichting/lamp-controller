@@ -22,6 +22,13 @@ typedef enum {
     MOTION_SENSOR
 }LampState;
 
+typedef struct LampConfig {
+	LampState lamp_state;
+	uint8_t brightness;
+} LampConfig;
+
+extern LampConfig previous_lamp_config;
+
 void LampState_Init(void);
 void Send_LampState(const LampState new_state);
 LampState Get_State_LampState(void);

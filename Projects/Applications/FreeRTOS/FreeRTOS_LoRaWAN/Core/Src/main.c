@@ -23,6 +23,7 @@
 #include "app_lorawan.h"
 #include "sys_app.h"
 #include "lamp_state.h"
+#include "schedules.h"
 
 #ifdef TESTING
 #include "testing.h"
@@ -122,6 +123,9 @@ int main(void) {
 	LoRaWAN_TaskHandle = osThreadCreate(osThread(LoRaWAN_Task), NULL);
 	osThreadDef(LampStateTask, Start_LampState_Task, osPriorityNormal, 0, 256);
 	osThreadCreate(osThread(LampStateTask), NULL);
+
+	osThreadDef(ProcessSchedulesTask, Start_Process_Schedules_Task, osPriorityNormal, 0, 256);
+	osThreadCreate(osThread(ProcessSchedulesTask), NULL);
 	osKernelStart();
 	/* USER CODE END 2 */
 #endif

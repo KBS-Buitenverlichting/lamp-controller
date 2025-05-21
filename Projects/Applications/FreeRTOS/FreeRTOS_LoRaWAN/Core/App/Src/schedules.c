@@ -8,7 +8,24 @@
 #include <stdlib.h>
 #include "schedules.h"
 
+SemaphoreHandle_t sem_process_alarm;
 static ScheduleList schedules = { 0 };
+
+void ScheduleList_Init();
+
+void Start_Process_Schedules_Task(void const *argument) {
+	ScheduleList_Init();
+	for(;;) {
+		if(xSemaphoreTake(sem_process_alarm, portMAX_DELAY) != pdPASS) {
+
+		}
+	}
+}
+
+void ScheduleList_Init() {
+	ScheduleList_Clear();
+	sem_process_alarm = xSemaphoreCreateBinary();
+}
 
 uint8_t ScheduleList_Get_Size(void) {
 	return schedules.size;

@@ -30,7 +30,7 @@
 #include "sys_app.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "schedules.h"
 /* USER CODE END Includes */
 
 /* External variables ---------------------------------------------------------*/
@@ -388,27 +388,8 @@ void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
 
 // alarm used for scheduling
 void HAL_RTCEx_AlarmBEventCallback(RTC_HandleTypeDef *hrtc) {
-	RTC_AlarmTypeDef alarm_b = {0};
-	RTC_TimeTypeDef cur_time = {0};
-
-	// test code
-	HAL_RTC_GetTime(hrtc, &cur_time, FORMAT_BIN);
-
-	HAL_RTC_GetAlarm(hrtc, &alarm_b, RTC_ALARM_B, FORMAT_BIN);
-#ifndef TESTING
-	APP_PRINTF("The alarm went off at %u minutes and %u seconds\n", cur_time.Minutes, cur_time.Seconds);
-#endif
-	alarm_b.AlarmTime.Seconds = cur_time.Seconds + 20;
-
-	if (alarm_b.AlarmTime.Seconds >= 60) {
-		alarm_b.AlarmTime.Seconds = 10;
-	}
-
-	alarm_b.AlarmMask = RTC_ALARMMASK_DATEWEEKDAY | RTC_ALARMMASK_HOURS | RTC_ALARMMASK_MINUTES;
-
-
-	while (HAL_RTC_SetAlarm_IT(hrtc, &alarm_b, FORMAT_BIN) != HAL_OK) {
-	}
+	// give semaphore
+	xSemaphoreGiveFromISR(sem_process_alarm, NULL);
 }
 
 void HAL_RTCEx_SSRUEventCallback(RTC_HandleTypeDef *hrtc)

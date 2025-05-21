@@ -10,6 +10,8 @@
 #define MAX_BRIGHTNESS 255
 #define MIN_BRIGHTNESS 0
 
+LampConfig previous_lamp_config = {MOTION_SENSOR, 255};
+
 static LampState current_lamp_state = MOTION_SENSOR;
 static uint8_t current_brightness = MAX_BRIGHTNESS;
 
