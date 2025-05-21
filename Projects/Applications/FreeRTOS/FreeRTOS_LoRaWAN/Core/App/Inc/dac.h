@@ -11,6 +11,7 @@
 #include "stm32wlxx_hal.h"
 #include "adc_if.h"
 #include "transmit.h"
+#include "lamp_state.h"
 
 #define DAC_MAX 4096
 #define LED_VMIN 1700 // 1.7V

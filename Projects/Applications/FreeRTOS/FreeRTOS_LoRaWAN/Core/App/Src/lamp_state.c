@@ -84,6 +84,9 @@ void Start_LampState_Task(void const *argument) {
 	LampState incoming_state;
 	uint8_t incoming_brightness;
 
+	// Initialize DAC (runs on PA10)
+	DAC_Init();
+
 	for (;;) {
 	    // Check for state change
 	    if (xQueueReceive(lamp_state_queue, &incoming_state, 0) == pdTRUE) {
@@ -100,6 +103,7 @@ void Start_LampState_Task(void const *argument) {
 	            	DAC_Enable();
 	            	break;
 	            case MOTION_SENSOR:
+	            	xSemaphoreGive(sem_motion_sensor_signal);
 					// handled in interrupt
 	                break;
 	            default:
@@ -135,9 +139,10 @@ void Start_Motion_Sensor_Task(void const *argument) {
 		}
 		if(Get_State_LampState() == MOTION_SENSOR) {
 			if (GPIOA->IDR & GPIO_PIN_0) {
-				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+				DAC_Enable();
+				DAC_Set_Brightness(Get_Brightness());
 			} else {
-				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+				DAC_Disable();
 			}
 		}
 	}
