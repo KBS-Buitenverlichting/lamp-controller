@@ -1288,7 +1288,6 @@ LmHandlerErrorStatus_t LmHandlerGetDevEUI(uint8_t *devEUI)
 
 LmHandlerErrorStatus_t LmHandlerSetDevEUI(uint8_t *devEUI)
 {
-#if ( STATIC_DEVICE_EUI != 1 )
     MibRequestConfirm_t mibReq;
 
     /* Not yet joined */
@@ -1307,9 +1306,6 @@ LmHandlerErrorStatus_t LmHandlerSetDevEUI(uint8_t *devEUI)
         /* Cannot change Keys in running state */
         return LORAMAC_HANDLER_ERROR;
     }
-#else /* STATIC_DEVICE_EUI == 1 */
-    return LORAMAC_HANDLER_ERROR;
-#endif /* STATIC_DEVICE_EUI */
 }
 
 LmHandlerErrorStatus_t LmHandlerGetAppEUI(uint8_t *appEUI)

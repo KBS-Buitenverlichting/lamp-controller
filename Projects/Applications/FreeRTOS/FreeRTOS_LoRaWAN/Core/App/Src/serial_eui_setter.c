@@ -126,9 +126,15 @@ void Handle_Join_Command(void) {
 }
 
 void set_devEUI(uint8_t *EUI) {
-	memcpy(devEUI, EUI, sizeof(devEUI));
+	//memcpy(devEUI, EUI, sizeof(devEUI));
+	LmHandlerStop();
+	LmHandlerSetDevEUI(EUI);
+    LmHandlerGetDevEUI(devEUI);
 }
 
 void set_joinEUI(uint8_t *EUI) {
-	memcpy(joinEUI, EUI, sizeof(joinEUI));
+	//memcpy(joinEUI, EUI, sizeof(joinEUI));
+	LmHandlerStop();
+	LmHandlerSetAppEUI(EUI);
+    LmHandlerGetAppEUI(joinEUI);
 }
