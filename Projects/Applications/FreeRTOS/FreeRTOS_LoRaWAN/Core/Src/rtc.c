@@ -33,11 +33,12 @@ void RTC_Init_AlarmB(void) {
 	HAL_RTC_GetTime(&hrtc, &cur_time, FORMAT_BIN);
 
 	alarm_b.AlarmTime.SubSeconds = 0;
-	alarm_b.AlarmTime.Seconds = cur_time.Seconds + 10;
+	alarm_b.AlarmTime.Seconds = cur_time.Seconds + 3;
 
 
 	alarm_b.AlarmMask = RTC_ALARMMASK_DATEWEEKDAY | RTC_ALARMMASK_HOURS | RTC_ALARMMASK_MINUTES;
 	alarm_b.Alarm = RTC_ALARM_B;
+	HAL_NVIC_SetPriority(RTC_Alarm_IRQn, 6, 0);
 	if (HAL_RTC_SetAlarm_IT(&hrtc, &alarm_b, FORMAT_BIN) != HAL_OK) {
 		Error_Handler();
 	}
