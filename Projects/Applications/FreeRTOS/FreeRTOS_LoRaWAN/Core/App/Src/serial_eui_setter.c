@@ -6,6 +6,17 @@
  */
 #include "serial_eui_setter.h"
 
+static void Print_EUIs(void);
+static void Print_Rx_Buffer(void);
+static void Print_EUI(const char *label, uint8_t *eui);
+static bool Interpret_Rx_Buffer(void);
+static uint8_t hex2byte(const char *hex);
+static void Handle_DevEUI_Command(char *hexStr);
+static void Handle_JoinEUI_Command(char *hexStr);
+static void Handle_Join_Command(void);
+static bool set_devEUI(const uint8_t *EUI);
+static bool set_joinEUI(const uint8_t *EUI);
+
 // Below are the standard EUIs, note that these will be reverted to when a power cycle occurs
 uint8_t devEUI[] = { 0x70, 0xB3, 0xD5, 0x7E, 0xD0, 0x07, 0x02, 0x97 };
 uint8_t joinEUI[] = { 0x09, 0x08, 0x07, 0x06, 0x05, 0x04, 0x02, 0x01 };
@@ -20,14 +31,6 @@ typedef enum {
 	CMD_JOIN,		// !JOIN
 	CMD_PRINT		// !PRINT
 } CommandType;
-
-void Print_Rx_Buffer(void) {
-	if (rx_buffer_index > 0) {
-		vcom_Trace((uint8_t*) "Received: ", 10);
-		vcom_Trace(rx_buffer, rx_buffer_index);
-		rx_buffer_index = 0;
-	}
-}
 
 void Add_To_Rx_Buffer(uint8_t *rxChar) {
 	if (rx_buffer_index < RX_BUFFER_SIZE) {
@@ -45,7 +48,20 @@ void Add_To_Rx_Buffer(uint8_t *rxChar) {
 	}
 }
 
-void Print_EUI(const char *label, uint8_t *eui) {
+static void Print_EUIs(void) {
+	Print_EUI("DevEUI=", devEUI);
+	Print_EUI("JoinEUI=", joinEUI);
+}
+
+static void Print_Rx_Buffer(void) {
+	if (rx_buffer_index > 0) {
+		vcom_Trace((uint8_t*) "Received: ", 10);
+		vcom_Trace(rx_buffer, rx_buffer_index);
+		rx_buffer_index = 0;
+	}
+}
+
+static void Print_EUI(const char *label, uint8_t *eui) {
 	static char buffer[64];
 	int len = snprintf(buffer, sizeof(buffer),
 			"%s%02X%02X%02X%02X%02X%02X%02X%02X\r\n", label, eui[0], eui[1],
@@ -59,7 +75,7 @@ void Print_EUI(const char *label, uint8_t *eui) {
 	}
 }
 
-bool Interpret_Rx_Buffer(void) {
+static bool Interpret_Rx_Buffer(void) {
 	if (rx_buffer_index < 2 || rx_buffer[0] != '!') {
 		return false;
 	}
@@ -103,13 +119,13 @@ bool Interpret_Rx_Buffer(void) {
 	return true;
 }
 
-uint8_t hex2byte(const char *hex) {
+static uint8_t hex2byte(const char *hex) {
 	uint8_t high = (isdigit(hex[0]) ? hex[0] - '0' : toupper(hex[0]) - 'A' + 10);
 	uint8_t low = (isdigit(hex[1]) ? hex[1] - '0' : toupper(hex[1]) - 'A' + 10);
 	return (high << 4) | low;
 }
 
-void Handle_DevEUI_Command(char *hexStr) {
+static void Handle_DevEUI_Command(char *hexStr) {
 	uint8_t newDevEUI[8];
 	for (int i = 0; i < 8; i++) {
 		newDevEUI[i] = hex2byte(&hexStr[i * 2]);
@@ -122,7 +138,7 @@ void Handle_DevEUI_Command(char *hexStr) {
 	}
 }
 
-void Handle_JoinEUI_Command(char *hexStr) {
+static void Handle_JoinEUI_Command(char *hexStr) {
 	uint8_t newJoinEUI[8];
 	for (int i = 0; i < 8; i++) {
 		newJoinEUI[i] = hex2byte(&hexStr[i * 2]);
@@ -135,12 +151,12 @@ void Handle_JoinEUI_Command(char *hexStr) {
 	}
 }
 
-void Handle_Join_Command(void) {
+static void Handle_Join_Command(void) {
 	vcom_Trace((uint8_t*) "Trying join\r\n", 13);
 	LmHandlerJoin(LORAWAN_DEFAULT_ACTIVATION_TYPE);
 }
 
-bool set_devEUI(uint8_t *EUI) {
+static bool set_devEUI(const uint8_t *EUI) {
 	uint8_t tempEUI[8];
 	int attempts = 0;
 
@@ -163,7 +179,7 @@ bool set_devEUI(uint8_t *EUI) {
 	return false;
 }
 
-bool set_joinEUI(uint8_t *EUI) {
+static bool set_joinEUI(const uint8_t *EUI) {
 	uint8_t tempEUI[8];
 	int attempts = 0;
 
@@ -185,9 +201,3 @@ bool set_joinEUI(uint8_t *EUI) {
 	vcom_Trace((uint8_t*) "Failed to set JoinEUI after multiple attempts\r\n", 48);
 	return false;
 }
-
-void Print_EUIs(void) {
-	Print_EUI("DevEUI=", devEUI);
-	Print_EUI("JoinEUI=", joinEUI);
-}
-
