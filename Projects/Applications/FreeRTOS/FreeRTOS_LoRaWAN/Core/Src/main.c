@@ -42,6 +42,7 @@ static void MX_LPTIM1_Init(void);
 /* USER CODE BEGIN PFP */
 int32_t LED_control(int value);
 void Lamp_GPIO_Init(void);
+void Motion_Sensor_GPIO_Init(void);
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -111,6 +112,7 @@ int main(void) {
 	MX_GPIO_Init();
 	MX_LPTIM1_Init();
 	Lamp_GPIO_Init();
+	Motion_Sensor_GPIO_Init();
 	LampState_Init();
 	/* USER CODE END SysInit */
 
@@ -122,6 +124,8 @@ int main(void) {
 	LoRaWAN_TaskHandle = osThreadCreate(osThread(LoRaWAN_Task), NULL);
 	osThreadDef(LampStateTask, Start_LampState_Task, osPriorityNormal, 0, 256);
 	osThreadCreate(osThread(LampStateTask), NULL);
+	osThreadDef(MotionSensorTask, Start_Motion_Sensor_Task, osPriorityNormal, 0, 256);
+	osThreadCreate(osThread(MotionSensorTask), NULL);
 	osKernelStart();
 	/* USER CODE END 2 */
 #endif
@@ -247,6 +251,23 @@ void Lamp_GPIO_Init(void) {
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+}
+
+void Motion_Sensor_GPIO_Init(void) {
+	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
+
+	/* GPIO Ports Clock Enable */
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+
+	/*Configure GPIO pin : PA0 */
+	GPIO_InitStruct.Pin = GPIO_PIN_0;
+	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	HAL_NVIC_SetPriority(EXTI0_IRQn, 15, 0);
+	HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 }
 
 int32_t LED_control(int value) {
