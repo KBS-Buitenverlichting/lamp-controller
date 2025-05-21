@@ -95,6 +95,8 @@ void HardFault_Handler(void)
   while (1)
   {
     /* USER CODE BEGIN W1_HardFault_IRQn 0 */
+	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
+	osDelay(100);
     /* USER CODE END W1_HardFault_IRQn 0 */
   }
 }
@@ -232,6 +234,11 @@ void TAMP_STAMP_LSECSS_SSRU_IRQHandler(void)
   /* USER CODE BEGIN TAMP_STAMP_LSECSS_SSRU_IRQn 1 */
 
   /* USER CODE END TAMP_STAMP_LSECSS_SSRU_IRQn 1 */
+}
+
+void EXTI0_IRQHandler(void)
+{
+	  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
 }
 
 /**

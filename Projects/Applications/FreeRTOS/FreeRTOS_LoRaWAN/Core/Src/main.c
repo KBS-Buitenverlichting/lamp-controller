@@ -21,8 +21,10 @@
 #include "main.h"
 #include "app_lorawan.h"
 #include "cmsis_os.h"
+#include "dac.h"
 #include "lamp_state.h"
 #include "sys_app.h"
+
 
 #ifdef TESTING
 #include "testing.h"
@@ -43,6 +45,7 @@ int32_t LED_control(int value);
 void Lamp_GPIO_Init(void);
 void rx_done(uint8_t *rxChar, uint16_t size, uint8_t error);
 void tx_done(void *arg);
+void Motion_Sensor_GPIO_Init(void);
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "serial_eui_setter.h"
@@ -89,55 +92,59 @@ void SystemClock_Config(void);
  * @retval int
  */
 int main(void) {
-	/* USER CODE BEGIN 1 */
+  /* USER CODE BEGIN 1 */
 
-	/* USER CODE END 1 */
+  /* USER CODE END 1 */
 
-	/* MCU Configuration--------------------------------------------------------*/
+  /* MCU Configuration--------------------------------------------------------*/
 
-	/* Reset of all peripherals, Initializes the Flash interface and the Systick.
-	 */
-	HAL_Init();
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick.
+   */
+  HAL_Init();
 
-	/* USER CODE BEGIN Init */
+  /* USER CODE BEGIN Init */
 
-	/* USER CODE END Init */
+  /* USER CODE END Init */
 
-	/* Configure the system clock */
-	SystemClock_Config();
+  /* Configure the system clock */
+  SystemClock_Config();
 
 #ifdef TESTING
   SystemApp_Init();
   Main_Test();
 #else
-	/* USER CODE BEGIN SysInit */
-	MX_GPIO_Init();
-	MX_LPTIM1_Init();
-	Lamp_GPIO_Init();
-	LampState_Init();
+  /* USER CODE BEGIN SysInit */
+  MX_GPIO_Init();
+  MX_LPTIM1_Init();
+  Lamp_GPIO_Init();
+  Motion_Sensor_GPIO_Init();
+  LampState_Init();
 
-	/* USER CODE END SysInit */
+  /* USER CODE END SysInit */
 
-	/* Initialize all configured peripherals */
-	/* USER CODE BEGIN 2 */
-	osThreadDef(General_Task, GeneralTask, osPriorityLow, 0, 128);
-	General_TaskHandle = osThreadCreate(osThread(General_Task), NULL);
-	osThreadDef(LoRaWAN_Task, StartLoRaWANTask, osPriorityNormal, 0, 1024);
-	LoRaWAN_TaskHandle = osThreadCreate(osThread(LoRaWAN_Task), NULL);
-	osThreadDef(LampStateTask, Start_LampState_Task, osPriorityNormal, 0, 256);
-	osThreadCreate(osThread(LampStateTask), NULL);
-	osKernelStart();
-	/* USER CODE END 2 */
+  /* Initialize all configured peripherals */
+  /* USER CODE BEGIN 2 */
+  osThreadDef(General_Task, GeneralTask, osPriorityLow, 0, 128);
+  General_TaskHandle = osThreadCreate(osThread(General_Task), NULL);
+  osThreadDef(LoRaWAN_Task, StartLoRaWANTask, osPriorityNormal, 0, 1024);
+  LoRaWAN_TaskHandle = osThreadCreate(osThread(LoRaWAN_Task), NULL);
+  osThreadDef(LampStateTask, Start_LampState_Task, osPriorityNormal, 0, 256);
+  osThreadCreate(osThread(LampStateTask), NULL);
+  osThreadDef(MotionSensorTask, Start_Motion_Sensor_Task, osPriorityNormal, 0,
+              256);
+  osThreadCreate(osThread(MotionSensorTask), NULL);
+  osKernelStart();
+  /* USER CODE END 2 */
 #endif
 
-	/* Infinite loop */
-	/* USER CODE BEGIN WHILE */
-	while (1) {
-		/* USER CODE END WHILE */
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1) {
+    /* USER CODE END WHILE */
 
-		/* USER CODE BEGIN 3 */
-	}
-	/* USER CODE END 3 */
+    /* USER CODE BEGIN 3 */
+  }
+  /* USER CODE END 3 */
 }
 
 /**
@@ -145,44 +152,44 @@ int main(void) {
  * @retval None
  */
 void SystemClock_Config(void) {
-	RCC_OscInitTypeDef RCC_OscInitStruct = { 0 };
-	RCC_ClkInitTypeDef RCC_ClkInitStruct = { 0 };
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-	/** Configure LSE Drive Capability
-	 */
-	HAL_PWR_EnableBkUpAccess();
-	__HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
-	/** Configure the main internal regulator output voltage
-	 */
-	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-	/** Initializes the CPU, AHB and APB busses clocks
-	 */
-	RCC_OscInitStruct.OscillatorType =
-	RCC_OSCILLATORTYPE_LSE | RCC_OSCILLATORTYPE_MSI | RCC_OSCILLATORTYPE_LSI;
-	RCC_OscInitStruct.LSEState = RCC_LSE_ON;
-	RCC_OscInitStruct.MSIState = RCC_MSI_ON;
-	RCC_OscInitStruct.MSICalibrationValue = RCC_MSICALIBRATION_DEFAULT;
-	RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_11;
-	RCC_OscInitStruct.LSIDiv = RCC_LSI_DIV1;
-	RCC_OscInitStruct.LSIState = RCC_LSI_ON;
-	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
-	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
-		Error_Handler();
-	}
-	/** Configure the SYSCLKSource, HCLK, PCLK1 and PCLK2 clocks dividers
-	 */
-	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK3 | RCC_CLOCKTYPE_HCLK |
-	RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 |
-	RCC_CLOCKTYPE_PCLK2;
-	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
-	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-	RCC_ClkInitStruct.AHBCLK3Divider = RCC_SYSCLK_DIV1;
+  /** Configure LSE Drive Capability
+   */
+  HAL_PWR_EnableBkUpAccess();
+  __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
+  /** Configure the main internal regulator output voltage
+   */
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+  /** Initializes the CPU, AHB and APB busses clocks
+   */
+  RCC_OscInitStruct.OscillatorType =
+      RCC_OSCILLATORTYPE_LSE | RCC_OSCILLATORTYPE_MSI | RCC_OSCILLATORTYPE_LSI;
+  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
+  RCC_OscInitStruct.MSIState = RCC_MSI_ON;
+  RCC_OscInitStruct.MSICalibrationValue = RCC_MSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_11;
+  RCC_OscInitStruct.LSIDiv = RCC_LSI_DIV1;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
+    Error_Handler();
+  }
+  /** Configure the SYSCLKSource, HCLK, PCLK1 and PCLK2 clocks dividers
+   */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK3 | RCC_CLOCKTYPE_HCLK |
+                                RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 |
+                                RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.AHBCLK3Divider = RCC_SYSCLK_DIV1;
 
-	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK) {
-		Error_Handler();
-	}
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK) {
+    Error_Handler();
+  }
 }
 
 /**
@@ -192,28 +199,28 @@ void SystemClock_Config(void) {
  */
 static void MX_LPTIM1_Init(void) {
 
-	/* USER CODE BEGIN LPTIM1_Init 0 */
+  /* USER CODE BEGIN LPTIM1_Init 0 */
 
-	/* USER CODE END LPTIM1_Init 0 */
+  /* USER CODE END LPTIM1_Init 0 */
 
-	/* USER CODE BEGIN LPTIM1_Init 1 */
+  /* USER CODE BEGIN LPTIM1_Init 1 */
 
-	/* USER CODE END LPTIM1_Init 1 */
-	hlptim1.Instance = LPTIM1;
-	hlptim1.Init.Clock.Source = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;
-	hlptim1.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV1;
-	hlptim1.Init.Trigger.Source = LPTIM_TRIGSOURCE_SOFTWARE;
-	hlptim1.Init.OutputPolarity = LPTIM_OUTPUTPOLARITY_HIGH;
-	hlptim1.Init.UpdateMode = LPTIM_UPDATE_IMMEDIATE;
-	hlptim1.Init.CounterSource = LPTIM_COUNTERSOURCE_INTERNAL;
-	hlptim1.Init.Input1Source = LPTIM_INPUT1SOURCE_GPIO;
-	hlptim1.Init.Input2Source = LPTIM_INPUT2SOURCE_GPIO;
-	if (HAL_LPTIM_Init(&hlptim1) != HAL_OK) {
-		Error_Handler();
-	}
-	/* USER CODE BEGIN LPTIM1_Init 2 */
+  /* USER CODE END LPTIM1_Init 1 */
+  hlptim1.Instance = LPTIM1;
+  hlptim1.Init.Clock.Source = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;
+  hlptim1.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV1;
+  hlptim1.Init.Trigger.Source = LPTIM_TRIGSOURCE_SOFTWARE;
+  hlptim1.Init.OutputPolarity = LPTIM_OUTPUTPOLARITY_HIGH;
+  hlptim1.Init.UpdateMode = LPTIM_UPDATE_IMMEDIATE;
+  hlptim1.Init.CounterSource = LPTIM_COUNTERSOURCE_INTERNAL;
+  hlptim1.Init.Input1Source = LPTIM_INPUT1SOURCE_GPIO;
+  hlptim1.Init.Input2Source = LPTIM_INPUT2SOURCE_GPIO;
+  if (HAL_LPTIM_Init(&hlptim1) != HAL_OK) {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN LPTIM1_Init 2 */
 
-	/* USER CODE END LPTIM1_Init 2 */
+  /* USER CODE END LPTIM1_Init 2 */
 }
 
 /**
@@ -222,91 +229,112 @@ static void MX_LPTIM1_Init(void) {
  * @retval None
  */
 void MX_GPIO_Init(void) {
-	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-	/* GPIO Ports Clock Enable */
-	__HAL_RCC_GPIOB_CLK_ENABLE();
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
-	/*Configure GPIO pin Output Level */
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
 
-	/*Configure GPIO pin : PB5 */
-	GPIO_InitStruct.Pin = GPIO_PIN_5;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  /*Configure GPIO pin : PB5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 }
 
 /* USER CODE BEGIN 4 */
 void Lamp_GPIO_Init(void) {
-	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-	/* GPIO Ports Clock Enable */
-	__HAL_RCC_GPIOA_CLK_ENABLE();
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOA_CLK_ENABLE();
 
-	/*Configure GPIO pin : PA10 */
-	GPIO_InitStruct.Pin = GPIO_PIN_10;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  /* Configure GPIO pin : PA10
+   * Push Pull mode
+   * No Pull-up or Pull-down active
+   * Speed low
+   */
+  GPIO_InitStruct.Pin = GPIO_PIN_10;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+}
+
+void Motion_Sensor_GPIO_Init(void) {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+
+  /*Configure GPIO pin : PA0 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 15, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 }
 
 int32_t LED_control(int value) {
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, value);
-	return 0;
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, value);
+  return 0;
 }
 /* USER CODE END 4 */
 /* USER CODE BEGIN 4 */
 
 void StartLoRaWANTask(void const *argument) {
-	/* init code for LoRaWAN */
-	MX_LoRaWAN_Init();
-	/* USER CODE BEGIN 5 */
+  /* init code for LoRaWAN */
+  MX_LoRaWAN_Init();
+  /* USER CODE BEGIN 5 */
 #ifdef TESTING
   Main_Test();
 #endif
 
-	/* Infinite loop */
-	for (;;) {
-		MX_LoRaWAN_Process();
-		osDelay(10);
-	}
-	/* USER CODE END 5 */
+  /* Infinite loop */
+  for (;;) {
+    MX_LoRaWAN_Process();
+    osDelay(10);
+  }
+  /* USER CODE END 5 */
 }
 /* USER CODE END 4 */
 void GeneralTask(void const *argument) {
-	LED_control(1);
-	vcom_Init(tx_done);
-	vcom_ReceiveInit(rx_done);
-	for (;;) {
-		LED_control(0);
-		osDelay(500);
-		LED_control(1);
-		osDelay(500);
-	}
+  LED_control(1);
+  vcom_Init(tx_done);
+  vcom_ReceiveInit(rx_done);
+  for (;;) {
+    LED_control(0);
+    osDelay(500);
+    LED_control(1);
+    osDelay(500);
+  }
 }
 
 void rx_done(uint8_t *rxChar, uint16_t size, uint8_t error) {
-	Add_To_Rx_Buffer(rxChar);
+  Add_To_Rx_Buffer(rxChar);
 }
 
-void tx_done(void *arg) {
-
-}
+void tx_done(void *arg) {}
 
 /**
  * @brief  This function is executed in case of error occurrence.
  * @retval None
  */
 void Error_Handler(void) {
-	/* USER CODE BEGIN Error_Handler_Debug */
-	/* User can add his own implementation to report the HAL error return state */
-	__disable_irq();
-	while (1) {
-	}
-	/* USER CODE END Error_Handler_Debug */
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+  __disable_irq();
+  while (1) {
+    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
+    osDelay(100);
+  }
+  /* USER CODE END Error_Handler_Debug */
 }
 
 #ifdef USE_FULL_ASSERT
