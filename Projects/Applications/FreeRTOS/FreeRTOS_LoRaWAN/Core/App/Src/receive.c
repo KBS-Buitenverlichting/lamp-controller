@@ -152,7 +152,8 @@ void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, c
 
 	if (buffer_size < TIME_DATE_BYTE_COUNT) {
 		APP_LOG(TS_OFF, VLEVEL_M, "Time/date command input is too short!\r\n");
-		Tx_Set_Ack(MISSING_DATA);
+		const uint8_t params[] = { SYNCHRONIZE_TIME_AND_DATE };
+		Tx_Set_Buffer(RESPONSE_OUT, MISSING_DATA, (const uint8_t* const)&params, sizeof(params));
 	} else if ( !IS_RTC_YEAR(buffer[2]) ||               // Year (0–99)
 				!IS_RTC_MONTH(buffer[3]) ||              // Month (1–12)
 				!IS_RTC_WEEKDAY(buffer[4]) ||            // Weekday (1–7)
@@ -162,32 +163,33 @@ void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, c
 				!IS_RTC_SECONDS(buffer[8]))              // Seconds (0–59)
 				{
 					APP_LOG(TS_OFF, VLEVEL_M, "Invalid date/time value received!\r\n");
-					Tx_Set_Ack(INVALID_DATA);
+					const uint8_t params[] = { SYNCHRONIZE_TIME_AND_DATE };
+					Tx_Set_Buffer(RESPONSE_OUT, INVALID_DATA, (const uint8_t* const)&params, sizeof(params));
 				}
 	else {
 		APP_LOG(TS_OFF, VLEVEL_M, "Update time/date!\r\n");
 
-		RTC_TimeTypeDef sTime = {0};
-		RTC_DateTypeDef sDate = {0};
+		RTC_TimeTypeDef current_time = {0};
+		RTC_DateTypeDef current_date = {0};
 
-		sDate.Year = buffer[2];
-		sDate.Month = buffer[3];
-		sDate.WeekDay = buffer[4];
-		sDate.Date = buffer[5];
-		sTime.Hours = buffer[6];
-		sTime.Minutes = buffer[7];
-		sTime.Seconds = buffer[8];
-		sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-		sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+		current_date.Year = buffer[2];
+		current_date.Month = buffer[3];
+		current_date.WeekDay = buffer[4];
+		current_date.Date = buffer[5];
+		current_time.Hours = buffer[6];
+		current_time.Minutes = buffer[7];
+		current_time.Seconds = buffer[8];
+		current_time.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+		current_time.StoreOperation = RTC_STOREOPERATION_RESET;
 
 
-		if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
+		if (HAL_RTC_SetTime(&hrtc, &current_time, RTC_FORMAT_BIN) != HAL_OK) {
 			APP_LOG(TS_OFF, VLEVEL_M, "Failed to set RTC time!\r\n");
 			const uint8_t params[] = { SYNCHRONIZE_TIME_AND_DATE, FAILED_TO_SET_RTC};
 			Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
 		}
 
-		if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {
+		if (HAL_RTC_SetDate(&hrtc, &current_date, RTC_FORMAT_BIN) != HAL_OK) {
 			APP_LOG(TS_OFF, VLEVEL_M, "Failed to set RTC date!\r\n");
 			const uint8_t params[] = { SYNCHRONIZE_TIME_AND_DATE, FAILED_TO_SET_RTC};
 			Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
@@ -215,23 +217,23 @@ void Handle_Remove_Timeslot_Instruction(const uint8_t *const buffer, const uint8
 
 void Print_Current_RTC_Time(void)
 {
-	RTC_TimeTypeDef sTime;
-    RTC_DateTypeDef sDate;
+	RTC_TimeTypeDef current_time;
+    RTC_DateTypeDef current_date;
 
-    HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
-    HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+    HAL_RTC_GetTime(&hrtc, &current_time, RTC_FORMAT_BIN);
+    HAL_RTC_GetDate(&hrtc, &current_date, RTC_FORMAT_BIN);
 
     const char *weekday_names[] = {"Forbidden", "Monday",   "Tuesday",
     								   "Wednesday", "Thursday", "Friday",
     								   "Saturday",  "Sunday"};
-    const char *weekday_str = (sDate.WeekDay <= 7) ? weekday_names[sDate.WeekDay] : "Unknown";
+    const char *weekday_str = (current_date.WeekDay <= 7) ? weekday_names[current_date.WeekDay] : "Unknown";
 
     APP_LOG(TS_OFF, VLEVEL_M, "RTC Now: %02u:%02u:%02u on %02u-%02u-%04u (Weekday %s)\r\n",
-            sTime.Hours,
-            sTime.Minutes,
-            sTime.Seconds,
-            sDate.Date,
-            sDate.Month,
-            2000 + sDate.Year,
+            current_time.Hours,
+            current_time.Minutes,
+            current_time.Seconds,
+            current_date.Date,
+            current_date.Month,
+            2000 + current_date.Year,	// adding 2000 years to get the full year =)
             weekday_str);
 }
