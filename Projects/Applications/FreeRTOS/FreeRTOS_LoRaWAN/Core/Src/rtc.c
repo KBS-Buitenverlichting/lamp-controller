@@ -30,15 +30,15 @@ void RTC_Init_AlarmB(void) {
 	RTC_AlarmTypeDef alarm_b = {0};
 	RTC_TimeTypeDef cur_time = {0};
 
-	HAL_RTC_GetTime(&hrtc, &cur_time, FORMAT_BCD);
+	HAL_RTC_GetTime(&hrtc, &cur_time, FORMAT_BIN);
 
 	alarm_b.AlarmTime.SubSeconds = 0;
-	alarm_b.AlarmTime.Seconds = cur_time.Seconds + 0x10;
+	alarm_b.AlarmTime.Seconds = cur_time.Seconds + 10;
 
 
 	alarm_b.AlarmMask = RTC_ALARMMASK_DATEWEEKDAY | RTC_ALARMMASK_HOURS | RTC_ALARMMASK_MINUTES;
 	alarm_b.Alarm = RTC_ALARM_B;
-	if (HAL_RTC_SetAlarm_IT(&hrtc, &alarm_b, FORMAT_BCD) != HAL_OK) {
+	if (HAL_RTC_SetAlarm_IT(&hrtc, &alarm_b, FORMAT_BIN) != HAL_OK) {
 		Error_Handler();
 	}
 }

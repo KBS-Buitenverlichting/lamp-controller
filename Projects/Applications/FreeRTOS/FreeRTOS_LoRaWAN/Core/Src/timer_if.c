@@ -392,22 +392,22 @@ void HAL_RTCEx_AlarmBEventCallback(RTC_HandleTypeDef *hrtc) {
 	RTC_TimeTypeDef cur_time = {0};
 
 	// test code
-	HAL_RTC_GetTime(hrtc, &cur_time, FORMAT_BCD);
+	HAL_RTC_GetTime(hrtc, &cur_time, FORMAT_BIN);
 
-	HAL_RTC_GetAlarm(hrtc, &alarm_b, RTC_ALARM_B, FORMAT_BCD);
+	HAL_RTC_GetAlarm(hrtc, &alarm_b, RTC_ALARM_B, FORMAT_BIN);
 #ifndef TESTING
-	APP_PRINTF("The alarm went off at %02X minutes and %02X seconds\n", cur_time.Minutes, cur_time.Seconds);
+	APP_PRINTF("The alarm went off at %u minutes and %u seconds\n", cur_time.Minutes, cur_time.Seconds);
 #endif
-	alarm_b.AlarmTime.Seconds = cur_time.Seconds + 0x20;
+	alarm_b.AlarmTime.Seconds = cur_time.Seconds + 20;
 
-	if (alarm_b.AlarmTime.Seconds >= 0x60) {
-		alarm_b.AlarmTime.Seconds = 0x10;
+	if (alarm_b.AlarmTime.Seconds >= 60) {
+		alarm_b.AlarmTime.Seconds = 10;
 	}
 
 	alarm_b.AlarmMask = RTC_ALARMMASK_DATEWEEKDAY | RTC_ALARMMASK_HOURS | RTC_ALARMMASK_MINUTES;
 
 
-	while (HAL_RTC_SetAlarm_IT(hrtc, &alarm_b, FORMAT_BCD) != HAL_OK) {
+	while (HAL_RTC_SetAlarm_IT(hrtc, &alarm_b, FORMAT_BIN) != HAL_OK) {
 	}
 }
 
