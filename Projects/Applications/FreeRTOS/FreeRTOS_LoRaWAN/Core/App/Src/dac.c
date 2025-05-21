@@ -42,7 +42,7 @@ Warning DAC_Set_Value(uint16_t value)
 		result = BATTERY_BELOW_LAMP_MAX_VDD;
 	}
 
-	/* Normalize from range [0, 3300] to [0, 4096] (convert from voltage to register value) */
+	/* Normalize from [0..VDD] to [0..DAC_MAX] (convert from voltage to register value) */
 	const uint16_t normalized = (((uint32_t)value * DAC_MAX) / battery_voltage);
 	DAC->DHR12R1 = (normalized & DAC_DHR12R1_DACC1DHR);
 
@@ -59,7 +59,7 @@ Warning DAC_Set_Brightness(const uint8_t brightness)
 
 	DAC_Enable();
 
-	/* Normalize from range [0, 255] to [1700, 2000] (convert from digital value to voltage) */
+	/* Normalize from [0..UINT8_MAX] to [LED_VMIN..LED_VMAX] (convert from digital value to voltage) */
 	const uint16_t normalized = (((uint32_t)brightness * (LED_VMAX - LED_VMIN)) / UINT8_MAX) + LED_VMIN;
 	return DAC_Set_Value(normalized);
 }
