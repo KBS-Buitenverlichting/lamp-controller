@@ -49,17 +49,22 @@ Warning DAC_Set_Value(uint16_t value)
 	return result;
 }
 
-Warning DAC_Set_Brightness(const uint8_t brightness)
-{
-	if (brightness == 0)
-	{
+Warning DAC_Set_Brightness(const uint8_t brightness) {
+	if (brightness == 0) {
 		DAC_Disable();
+		if (Get_State_LampState() != MOTION_SENSOR) {
+			Send_LampState(OFF);
+		}
 		return NO_WARNING;
 	}
 
-	DAC_Enable();
+	if(Get_State_LampState() != MOTION_SENSOR) {
+		DAC_Enable();
+		Send_LampState(ON);
+	}
 
 	/* Normalize from [0..UINT8_MAX] to [LED_VMIN..LED_VMAX] (convert from digital value to voltage) */
-	const uint16_t normalized = (((uint32_t)brightness * (LED_VMAX - LED_VMIN)) / UINT8_MAX) + LED_VMIN;
+	const uint16_t normalized = (((uint32_t) brightness * (LED_VMAX - LED_VMIN))
+			/ UINT8_MAX) + LED_VMIN;
 	return DAC_Set_Value(normalized);
 }
