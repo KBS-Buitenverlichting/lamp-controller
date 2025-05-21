@@ -72,10 +72,10 @@ void Interpret_Rx_Buffer(void) {
 
     if (strncmp(cmdStart, "DEVEUI=", 7) == 0) {
         cmdType = CMD_DEVEUI;
-        hexStr = (char *)(rx_buffer + 7);
+        hexStr = cmdStart + 7;
     } else if (strncmp(cmdStart, "JOINEUI=", 8) == 0) {
         cmdType = CMD_JOINEUI;
-        hexStr = (char *)(rx_buffer + 8);
+        hexStr = cmdStart + 8;
     } else if (strncmp(cmdStart, "JOIN", 4) == 0) {
         cmdType = CMD_JOIN;
     }
