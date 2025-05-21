@@ -9,5 +9,6 @@
 #include "sys_app.h"
 #include "stdint.h"
 #include "transmit_test.h"
+#include "schedules_test.h"
 
 void Main_Test(void);

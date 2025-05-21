@@ -300,6 +300,8 @@ void Error_Handler(void) {
 	/* User can add his own implementation to report the HAL error return state */
 	__disable_irq();
 	while (1) {
+		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
+		osDelay(100);
 	}
 	/* USER CODE END Error_Handler_Debug */
 }
