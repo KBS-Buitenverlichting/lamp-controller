@@ -15,17 +15,16 @@ uint8_t rx_buffer_index = 0;
 
 typedef enum {
 	CMD_UNKNOWN,
-	CMD_DEVEUI,
-	CMD_JOINEUI,
-	CMD_JOIN
+	CMD_DEVEUI,		// !DEVEUI=...
+	CMD_JOINEUI,	// !JOINEUI=...
+	CMD_JOIN,		// !JOIN
+	CMD_PRINT		// !PRINT
 } CommandType;
 
 void Print_Rx_Buffer(void) {
 	if (rx_buffer_index > 0) {
 		vcom_Trace((uint8_t*) "Received: ", 10);
 		vcom_Trace(rx_buffer, rx_buffer_index);
-		Print_EUI("DevEUI=", devEUI);
-		Print_EUI("JoinEUI=", joinEUI);
 		rx_buffer_index = 0;
 	}
 }
@@ -35,8 +34,9 @@ void Add_To_Rx_Buffer(uint8_t *rxChar) {
 		rx_buffer[rx_buffer_index++] = *rxChar;
 
 		if (*rxChar == '\n') {
-			Interpret_Rx_Buffer();
-			Print_Rx_Buffer();
+			if (!Interpret_Rx_Buffer()) {
+				Print_Rx_Buffer();
+			}
 		}
 	} else {
 		Print_Rx_Buffer();
@@ -59,9 +59,9 @@ void Print_EUI(const char *label, uint8_t *eui) {
 	}
 }
 
-void Interpret_Rx_Buffer(void) {
+bool Interpret_Rx_Buffer(void) {
 	if (rx_buffer_index < 2 || rx_buffer[0] != '!') {
-		return;
+		return false;
 	}
 
 	char *cmdStart = (char*) (rx_buffer + 1);
@@ -77,6 +77,8 @@ void Interpret_Rx_Buffer(void) {
 		hexStr = cmdStart + 8;
 	} else if (strncmp(cmdStart, "JOIN", 4) == 0) {
 		cmdType = CMD_JOIN;
+	} else if (strncmp(cmdStart, "PRINT", 5) == 0) {
+		cmdType = CMD_PRINT;
 	}
 
 	switch (cmdType) {
@@ -89,19 +91,25 @@ void Interpret_Rx_Buffer(void) {
 	case CMD_JOIN:
 		Handle_Join_Command();
 		break;
+	case CMD_PRINT:
+		Print_EUIs();
+		break;
 	default:
 		vcom_Trace((uint8_t*) "Unknown command\r\n", 20);
 		break;
 	}
+
+	rx_buffer_index = 0;
+	return true;
 }
 
-static uint8_t hex2byte(const char *hex) {
+uint8_t hex2byte(const char *hex) {
 	uint8_t high = (isdigit(hex[0]) ? hex[0] - '0' : toupper(hex[0]) - 'A' + 10);
 	uint8_t low = (isdigit(hex[1]) ? hex[1] - '0' : toupper(hex[1]) - 'A' + 10);
 	return (high << 4) | low;
 }
 
-static void Handle_DevEUI_Command(char *hexStr) {
+void Handle_DevEUI_Command(char *hexStr) {
 	uint8_t newDevEUI[8];
 	for (int i = 0; i < 8; i++) {
 		newDevEUI[i] = hex2byte(&hexStr[i * 2]);
@@ -114,7 +122,7 @@ static void Handle_DevEUI_Command(char *hexStr) {
 	}
 }
 
-static void Handle_JoinEUI_Command(char *hexStr) {
+void Handle_JoinEUI_Command(char *hexStr) {
 	uint8_t newJoinEUI[8];
 	for (int i = 0; i < 8; i++) {
 		newJoinEUI[i] = hex2byte(&hexStr[i * 2]);
@@ -128,8 +136,8 @@ static void Handle_JoinEUI_Command(char *hexStr) {
 }
 
 void Handle_Join_Command(void) {
-	vcom_Trace((uint8_t*) "Try join\r\n", 10);
-	LmHandlerJoin(2);
+	vcom_Trace((uint8_t*) "Trying join\r\n", 13);
+	LmHandlerJoin(LORAWAN_DEFAULT_ACTIVATION_TYPE);
 }
 
 bool set_devEUI(uint8_t *EUI) {
@@ -176,5 +184,10 @@ bool set_joinEUI(uint8_t *EUI) {
 
 	vcom_Trace((uint8_t*) "Failed to set JoinEUI after multiple attempts\r\n", 48);
 	return false;
+}
+
+void Print_EUIs(void) {
+	Print_EUI("DevEUI=", devEUI);
+	Print_EUI("JoinEUI=", joinEUI);
 }
 
