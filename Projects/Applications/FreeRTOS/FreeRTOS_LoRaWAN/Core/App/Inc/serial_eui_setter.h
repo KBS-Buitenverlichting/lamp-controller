@@ -27,5 +27,5 @@ static uint8_t hex2byte(const char *hex);
 static void Handle_DevEUI_Command(char *hexStr);
 static void Handle_JoinEUI_Command(char *hexStr);
 void Handle_Join_Command(void);
-void set_devEUI(uint8_t *EUI);
-void set_joinEUI(uint8_t *EUI);
+bool set_devEUI(uint8_t *EUI);
+bool set_joinEUI(uint8_t *EUI);

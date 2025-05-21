@@ -6,6 +6,7 @@
  */
 #include "serial_eui_setter.h"
 
+// Below are the standard EUIs, note that these will be reverted to when a power cycle occurs
 uint8_t devEUI[] = { 0x70, 0xB3, 0xD5, 0x7E, 0xD0, 0x07, 0x02, 0x97 };
 uint8_t joinEUI[] = { 0x09, 0x08, 0x07, 0x06, 0x05, 0x04, 0x02, 0x01 };
 
@@ -105,8 +106,12 @@ static void Handle_DevEUI_Command(char *hexStr) {
 	for (int i = 0; i < 8; i++) {
 		newDevEUI[i] = hex2byte(&hexStr[i * 2]);
 	}
-	set_devEUI(newDevEUI);
-	Print_EUI("New DevEUI: ", devEUI);
+	LmHandlerStop();
+	if (set_devEUI(newDevEUI)) {
+		Print_EUI("New DevEUI: ", devEUI);
+	} else {
+		vcom_Trace((uint8_t *)"Please try again\r\n", 18);
+	}
 }
 
 static void Handle_JoinEUI_Command(char *hexStr) {
@@ -115,8 +120,11 @@ static void Handle_JoinEUI_Command(char *hexStr) {
 		newJoinEUI[i] = hex2byte(&hexStr[i * 2]);
 	}
 	LmHandlerStop();
-	set_joinEUI(newJoinEUI);
-	Print_EUI("New JoinEUI: ", joinEUI);
+	if (set_joinEUI(newJoinEUI)) {
+		Print_EUI("New JoinEUI: ", joinEUI);
+	} else {
+		vcom_Trace((uint8_t *)"Please try again\r\n", 18);
+	}
 }
 
 void Handle_Join_Command(void) {
@@ -124,7 +132,7 @@ void Handle_Join_Command(void) {
 	LmHandlerJoin(2);
 }
 
-void set_devEUI(uint8_t *EUI) {
+bool set_devEUI(uint8_t *EUI) {
 	uint8_t tempEUI[8];
 	int attempts = 0;
 
@@ -136,18 +144,18 @@ void set_devEUI(uint8_t *EUI) {
 			if (memcmp(tempEUI, EUI, 8) == 0) {
 				memcpy(devEUI, tempEUI, 8);
 				vcom_Trace((uint8_t*) "Successfully updated DevEUI\r\n", 29);
-				return;
+				return true;
 			}
 		}
 		LmHandlerStop();
 		HAL_Delay(100);
 	}
 
-	vcom_Trace((uint8_t*) "Failed to set DevEUI after multiple attempts\r\n",
-			47);
+	vcom_Trace((uint8_t*) "Failed to set DevEUI after multiple attempts\r\n", 47);
+	return false;
 }
 
-void set_joinEUI(uint8_t *EUI) {
+bool set_joinEUI(uint8_t *EUI) {
 	uint8_t tempEUI[8];
 	int attempts = 0;
 
@@ -159,13 +167,14 @@ void set_joinEUI(uint8_t *EUI) {
 			if (memcmp(tempEUI, EUI, 8) == 0) {
 				memcpy(joinEUI, tempEUI, 8);
 				vcom_Trace((uint8_t*) "Successfully updated JoinEUI\r\n", 30);
-				return;
+				return true;
 			}
 		}
 		LmHandlerStop();
+		HAL_Delay(100);
 	}
 
-	vcom_Trace((uint8_t*) "Failed to set JoinEUI after multiple attempts\r\n",
-			48);
+	vcom_Trace((uint8_t*) "Failed to set JoinEUI after multiple attempts\r\n", 48);
+	return false;
 }
 
