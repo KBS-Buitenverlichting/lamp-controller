@@ -155,12 +155,11 @@ void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, c
 				!IS_RTC_SECONDS(buffer[8]))              // Seconds (0–59)
 				{
 					APP_LOG(TS_OFF, VLEVEL_M, "Invalid date/time value received!\r\n");
-					const uint8_t params[] = { SYNCHRONIZE_TIME_AND_DATE};
-					Tx_Set_Buffer(RESPONSE_OUT, INVALID_DATA, (const uint8_t* const)&params, sizeof(params));
-					Error_Handler();
+					Tx_Set_Ack(INVALID_DATA);
 				}
 	else {
 		APP_LOG(TS_OFF, VLEVEL_M, "Update time/date!\r\n");
+
 		RTC_TimeTypeDef sTime = {0};
 		RTC_DateTypeDef sDate = {0};
 
@@ -179,14 +178,12 @@ void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, c
 			APP_LOG(TS_OFF, VLEVEL_M, "Failed to set RTC time!\r\n");
 			const uint8_t params[] = { SYNCHRONIZE_TIME_AND_DATE, FAILED_TO_SET_RTC};
 			Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
-			Error_Handler();
 		}
 
 		if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {
 			APP_LOG(TS_OFF, VLEVEL_M, "Failed to set RTC date!\r\n");
 			const uint8_t params[] = { SYNCHRONIZE_TIME_AND_DATE, FAILED_TO_SET_RTC};
 			Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
-			Error_Handler();
 		}
 
 			Print_Current_RTC_Time();
