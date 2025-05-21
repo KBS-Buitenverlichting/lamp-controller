@@ -146,22 +146,34 @@ void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, c
 	if (buffer_size < TIME_DATE_BYTE_COUNT) {
 		APP_LOG(TS_OFF, VLEVEL_M, "Time/date command input is too short!\r\n");
 		Tx_Set_Ack(MISSING_DATA);
-	} else {
+	} else if ( !IS_RTC_YEAR(buffer[2]) ||               // Year (0–99)
+				!IS_RTC_MONTH(buffer[3]) ||              // Month (1–12)
+				!IS_RTC_WEEKDAY(buffer[4]) ||            // Weekday (1–7)
+				!IS_RTC_DATE(buffer[5]) ||               // Day (1–31)
+				!IS_RTC_HOUR24(buffer[6]) ||             // Hours (0–23)
+				!IS_RTC_MINUTES(buffer[7])||             // Minutes (0–59)
+				!IS_RTC_SECONDS(buffer[8]))              // Seconds (0–59)
+				{
+					APP_LOG(TS_OFF, VLEVEL_M, "Invalid date/time value received!\r\n");
+					const uint8_t params[] = { SYNCHRONIZE_TIME_AND_DATE};
+					Tx_Set_Buffer(RESPONSE_OUT, INVALID_DATA, (const uint8_t* const)&params, sizeof(params));
+					Error_Handler();
+				}
+	else {
 		APP_LOG(TS_OFF, VLEVEL_M, "Update time/date!\r\n");
-
 		RTC_TimeTypeDef sTime = {0};
 		RTC_DateTypeDef sDate = {0};
 
-		sTime.Hours = buffer[2];
-		sTime.Minutes = buffer[3];
-		sTime.Seconds = buffer[4];
+		sDate.Year = buffer[2];
+		sDate.Month = buffer[3];
+		sDate.WeekDay = buffer[4];
+		sDate.Date = buffer[5];
+		sTime.Hours = buffer[6];
+		sTime.Minutes = buffer[7];
+		sTime.Seconds = buffer[8];
 		sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
 		sTime.StoreOperation = RTC_STOREOPERATION_RESET;
 
-		sDate.WeekDay = buffer[6];
-		sDate.Month = buffer[7];
-		sDate.Date = buffer[8];
-		sDate.Year = buffer[5];
 
 		if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
 			APP_LOG(TS_OFF, VLEVEL_M, "Failed to set RTC time!\r\n");
@@ -176,6 +188,7 @@ void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, c
 			Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
 			Error_Handler();
 		}
+
 			Print_Current_RTC_Time();
 			Tx_Set_Ack(SYNCHRONIZE_TIME_AND_DATE);
 	}
