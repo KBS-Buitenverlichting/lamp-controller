@@ -10,10 +10,9 @@
 #define MAX_BRIGHTNESS UINT8_MAX
 #define MIN_BRIGHTNESS 0
 
-LampConfig previous_lamp_config = {MOTION_SENSOR, 255};
+LampConfig previous_lamp_config = {MOTION_SENSOR, MAX_BRIGHTNESS};
 
-static LampState current_lamp_state = MOTION_SENSOR;
-static uint8_t current_brightness = MAX_BRIGHTNESS;
+static LampConfig current_lamp_config = {MOTION_SENSOR, MAX_BRIGHTNESS};
 
 static SemaphoreHandle_t state_mutex;
 static QueueHandle_t lamp_state_queue;
@@ -41,7 +40,7 @@ void LampState_Init(void) {
 LampState Get_State_LampState(void) {
     LampState copy = OFF;
     if (xSemaphoreTake(state_mutex, portMAX_DELAY) == pdTRUE) {
-        copy = current_lamp_state;
+        copy = current_lamp_config.state;
         xSemaphoreGive(state_mutex);
     }
     return copy;
@@ -74,7 +73,7 @@ void Send_Brightness(const uint8_t brightness) {
 uint8_t Get_Brightness(void) {
     uint8_t copy = MAX_BRIGHTNESS;
     if (xSemaphoreTake(state_mutex, portMAX_DELAY) == pdTRUE) {
-        copy = current_brightness;
+        copy = current_lamp_config.brightness;
         xSemaphoreGive(state_mutex);
     }
     return copy;
@@ -89,11 +88,11 @@ void Start_LampState_Task(void const *argument) {
 	    // Check for state change
 	    if (xQueueReceive(lamp_state_queue, &incoming_state, 0) == pdTRUE) {
 	        if (xSemaphoreTake(state_mutex, portMAX_DELAY) == pdTRUE) {
-	            current_lamp_state = incoming_state;
+	            current_lamp_config.state = incoming_state;
 	            xSemaphoreGive(state_mutex);
 	        }
 
-	        switch (current_lamp_state) {
+	        switch (current_lamp_config.state) {
 	            case OFF:
 	                DAC_Disable();
 	            	break;
@@ -111,11 +110,11 @@ void Start_LampState_Task(void const *argument) {
 	    // Check for brightness change
 	    if (xQueueReceive(brightness_queue, &incoming_brightness, 0) == pdTRUE) {
 	        if (xSemaphoreTake(state_mutex, portMAX_DELAY) == pdTRUE) {
-	            current_brightness = incoming_brightness;
+	            current_lamp_config.brightness = incoming_brightness;
 	            xSemaphoreGive(state_mutex);
 	        }
 
-	        Warning result = DAC_Set_Brightness(current_brightness);
+	        Warning result = DAC_Set_Brightness(current_lamp_config.brightness);
 
 	    	if (result != NO_WARNING)
 	    	{

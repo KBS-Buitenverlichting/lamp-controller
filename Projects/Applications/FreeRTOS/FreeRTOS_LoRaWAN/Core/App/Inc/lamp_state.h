@@ -25,7 +25,7 @@ typedef enum {
 }LampState;
 
 typedef struct LampConfig {
-	LampState lamp_state;
+	LampState state;
 	uint8_t brightness;
 } LampConfig;
 
