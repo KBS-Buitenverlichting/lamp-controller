@@ -6,10 +6,12 @@
  */
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include "schedules.h"
 
 SemaphoreHandle_t sem_process_alarm;
 static ScheduleList schedules = { 0 };
+static bool schedule_active = false;
 
 void ScheduleList_Init();
 
@@ -17,8 +19,17 @@ void Start_Process_Schedules_Task(void const *argument) {
 	ScheduleList_Init();
 	for(;;) {
 		if(xSemaphoreTake(sem_process_alarm, portMAX_DELAY) != pdPASS) {
+			Error_Handler();
+		}
+		// check if a schedule is active
+		// 	if yes: deactivate and delete it, restore the previous lamp config, set alarm to next schedule in the list
+		//  if no: save current lamp config to previous, set the first schedule in the list as active, set alarm to end time of current schedule
+		if (schedule_active) {
+
+		} else {
 
 		}
+
 	}
 }
 
