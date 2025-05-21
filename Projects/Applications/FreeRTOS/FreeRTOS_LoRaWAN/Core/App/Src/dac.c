@@ -53,8 +53,12 @@ Warning DAC_Set_Brightness(const uint8_t brightness)
 {
 	if (brightness == 0)
 	{
-		return DAC_Set_Value(0);
+		DAC_Disable();
+		return NO_WARNING;
 	}
+
+	DAC_Enable();
+
 	/* Normalize from range [0, 255] to [1700, 2000] (convert from digital value to voltage) */
 	const uint16_t normalized = (((uint32_t)brightness * (LED_VMAX - LED_VMIN)) / UINT8_MAX) + LED_VMIN;
 	return DAC_Set_Value(normalized);
