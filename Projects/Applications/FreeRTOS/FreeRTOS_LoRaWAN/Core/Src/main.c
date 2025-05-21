@@ -23,8 +23,6 @@
 #include "cmsis_os.h"
 #include "dac.h"
 #include "lamp_state.h"
-#include "sys_app.h"
-
 
 #ifdef TESTING
 #include "testing.h"
