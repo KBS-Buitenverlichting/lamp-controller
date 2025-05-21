@@ -182,7 +182,7 @@ void Handle_Set_Timeslot_Instruction(const uint8_t *const buffer, const uint8_t 
 
 void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
-	// For testing purposes
+	// Below is for testing purposes
 	ScheduleList_Clear();
 
 	Schedule test_schedule;
@@ -212,7 +212,7 @@ void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_
 		(void)ScheduleList_Insert_After(test_node, test_schedule);
 		test_node = test_node->next;
 	}
-	//
+	// Above is for testing purposes
 
 	APP_LOG(TS_OFF, VLEVEL_M, "Show timetable\r\n");
 
@@ -248,9 +248,9 @@ void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_
 
 	Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION, (const uint8_t* const)&params, sizeof(params));
 
-	// For testing purposes
+	// Below is for testing purposes
 	ScheduleList_Clear();
-	//
+	// Above is for testing purposes
 }
 
 void Handle_Remove_Timeslot_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
