@@ -7,7 +7,7 @@
 
 #include "lamp_state.h"
 
-#define MAX_BRIGHTNESS 255
+#define MAX_BRIGHTNESS UINT8_MAX
 #define MIN_BRIGHTNESS 0
 
 LampConfig previous_lamp_config = {MOTION_SENSOR, 255};
@@ -19,9 +19,12 @@ static SemaphoreHandle_t state_mutex;
 static QueueHandle_t lamp_state_queue;
 static QueueHandle_t brightness_queue;
 
+SemaphoreHandle_t sem_motion_sensor_signal;
+
 ///Brief: Initializes lamp state and brightness queues and mutex.
 void LampState_Init(void) {
     state_mutex = xSemaphoreCreateMutex();
+    sem_motion_sensor_signal = xSemaphoreCreateBinary();
     lamp_state_queue = xQueueCreate(5, sizeof(LampState));  // queue size = 5 messages
     brightness_queue = xQueueCreate(5, sizeof(uint8_t));
 
@@ -62,7 +65,7 @@ void Send_LampState(const LampState new_state) {
 }
 
 /// Brief: Sends a new brightness value to the queue.
-void Send_Brightness(const LampState brightness) {
+void Send_Brightness(const uint8_t brightness) {
     if (xQueueSend(brightness_queue, &brightness, 0) != pdPASS) {
         APP_LOG(TS_OFF, VLEVEL_M, "Failed to enqueue brightness\r\n");
     }
@@ -92,12 +95,13 @@ void Start_LampState_Task(void const *argument) {
 
 	        switch (current_lamp_state) {
 	            case OFF:
-	                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-	                break;
+	                DAC_Disable();
+	            	break;
 	            case ON:
-	                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
-	                break;
+	            	DAC_Enable();
+	            	break;
 	            case MOTION_SENSOR:
+					// handled in interrupt
 	                break;
 	            default:
 	            	break;
@@ -106,22 +110,36 @@ void Start_LampState_Task(void const *argument) {
 
 	    // Check for brightness change
 	    if (xQueueReceive(brightness_queue, &incoming_brightness, 0) == pdTRUE) {
-	    	if (incoming_brightness <= MESSAGE_MIN_BYTES) {
-	    		APP_LOG(TS_OFF, VLEVEL_M, "Brightness command does not include brightness\r\n");
-	    	}
-	        if (incoming_brightness > MAX_BRIGHTNESS) {
-	            incoming_brightness = MAX_BRIGHTNESS;
-	            APP_LOG(TS_OFF, VLEVEL_M, "Brightness outside range, brightness is now %u!\r\n", incoming_brightness);
-	        }
 	        if (xSemaphoreTake(state_mutex, portMAX_DELAY) == pdTRUE) {
 	            current_brightness = incoming_brightness;
-	            APP_LOG(TS_OFF, VLEVEL_M, "Change brightness to %u!\r\n", incoming_brightness);
 	            xSemaphoreGive(state_mutex);
 	        }
 
-	        APP_LOG(TS_OFF, VLEVEL_M, "Brightness changed to: %u\r\n", current_brightness);
+	        Warning result = DAC_Set_Brightness(current_brightness);
+
+	    	if (result != NO_WARNING)
+	    	{
+	    		const uint8_t params[] = { CHANGE_BRIGHTNESS, result };
+	    		Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_WARNING, (const uint8_t* const)&params, sizeof(params));
+	    		return;
+	    	}
 	    }
 
 	    osDelay(10);  // Give other tasks a chance
+	}
+}
+
+void Start_Motion_Sensor_Task(void const *argument) {
+	for (;;) {
+		if (xSemaphoreTake(sem_motion_sensor_signal, portMAX_DELAY) != pdTRUE) {
+			Error_Handler();
+		}
+		if(Get_State_LampState() == MOTION_SENSOR) {
+			if (GPIOA->IDR & GPIO_PIN_0) {
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+			} else {
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+			}
+		}
 	}
 }

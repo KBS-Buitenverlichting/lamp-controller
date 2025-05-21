@@ -41,6 +41,7 @@
 /* USER CODE BEGIN Includes */
 #include "transmit.h"
 #include "receive.h"
+#include "lamp_state.h"
 /* USER CODE END Includes */
 
 /* External variables ---------------------------------------------------------*/
@@ -262,6 +263,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     case  BUTTON_SW1_PIN:
       /* Note: when "EventType == TX_ON_TIMER" this GPIO is not initialized */
       UTIL_SEQ_SetTask((1 << CFG_SEQ_Task_LoRaSendOnTxTimerOrButtonEvent), CFG_SEQ_Prio_0);
+      break;
+    case GPIO_PIN_0:
+      xSemaphoreGiveFromISR(sem_motion_sensor_signal, NULL);
       break;
     default:
       break;

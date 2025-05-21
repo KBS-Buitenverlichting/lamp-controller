@@ -24,6 +24,7 @@
 #include "sys_app.h"
 #include "lamp_state.h"
 #include "schedules.h"
+#include "dac.h"
 
 #ifdef TESTING
 #include "testing.h"
@@ -43,6 +44,7 @@ static void MX_LPTIM1_Init(void);
 /* USER CODE BEGIN PFP */
 int32_t LED_control(int value);
 void Lamp_GPIO_Init(void);
+void Motion_Sensor_GPIO_Init(void);
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -112,6 +114,7 @@ int main(void) {
 	MX_GPIO_Init();
 	MX_LPTIM1_Init();
 	Lamp_GPIO_Init();
+	Motion_Sensor_GPIO_Init();
 	LampState_Init();
 	/* USER CODE END SysInit */
 
@@ -126,6 +129,8 @@ int main(void) {
 
 	osThreadDef(ProcessSchedulesTask, Start_Process_Schedules_Task, osPriorityNormal, 0, 256);
 	osThreadCreate(osThread(ProcessSchedulesTask), NULL);
+	osThreadDef(MotionSensorTask, Start_Motion_Sensor_Task, osPriorityNormal, 0, 256);
+	osThreadCreate(osThread(MotionSensorTask), NULL);
 	osKernelStart();
 	/* USER CODE END 2 */
 #endif
@@ -245,12 +250,36 @@ void Lamp_GPIO_Init(void) {
 	/* GPIO Ports Clock Enable */
 	__HAL_RCC_GPIOA_CLK_ENABLE();
 
-	/*Configure GPIO pin : PA10 */
+	/* Configure GPIO pin : PA10
+	 * Push Pull mode
+	 * No Pull-up or Pull-down active
+	 * Speed low
+	 */
 	GPIO_InitStruct.Pin = GPIO_PIN_10;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	// Initialize DAC (runs on PA10)
+	DAC_Init();
+}
+
+void Motion_Sensor_GPIO_Init(void) {
+	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
+
+	/* GPIO Ports Clock Enable */
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+
+	/*Configure GPIO pin : PA0 */
+	GPIO_InitStruct.Pin = GPIO_PIN_0;
+	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	HAL_NVIC_SetPriority(EXTI0_IRQn, 15, 0);
+	HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 }
 
 int32_t LED_control(int value) {
