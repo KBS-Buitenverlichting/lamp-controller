@@ -45,7 +45,7 @@ Warning DAC_Set_Value(const uint16_t value);
  *
  * @param brightness The brightness to set, where 255 is 100%
  *
- * @return A warning may be generated in DAC_Set_Brightness, this will be passed on
+ * @return A warning may be generated in DAC_Set_Value, this will be passed on
  *
  * @see DAC_Set_Value
  */
