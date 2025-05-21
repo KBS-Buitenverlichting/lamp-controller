@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <ctype.h>
 #include "stm32wlxx_hal.h"
 #include "usart.h"
@@ -16,6 +17,7 @@
 #include "LmHandler.h"
 
 #define RX_BUFFER_SIZE 64
+#define MAX_RETRIES 25
 
 void Interpret_Rx_Buffer(void);
 void Print_Rx_Buffer(void);
