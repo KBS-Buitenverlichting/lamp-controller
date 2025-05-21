@@ -87,12 +87,19 @@ void Handle_Activate_Motion_Sensor_Instruction(const uint8_t *const buffer, cons
 
 void Handle_Change_Brightness_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
-	if (buffer_size < MESSAGE_MIN_BYTES + BRIGHTNESS_PARAMS_BYTE_COUNT) {
-		APP_LOG(TS_OFF, VLEVEL_M, "Brightness command does not include brightness\n");
-	} else {
-		APP_LOG(TS_OFF, VLEVEL_M, "Change brightness to %02X!\n", buffer[PARAMETERS_START_BYTE]);
-		Send_Brightness(buffer[PARAMETERS_START_BYTE]);
+	APP_LOG(TS_OFF, VLEVEL_M, "Setting brightness\r\n");
+
+	if (buffer_size < MESSAGE_MIN_BYTES + BRIGHTNESS_PARAMS_BYTE_COUNT)
+	{
+		const uint8_t params[] = { CHANGE_BRIGHTNESS };
+		Tx_Set_Buffer(RESPONSE_OUT, MISSING_DATA, (const uint8_t* const)&params, sizeof(params));
+		return;
 	}
+
+	APP_LOG(TS_OFF, VLEVEL_M, "brightness: %u\r\n", buffer[PARAMETERS_START_BYTE]);
+
+	Send_Brightness(buffer[PARAMETERS_START_BYTE]);
+	Tx_Set_Ack(CHANGE_BRIGHTNESS);
 }
 
 void Handle_Send_Battery_Status_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
@@ -122,8 +129,8 @@ void Handle_Set_Battery_Vrefs_Instruction(const uint8_t *const buffer, const uin
 		return;
 	}
 
-	uint16_t min_vref = (buffer[PARAMETERS_START_BYTE] << 8) | buffer[PARAMETERS_START_BYTE + 1];
-	uint16_t max_vref = (buffer[PARAMETERS_START_BYTE + 2] << 8) | buffer[PARAMETERS_START_BYTE + 3];
+	const uint16_t min_vref = (buffer[PARAMETERS_START_BYTE] << 8) | buffer[PARAMETERS_START_BYTE + 1];
+	const uint16_t max_vref = (buffer[PARAMETERS_START_BYTE + 2] << 8) | buffer[PARAMETERS_START_BYTE + 3];
 
 	APP_LOG(TS_OFF, VLEVEL_M, "min: %u    max: %u\r\n", min_vref, max_vref);
 
