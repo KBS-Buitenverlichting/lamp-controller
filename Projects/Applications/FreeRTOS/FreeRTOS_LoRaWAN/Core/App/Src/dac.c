@@ -26,9 +26,9 @@ void DAC_Init(void)
 	 * Normal mode, output to external pin, buffer enabled (MODE[2:0] = 0b000)
 	 * Max brightness
 	 */
-	DAC_Disable();
 	DAC->MCR &= ~(DAC_MCR_MODE1);
 	DAC_Set_Brightness(UINT8_MAX);
+	DAC_Disable();
 }
 
 Warning DAC_Set_Value(uint16_t value)
