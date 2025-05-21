@@ -15,6 +15,8 @@
 #include "queue.h"
 #include "semphr.h"
 #include "main.h"  // for GPIO control
+#include "dac.h"
+#include "transmit.h"
 
 typedef enum {
     OFF,
@@ -29,7 +31,7 @@ void Send_LampState(const LampState new_state);
 LampState Get_State_LampState(void);
 const char* LampState_ToString(const LampState state);
 void Start_LampState_Task(void const *argument);
+void Send_Brightness(const uint8_t brightness);
 void Start_Motion_Sensor_Task(void const *argument);
-void Send_Brightness(const LampState brightness);
 uint8_t Get_Brightness(void);
 
