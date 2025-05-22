@@ -9,6 +9,7 @@
 
 #include "rtc.h"
 #include "lamp_state.h"
+#include "stdbool.h"
 
 #define SCHEDULE_LIST_MAX_LENGTH 10
 
@@ -57,6 +58,7 @@ void ScheduleList_Clear(void);
 
 void ScheduleTimestamp_To_RTC_DateTime(const ScheduleTimestamp* const timestamp, RTC_DateTypeDef* const out_date, RTC_TimeTypeDef* const out_time);
 ScheduleTimestamp RTC_DateTime_To_ScheduleTimestamp(const RTC_DateTypeDef* const date, const RTC_TimeTypeDef* const time);
+bool ScheduleTimestamp_Compare(const ScheduleTimestamp* const ts1, const ScheduleTimestamp* const ts2);
 
 ScheduleNode* ScheduleList_Get_First_Node(void);
 ScheduleFuncStatus ScheduleList_Insert_First(Schedule new_schedule);
