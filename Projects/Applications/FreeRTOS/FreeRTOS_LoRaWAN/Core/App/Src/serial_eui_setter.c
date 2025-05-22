@@ -10,7 +10,7 @@ static void Print_EUIs(void);
 static void Print_Rx_Buffer(void);
 static void Print_EUI(const char* const label, const uint8_t* const eui);
 static bool Interpret_Rx_Buffer(void);
-static uint8_t hex_to_byte(const char* const hex);
+static uint8_t Hex_To_Byte(const char* const hex);
 static void Handle_DevEUI_Command(const char* const hex_str);
 static void Handle_JoinEUI_Command(const char* const hex_str);
 static void Handle_Join_Command(void);
@@ -119,7 +119,7 @@ static bool Interpret_Rx_Buffer(void) {
 	return true;
 }
 
-static uint8_t hex_to_byte(const char* const hex) {
+static uint8_t Hex_To_Byte(const char* const hex) {
 	uint8_t high = (isdigit((uint8_t)hex[0]) ? hex[0] - '0' : toupper(hex[0]) - 'A' + 10);
 	uint8_t low = (isdigit((uint8_t)hex[1]) ? hex[1] - '0' : toupper(hex[1]) - 'A' + 10);
 	return (high << 4) | low;
