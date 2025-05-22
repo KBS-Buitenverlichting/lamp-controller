@@ -154,11 +154,6 @@ static void Handle_JoinEUI_Command(const char* const hex_str) {
 static void Handle_Join_Command(void) {
 	vcom_Trace((uint8_t*) "Trying join...\r\n", 16);
 	LmHandlerJoin(LORAWAN_DEFAULT_ACTIVATION_TYPE);
-	if (LmHandlerJoinStatus() == LORAMAC_HANDLER_SET) {
-		vcom_Trace((uint8_t*) "Successfully joined\r\n", 21);
-	} else {
-		vcom_Trace((uint8_t*) "Join failed\r\n", 13);
-	}
 }
 
 static bool Set_DevEUI(uint8_t *EUI) {
