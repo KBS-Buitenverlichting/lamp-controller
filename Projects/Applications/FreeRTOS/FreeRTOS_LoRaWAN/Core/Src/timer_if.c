@@ -395,8 +395,8 @@ void HAL_RTCEx_AlarmBEventCallback(RTC_HandleTypeDef *hrtc) {
 	HAL_RTC_GetTime(hrtc, &cur_time, FORMAT_BCD);
 
 	HAL_RTC_GetAlarm(hrtc, &alarm_b, RTC_ALARM_B, FORMAT_BCD);
-#ifndef TESTING
-	APP_PRINTF("The alarm went off at %02X minutes and %02X seconds\n", cur_time.Minutes, cur_time.Seconds);
+#ifndef TESTING	
+  APP_PRINTF("The alarm went off at %02X hours, %02X minutes and %02X seconds\r\n", cur_time.Hours, cur_time.Minutes, cur_time.Seconds);
 #endif
 	alarm_b.AlarmTime.Seconds = cur_time.Seconds + 0x20;
 

@@ -72,5 +72,6 @@ typedef enum Errors
 {
 	NO_ERROR = 0x00,
 	VREFS_NOT_INITIALIZED = 0x50,
+	FAILED_TO_SET_RTC = 0x60,
 	SCHEDULE_NOT_FOUND = 0xA0
 } Error;
