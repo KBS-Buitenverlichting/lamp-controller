@@ -175,7 +175,7 @@ void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, c
     }
 }
 
-void Handle_Set_Timeslot_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
+void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
 	APP_LOG(TS_OFF, VLEVEL_M, "Set new timeslot\r\n");
 }
@@ -185,7 +185,7 @@ void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_
 	APP_LOG(TS_OFF, VLEVEL_M, "Show timetable\r\n");
 }
 
-void Handle_Remove_Timeslot_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
+void Handle_Remove_Timeschedule_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
 	// Below is for testing purposes
 	ScheduleList_Clear();
