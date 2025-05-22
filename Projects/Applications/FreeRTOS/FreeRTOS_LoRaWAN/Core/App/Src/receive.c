@@ -244,7 +244,7 @@ void Handle_Remove_Timeslot_Instruction(const uint8_t *const buffer, const uint8
 	ScheduleNode* node = ScheduleList_Get_First_Node();
 
 	// Check the first node
-	if (ScheduleTimestamp_Compare(&(node->schedule.time_start), &start_time))
+	if (ScheduleTimestamp_Equals(&(node->schedule.time_start), &start_time))
 	{
 		ScheduleList_Remove_First();
 		// Below is for testing purposes
@@ -261,7 +261,7 @@ void Handle_Remove_Timeslot_Instruction(const uint8_t *const buffer, const uint8
 			// Below is for testing purposes
 			node_counter++;
 			// Above is for testing purposes
-			if (ScheduleTimestamp_Compare(&(node->schedule.time_start), &start_time))
+			if (ScheduleTimestamp_Equals(&(node->schedule.time_start), &start_time))
 			{
 				// Below is for testing purposes
 		        APP_LOG(TS_OFF, VLEVEL_M, "Removed %u\r\n", node_counter);
