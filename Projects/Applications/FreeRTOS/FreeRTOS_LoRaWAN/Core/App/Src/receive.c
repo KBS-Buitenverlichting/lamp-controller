@@ -46,14 +46,14 @@ void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
 		case SYNCHRONIZE_TIME_AND_DATE:
 			Handle_Synchronize_Time_And_Date_Instruction(buffer, buffer_size);
 			break;
-		case SET_TIMESLOT:
-			Handle_Set_Timeslot_Instruction(buffer, buffer_size);
+		case SET_TIMESCHEDULE:
+			Handle_Set_Timeschedule_Instruction(buffer, buffer_size);
 			break;
 		case SHOW_TIMETABLE:
 			Handle_Show_Timetable_Instruction(buffer, buffer_size);
 			break;
-		case REMOVE_TIMESLOT:
-			Handle_Remove_Timeslot_Instruction(buffer, buffer_size);
+		case REMOVE_TIMESCHEDULE:
+			Handle_Remove_Timeschedule_Instruction(buffer, buffer_size);
 			break;
 		default:
 			APP_LOG(TS_OFF, VLEVEL_M, "Unknown AB command: %02X\r\n", buffer[SUBTYPE_BYTE]);
@@ -203,7 +203,7 @@ void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, c
 	}
 }
 
-void Handle_Set_Timeslot_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
+void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
 	APP_LOG(TS_OFF, VLEVEL_M, "Set new timeslot\r\n");
 }
@@ -281,9 +281,102 @@ void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_
 	// Above is for testing purposes
 }
 
-void Handle_Remove_Timeslot_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
+void Handle_Remove_Timeschedule_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
-	APP_LOG(TS_OFF, VLEVEL_M, "Remove timeslot\r\n");
+	// Below is for testing purposes
+	ScheduleList_Clear();
+
+	Schedule test_schedule;
+	ScheduleTimestamp timestamp = {
+		.year = 25,
+		.month = 5,
+		.weekday = 3,
+		.date = 16,
+		.hours = 11,
+		.minutes = 30,
+		.seconds = 0
+	};
+	test_schedule.lamp_config = (LampConfig) {
+		.lamp_state = ON,
+		.brightness = 255
+	};
+	test_schedule.time_start = timestamp;
+	test_schedule.time_end = timestamp;
+	test_schedule.time_end.hours++;
+	(void)ScheduleList_Insert_First(test_schedule);
+
+	ScheduleNode* test_node = ScheduleList_Get_First_Node();
+
+
+	for (uint8_t i = 0; i < 9; i++)
+	{
+		test_schedule.time_start.year++;
+		test_schedule.time_end.year++;
+		(void)ScheduleList_Insert_After(test_node, test_schedule);
+		test_node = test_node->next;
+	}
+
+	uint8_t node_counter = 0;
+	// Above is for testing purposes
+
+	APP_LOG(TS_OFF, VLEVEL_M, "Remove timeschedule\r\n");
+
+	if (buffer_size < TIME_DATE_BYTE_COUNT) {
+		const uint8_t params[] = { REMOVE_TIMESCHEDULE };
+		Tx_Set_Buffer(RESPONSE_OUT, MISSING_DATA, (const uint8_t* const)&params, sizeof(params));
+		return;
+	}
+
+	const ScheduleTimestamp start_time = {
+			.year = buffer[2],
+			.month = buffer[3],
+			.weekday = buffer[4],
+			.date = buffer[5],
+			.hours = buffer[6],
+			.minutes = buffer[7],
+			.seconds = buffer[8]
+	};
+
+	ScheduleNode* node = ScheduleList_Get_First_Node();
+
+	// Check the first node
+	if (ScheduleTimestamp_Equals(&(node->schedule.time_start), &start_time))
+	{
+		ScheduleList_Remove_First();
+		Tx_Set_Ack(REMOVE_TIMESCHEDULE);
+		// Below is for testing purposes
+        APP_LOG(TS_OFF, VLEVEL_M, "Removed first\r\n");
+    	ScheduleList_Clear();
+		// Above is for testing purposes
+        return;
+	}
+	else // Check all other nodes
+	{
+		ScheduleNode* previous_node = node;
+		node = node->next;
+
+		while (node)
+		{
+			// Below is for testing purposes
+			node_counter++;
+			// Above is for testing purposes
+			if (ScheduleTimestamp_Equals(&(node->schedule.time_start), &start_time))
+			{
+				ScheduleList_Remove_After(previous_node);
+				Tx_Set_Ack(REMOVE_TIMESCHEDULE);
+				// Below is for testing purposes
+		        APP_LOG(TS_OFF, VLEVEL_M, "Removed %u\r\n", node_counter);
+		    	ScheduleList_Clear();
+				// Above is for testing purposes
+				return;
+			}
+			previous_node = node;
+			node = node->next;
+		}
+	}
+
+	const uint8_t params[] = { REMOVE_TIMESCHEDULE, SCHEDULE_NOT_FOUND };
+	Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
 }
 
 void Print_Current_RTC_Time(void)

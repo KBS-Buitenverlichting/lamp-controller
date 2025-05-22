@@ -40,9 +40,9 @@ typedef enum InstructionSubtypes
 	SEND_BATTERY_STATUS = 0x04,
 	SET_BATTERY_VREFS = 0x05,
 	SYNCHRONIZE_TIME_AND_DATE = 0x06,
-	SET_TIMESLOT = 0x07,
+	SET_TIMESCHEDULE = 0x07,
 	SHOW_TIMETABLE = 0x08,
-	REMOVE_TIMESLOT = 0x0A
+	REMOVE_TIMESCHEDULE = 0x0A
 } InstructionSubtype;
 
 typedef enum ResponseSubtypes
@@ -72,5 +72,6 @@ typedef enum Errors
 {
 	NO_ERROR = 0x00,
 	VREFS_NOT_INITIALIZED = 0x50,
-	FAILED_TO_SET_RTC = 0x60
+	FAILED_TO_SET_RTC = 0x60,
+	SCHEDULE_NOT_FOUND = 0xA0
 } Error;
