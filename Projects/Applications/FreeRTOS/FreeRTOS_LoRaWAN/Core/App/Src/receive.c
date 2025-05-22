@@ -210,7 +210,75 @@ void Handle_Set_Timeslot_Instruction(const uint8_t *const buffer, const uint8_t 
 
 void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
+	// Below is for testing purposes
+	ScheduleList_Clear();
+
+	Schedule test_schedule;
+	ScheduleTimestamp timestamp = {
+		.year = 25,
+		.month = 5,
+		.weekday = 3,
+		.date = 16,
+		.hours = 11,
+		.minutes = 30,
+		.seconds = 0
+	};
+	test_schedule.lamp_config = (LampConfig) {
+		.lamp_state = ON,
+		.brightness = 255
+	};
+	test_schedule.time_start = timestamp;
+	test_schedule.time_end = timestamp;
+	test_schedule.time_end.hours++;
+	(void)ScheduleList_Insert_First(test_schedule);
+
+	ScheduleNode* test_node = ScheduleList_Get_First_Node();
+
+
+	for (uint8_t i = 0; i < 9; i++)
+	{
+		(void)ScheduleList_Insert_After(test_node, test_schedule);
+		test_node = test_node->next;
+	}
+	// Above is for testing purposes
+
 	APP_LOG(TS_OFF, VLEVEL_M, "Show timetable\r\n");
+
+	const ScheduleNode* node = ScheduleList_Get_First_Node();
+	uint8_t params[IDENTIFIER_BYTE_COUNT + (ScheduleList_Get_Size() * sizeof(Schedule))];
+	params[IDENTIFIER_BYTE] = SHOW_TIMETABLE;
+
+	for (uint8_t i = 0; i < ScheduleList_Get_Size() && node; i++)
+	{
+		const uint8_t index = IDENTIFIER_BYTE_COUNT + (i * sizeof(Schedule));
+
+		params[index] = node->schedule.time_start.year;
+		params[index + 1] = node->schedule.time_start.month;
+		params[index + 2] = node->schedule.time_start.weekday;
+		params[index + 3] = node->schedule.time_start.date;
+		params[index + 4] = node->schedule.time_start.hours;
+		params[index + 5] = node->schedule.time_start.minutes;
+		params[index + 6] = node->schedule.time_start.seconds;
+
+		params[index + 7] = node->schedule.time_end.year;
+		params[index + 8] = node->schedule.time_end.month;
+		params[index + 9] = node->schedule.time_end.weekday;
+		params[index + 10] = node->schedule.time_end.date;
+		params[index + 11] = node->schedule.time_end.hours;
+		params[index + 12] = node->schedule.time_end.minutes;
+		params[index + 13] = node->schedule.time_end.seconds;
+
+		params[index + 14] = node->schedule.lamp_config.lamp_state;
+		params[index + 15] = node->schedule.lamp_config.brightness;
+
+		node = node->next;
+	}
+
+	Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION, (const uint8_t* const)&params, sizeof(params));
+
+	// Below is for testing purposes
+	ScheduleList_Clear();
+	// Above is for testing purposes
 }
 
 void Handle_Remove_Timeslot_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
