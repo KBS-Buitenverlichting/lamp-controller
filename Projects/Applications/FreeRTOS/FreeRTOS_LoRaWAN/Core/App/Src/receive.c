@@ -247,9 +247,12 @@ void Handle_Remove_Timeschedule_Instruction(const uint8_t *const buffer, const u
 	if (ScheduleTimestamp_Equals(&(node->schedule.time_start), &start_time))
 	{
 		ScheduleList_Remove_First();
+		Tx_Set_Ack(REMOVE_TIMESCHEDULE);
 		// Below is for testing purposes
         APP_LOG(TS_OFF, VLEVEL_M, "Removed first\r\n");
+    	ScheduleList_Clear();
 		// Above is for testing purposes
+        return;
 	}
 	else // Check all other nodes
 	{
@@ -263,20 +266,19 @@ void Handle_Remove_Timeschedule_Instruction(const uint8_t *const buffer, const u
 			// Above is for testing purposes
 			if (ScheduleTimestamp_Equals(&(node->schedule.time_start), &start_time))
 			{
+				ScheduleList_Remove_After(previous_node);
+				Tx_Set_Ack(REMOVE_TIMESCHEDULE);
 				// Below is for testing purposes
 		        APP_LOG(TS_OFF, VLEVEL_M, "Removed %u\r\n", node_counter);
+		    	ScheduleList_Clear();
 				// Above is for testing purposes
-				ScheduleList_Remove_After(previous_node);
-				break;
+				return;
 			}
 			previous_node = node;
 			node = node->next;
 		}
 	}
 
-	Tx_Set_Ack(REMOVE_TIMESCHEDULE);
-
-	// Below is for testing purposes
-	ScheduleList_Clear();
-	// Above is for testing purposes
+	const uint8_t params[] = { REMOVE_TIMESCHEDULE, SCHEDULE_NOT_FOUND };
+	Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
 }
