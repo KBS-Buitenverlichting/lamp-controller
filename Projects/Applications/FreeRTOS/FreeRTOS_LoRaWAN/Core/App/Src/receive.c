@@ -45,13 +45,13 @@ void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
 			Handle_Synchronize_Time_And_Date_Instruction(buffer, buffer_size);
 			break;
 		case SET_TIMESCHEDULE:
-			Handle_Set_Timeslot_Instruction(buffer, buffer_size);
+			Handle_Set_Timeschedule_Instruction(buffer, buffer_size);
 			break;
 		case SHOW_TIMETABLE:
 			Handle_Show_Timetable_Instruction(buffer, buffer_size);
 			break;
 		case REMOVE_TIMESCHEDULE:
-			Handle_Remove_Timeslot_Instruction(buffer, buffer_size);
+			Handle_Remove_Timeschedule_Instruction(buffer, buffer_size);
 			break;
 		default:
 			APP_LOG(TS_OFF, VLEVEL_M, "Unknown AB command: %02X\r\n", buffer[SUBTYPE_BYTE]);
