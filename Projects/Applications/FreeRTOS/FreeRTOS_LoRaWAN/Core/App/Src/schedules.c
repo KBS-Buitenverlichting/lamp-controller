@@ -40,7 +40,7 @@ ScheduleTimestamp RTC_DateTime_To_ScheduleTimestamp(
 	return timestamp;
 }
 
-bool ScheduleTimestamp_Compare(const ScheduleTimestamp* const ts1, const ScheduleTimestamp* const ts2)
+bool ScheduleTimestamp_Equals(const ScheduleTimestamp* const ts1, const ScheduleTimestamp* const ts2)
 {
 	return (ts1->year == ts2->year &&
 			ts1->month == ts2->month &&
