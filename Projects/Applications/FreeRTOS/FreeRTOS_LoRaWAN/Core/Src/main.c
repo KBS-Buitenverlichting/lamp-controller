@@ -41,8 +41,8 @@ static void MX_LPTIM1_Init(void);
 /* USER CODE BEGIN PFP */
 int32_t LED_control(int value);
 void Lamp_GPIO_Init(void);
-void rx_done(uint8_t *rxChar, uint16_t size, uint8_t error);
-void tx_done(void *arg);
+void Rx_Done(uint8_t *rx_char, uint16_t size, uint8_t error);
+void Tx_Done(void *arg);
 void Motion_Sensor_GPIO_Init(void);
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -69,12 +69,12 @@ void Motion_Sensor_GPIO_Init(void);
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
-osThreadId General_TaskHandle;
+osThreadId general_taskhandle;
 osThreadId LoRaWAN_TaskHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 void StartLoRaWANTask(void const *argument);
-void GeneralTask(void const *argument);
+void General_Task(void const *argument);
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
@@ -122,8 +122,8 @@ int main(void) {
 
   /* Initialize all configured peripherals */
   /* USER CODE BEGIN 2 */
-  osThreadDef(General_Task, GeneralTask, osPriorityLow, 0, 128);
-  General_TaskHandle = osThreadCreate(osThread(General_Task), NULL);
+  osThreadDef(General_Task, General_Task, osPriorityLow, 0, 128);
+  general_taskhandle = osThreadCreate(osThread(General_Task), NULL);
   osThreadDef(LoRaWAN_Task, StartLoRaWANTask, osPriorityNormal, 0, 1024);
   LoRaWAN_TaskHandle = osThreadCreate(osThread(LoRaWAN_Task), NULL);
   osThreadDef(LampStateTask, Start_LampState_Task, osPriorityNormal, 0, 256);
@@ -302,10 +302,10 @@ void StartLoRaWANTask(void const *argument) {
   /* USER CODE END 5 */
 }
 /* USER CODE END 4 */
-void GeneralTask(void const *argument) {
+void General_Task(void const *argument) {
   LED_control(1);
-  vcom_Init(tx_done);
-  vcom_ReceiveInit(rx_done);
+  vcom_Init(Tx_Done);
+  vcom_ReceiveInit(Rx_Done);
   for (;;) {
     LED_control(0);
     osDelay(500);
@@ -314,11 +314,11 @@ void GeneralTask(void const *argument) {
   }
 }
 
-void rx_done(uint8_t *rxChar, uint16_t size, uint8_t error) {
-  Add_To_Rx_Buffer(rxChar);
+void Rx_Done(uint8_t *rx_char, uint16_t size, uint8_t error) {
+  Add_To_Rx_Buffer(rx_char);
 }
 
-void tx_done(void *arg) {}
+void Tx_Done(void *arg) {}
 
 /**
  * @brief  This function is executed in case of error occurrence.
