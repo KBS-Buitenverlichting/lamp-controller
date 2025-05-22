@@ -223,7 +223,7 @@ void Handle_Remove_Timeschedule_Instruction(const uint8_t *const buffer, const u
 	uint8_t node_counter = 0;
 	// Above is for testing purposes
 
-	APP_LOG(TS_OFF, VLEVEL_M, "Remove timeslot\r\n");
+	APP_LOG(TS_OFF, VLEVEL_M, "Remove timeschedule\r\n");
 
 	if (buffer_size < TIME_DATE_BYTE_COUNT) {
 		const uint8_t params[] = { REMOVE_TIMESCHEDULE };
