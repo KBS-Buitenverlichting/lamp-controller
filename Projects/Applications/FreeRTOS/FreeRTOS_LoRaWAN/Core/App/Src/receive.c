@@ -1,6 +1,8 @@
 #include "receive.h"
 #include "lamp_state.h"
 #include "sys_app.h" // Used for APP_LOG to write output to serial
+#include "rtc.h"
+#include "stm32wlxx_hal_rtc.h"
 
 /// Brief: Handles incoming LoRaWAN data and calls message interpreter.
 void Process_Rx_Data(const LmHandlerAppData_t *const app_data,
@@ -147,32 +149,58 @@ void Handle_Set_Battery_Vrefs_Instruction(const uint8_t *const buffer, const uin
 void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
 	APP_LOG(TS_OFF, VLEVEL_M, "Sync time and date\r\n");
+
 	if (buffer_size < TIME_DATE_BYTE_COUNT) {
-        APP_LOG(TS_OFF, VLEVEL_M, "Time/date command input is to short!\r\n");
-    } else {
-        APP_LOG(TS_OFF, VLEVEL_M, "Update time/ date!\r\n");
+		APP_LOG(TS_OFF, VLEVEL_M, "Time/date command input is too short!\r\n");
+		const uint8_t params[] = { SYNCHRONIZE_TIME_AND_DATE };
+		Tx_Set_Buffer(RESPONSE_OUT, MISSING_DATA, (const uint8_t* const)&params, sizeof(params));
+	} else if ( !IS_RTC_YEAR(buffer[2]) ||               // Year (0–99)
+				!IS_RTC_MONTH(buffer[3]) ||              // Month (1–12)
+				!IS_RTC_WEEKDAY(buffer[4]) ||            // Weekday (1–7)
+				!IS_RTC_DATE(buffer[5]) ||               // Day (1–31)
+				!IS_RTC_HOUR24(buffer[6]) ||             // Hours (0–23)
+				!IS_RTC_MINUTES(buffer[7])||             // Minutes (0–59)
+				!IS_RTC_SECONDS(buffer[8]))              // Seconds (0–59)
+				{
+					APP_LOG(TS_OFF, VLEVEL_M, "Invalid date/time value received!\r\n");
+					const uint8_t params[] = { SYNCHRONIZE_TIME_AND_DATE };
+					Tx_Set_Buffer(RESPONSE_OUT, INVALID_DATA, (const uint8_t* const)&params, sizeof(params));
+				}
+	else {
+		APP_LOG(TS_OFF, VLEVEL_M, "Update time/date!\r\n");
 
-        uint8_t hour = buffer[2];
-        uint8_t minute = buffer[3];
-        uint8_t second = buffer[4];
-        uint8_t year = buffer[5];    // Assume offset from 2000
-        uint8_t weekday = buffer[6]; // 1 = Monday, 7 = Sunday
-        uint8_t month = buffer[7];   // 1–12
-        uint8_t day = buffer[8];     // 1–31
+		RTC_TimeTypeDef current_time = {0};
+		RTC_DateTypeDef current_date = {0};
 
-        const char *weekday_names[] = {"Forbidden", "Monday",   "Tuesday",
-                                       "Wednesday", "Thursday", "Friday",
-                                       "Saturday",  "Sunday"};
+		current_date.Year = buffer[2];
+		current_date.Month = buffer[3];
+		current_date.WeekDay = buffer[4];
+		current_date.Date = buffer[5];
+		current_time.Hours = buffer[6];
+		current_time.Minutes = buffer[7];
+		current_time.Seconds = buffer[8];
+		current_time.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+		current_time.StoreOperation = RTC_STOREOPERATION_RESET;
 
-        const char *weekday_str = "Unknown";
 
-        if (weekday <= 7) {
-            weekday_str = weekday_names[weekday];
-        }
+		if (HAL_RTC_SetTime(&hrtc, &current_time, RTC_FORMAT_BIN) != HAL_OK) {
+			APP_LOG(TS_OFF, VLEVEL_M, "Failed to set RTC time!\r\n");
+			const uint8_t params[] = { SYNCHRONIZE_TIME_AND_DATE, FAILED_TO_SET_RTC};
+			Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
+		}
 
-        APP_LOG(TS_OFF, VLEVEL_M, "Time: %02u:%02u:%02u\r\n", hour, minute, second);
-        APP_LOG(TS_OFF, VLEVEL_M, "Date: %s %02u-%02u-%04u\r\n", weekday_str, day, month, 2000 + year);
-    }
+		if (HAL_RTC_SetDate(&hrtc, &current_date, RTC_FORMAT_BIN) != HAL_OK) {
+			APP_LOG(TS_OFF, VLEVEL_M, "Failed to set RTC date!\r\n");
+			const uint8_t params[] = { SYNCHRONIZE_TIME_AND_DATE, FAILED_TO_SET_RTC};
+			Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
+		}
+			Print_Current_RTC_Time();
+//			An acknowledge is not possible because when it updates the time, it also resets the subseconds, TTN uses this to base their messaging timing on,
+//			and then you have to wait however long the microcontroller has been on, which could take a while.
+//			And during this time you can't use the LoRa. A reset fixes this, but then you won't get an acknowledge, so for this reason we don't have one.
+//			Tx_Set_Ack(SYNCHRONIZE_TIME_AND_DATE);
+			NVIC_SystemReset();
+	}
 }
 
 void Handle_Set_Timeslot_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
@@ -188,4 +216,27 @@ void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_
 void Handle_Remove_Timeslot_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
 	APP_LOG(TS_OFF, VLEVEL_M, "Remove timeslot\r\n");
+}
+
+void Print_Current_RTC_Time(void)
+{
+	RTC_TimeTypeDef current_time;
+    RTC_DateTypeDef current_date;
+
+    HAL_RTC_GetTime(&hrtc, &current_time, RTC_FORMAT_BIN);
+    HAL_RTC_GetDate(&hrtc, &current_date, RTC_FORMAT_BIN);
+
+    const char *weekday_names[] = {"Forbidden", "Monday",   "Tuesday",
+    								   "Wednesday", "Thursday", "Friday",
+    								   "Saturday",  "Sunday"};
+    const char *weekday_str = (current_date.WeekDay <= 7) ? weekday_names[current_date.WeekDay] : "Unknown";
+
+    APP_LOG(TS_OFF, VLEVEL_M, "RTC Now: %02u:%02u:%02u on %02u-%02u-%04u (Weekday %s)\r\n",
+            current_time.Hours,
+            current_time.Minutes,
+            current_time.Seconds,
+            current_date.Date,
+            current_date.Month,
+            2000 + current_date.Year,	// adding 2000 years to get the full year =)
+            weekday_str);
 }
