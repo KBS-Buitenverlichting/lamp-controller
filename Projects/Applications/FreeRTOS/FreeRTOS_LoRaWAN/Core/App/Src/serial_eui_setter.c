@@ -128,7 +128,7 @@ static uint8_t Hex_To_Byte(const char* const hex) {
 static void Handle_DevEUI_Command(const char* const hex_str) {
 	uint8_t new_devEUI[EUI_SIZE];
 	for (uint8_t i = 0; i < EUI_SIZE; i++) {
-		new_devEUI[i] = hex_to_byte(&hex_str[i * 2]);
+		new_devEUI[i] = Hex_To_Byte(&hex_str[i * 2]);
 	}
 	LmHandlerStop();
 	if (Set_DevEUI(new_devEUI)) {
@@ -141,7 +141,7 @@ static void Handle_DevEUI_Command(const char* const hex_str) {
 static void Handle_JoinEUI_Command(const char* const hex_str) {
 	uint8_t new_joinEUI[EUI_SIZE];
 	for (uint8_t i = 0; i < EUI_SIZE; i++) {
-		new_joinEUI[i] = hex_to_byte(&hex_str[i * 2]);
+		new_joinEUI[i] = Hex_To_Byte(&hex_str[i * 2]);
 	}
 	LmHandlerStop();
 	if (Set_JoinEUI(new_joinEUI)) {
