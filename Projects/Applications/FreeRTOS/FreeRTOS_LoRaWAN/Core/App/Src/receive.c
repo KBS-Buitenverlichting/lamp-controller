@@ -44,13 +44,13 @@ void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
 		case SYNCHRONIZE_TIME_AND_DATE:
 			Handle_Synchronize_Time_And_Date_Instruction(buffer, buffer_size);
 			break;
-		case SET_TIMESLOT:
+		case SET_TIMESCHEDULE:
 			Handle_Set_Timeslot_Instruction(buffer, buffer_size);
 			break;
 		case SHOW_TIMETABLE:
 			Handle_Show_Timetable_Instruction(buffer, buffer_size);
 			break;
-		case REMOVE_TIMESLOT:
+		case REMOVE_TIMESCHEDULE:
 			Handle_Remove_Timeslot_Instruction(buffer, buffer_size);
 			break;
 		default:
@@ -226,7 +226,7 @@ void Handle_Remove_Timeslot_Instruction(const uint8_t *const buffer, const uint8
 	APP_LOG(TS_OFF, VLEVEL_M, "Remove timeslot\r\n");
 
 	if (buffer_size < TIME_DATE_BYTE_COUNT) {
-		const uint8_t params[] = { REMOVE_TIMESLOT };
+		const uint8_t params[] = { REMOVE_TIMESCHEDULE };
 		Tx_Set_Buffer(RESPONSE_OUT, MISSING_DATA, (const uint8_t* const)&params, sizeof(params));
 		return;
 	}
@@ -274,7 +274,7 @@ void Handle_Remove_Timeslot_Instruction(const uint8_t *const buffer, const uint8
 		}
 	}
 
-	Tx_Set_Ack(REMOVE_TIMESLOT);
+	Tx_Set_Ack(REMOVE_TIMESCHEDULE);
 
 	// Below is for testing purposes
 	ScheduleList_Clear();
