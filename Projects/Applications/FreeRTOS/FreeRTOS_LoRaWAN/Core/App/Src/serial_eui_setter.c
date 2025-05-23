@@ -8,14 +8,17 @@
 
 static void Print_EUIs(void);
 static void Print_Rx_Buffer(void);
-static void Print_EUI(const char* const label, const uint8_t* const eui);
+static void Print_EUI(const char *const label, const uint8_t *const eui);
 static bool Interpret_Rx_Buffer(void);
-static uint8_t Hex_To_Byte(const char* const hex);
-static void Handle_DevEUI(const char* const hex_str);
-static void Handle_JoinEUI(const char* const hex_str);
+static uint8_t Hex_To_Byte(const char *const hex);
+static void Handle_DevEUI(const char *const hex_str);
+static void Handle_JoinEUI(const char *const hex_str);
 static void Handle_Join(void);
+static void Handle_Status(void);
 static bool Set_DevEUI(uint8_t *EUI);
 static bool Set_JoinEUI(uint8_t *EUI);
+static void Get_Currently_Used_EUIs(void);
+static bool Is_Joined(void);
 
 // Below are the standard EUIs, note that these will be reverted to when a power cycle occurs
 uint8_t devEUI[8]; // 70B3D57ED0070297
@@ -25,33 +28,23 @@ uint8_t rx_buffer[RX_BUFFER_SIZE];
 uint8_t rx_buffer_index = 0;
 
 typedef enum CommandTypes {
-	CMD_UNKNOWN,
-	CMD_DEVEUI,		// !DEVEUI=...
+	CMD_UNKNOWN, CMD_DEVEUI,		// !DEVEUI=...
 	CMD_JOINEUI,	// !JOINEUI=...
 	CMD_JOIN,		// !JOIN
-	CMD_PRINT		// !PRINT
+	CMD_PRINT,		// !PRINT
+	CMD_STATUS		// !STATUS
 } CommandType;
 
 void Serial_Init(void) {
-	uint8_t devEUI_compare[8];
-	uint8_t joinEUI_compare[8];
-
 	Load_EUIs_From_Flash(devEUI, joinEUI);
-	LmHandlerGetDevEUI(devEUI_compare);
-	LmHandlerGetAppEUI(joinEUI_compare);
-
-	if (devEUI != devEUI_compare || joinEUI != joinEUI_compare) {
-		LmHandlerStop();
-		Refresh_EUIs();
-		//Handle_Join();
-		//while (!LmHandlerJoinStatus() != LORAMAC_HANDLER_SET);
-		vcom_Trace((uint8_t*) "Lamp unit ready!\r\n", 18);
-	}
-
-
+	LmHandlerStop();
+	LmHandlerSetDevEUI(devEUI);
+	LmHandlerSetAppEUI(joinEUI);
+	//Handle_Join();
+	vcom_Trace((uint8_t*) "Lamp unit ready!\r\n", 18);
 }
 
-void Add_To_Rx_Buffer(const uint8_t* const rx_char) {
+void Add_To_Rx_Buffer(const uint8_t *const rx_char) {
 	if (rx_buffer_index < RX_BUFFER_SIZE) {
 		rx_buffer[rx_buffer_index++] = *rx_char;
 
@@ -81,7 +74,7 @@ static void Print_Rx_Buffer(void) {
 	}
 }
 
-static void Print_EUI(const char* const label, const uint8_t* const eui) {
+static void Print_EUI(const char *const label, const uint8_t *const eui) {
 	static char buffer[PRINT_BUFFER_SIZE];
 	uint8_t len = snprintf(buffer, sizeof(buffer),
 			"%s%02X%02X%02X%02X%02X%02X%02X%02X\r\n", label, eui[0], eui[1],
@@ -115,6 +108,8 @@ static bool Interpret_Rx_Buffer(void) {
 		cmd_type = CMD_JOIN;
 	} else if (strncmp(cmd_start, "PRINT", 5) == 0) {
 		cmd_type = CMD_PRINT;
+	} else if (strncmp(cmd_start, "STATUS", 6) == 0) {
+		cmd_type = CMD_STATUS;
 	}
 
 	switch (cmd_type) {
@@ -130,6 +125,9 @@ static bool Interpret_Rx_Buffer(void) {
 	case CMD_PRINT:
 		Print_EUIs();
 		break;
+	case CMD_STATUS:
+		Handle_Status();
+		break;
 	default:
 		vcom_Trace((uint8_t*) "Unknown command\r\n", 20);
 		break;
@@ -139,13 +137,17 @@ static bool Interpret_Rx_Buffer(void) {
 	return true;
 }
 
-static uint8_t Hex_To_Byte(const char* const hex) {
-	uint8_t high = (isdigit((uint8_t)hex[0]) ? hex[0] - '0' : toupper(hex[0]) - 'A' + 10);
-	uint8_t low = (isdigit((uint8_t)hex[1]) ? hex[1] - '0' : toupper(hex[1]) - 'A' + 10);
+static uint8_t Hex_To_Byte(const char *const hex) {
+	uint8_t high = (
+			isdigit((uint8_t )hex[0]) ?
+					hex[0] - '0' : toupper(hex[0]) - 'A' + 10);
+	uint8_t low = (
+			isdigit((uint8_t )hex[1]) ?
+					hex[1] - '0' : toupper(hex[1]) - 'A' + 10);
 	return (high << 4) | low;
 }
 
-static void Handle_DevEUI(const char* const hex_str) {
+static void Handle_DevEUI(const char *const hex_str) {
 	uint8_t new_devEUI[EUI_SIZE];
 	for (uint8_t i = 0; i < EUI_SIZE; i++) {
 		new_devEUI[i] = Hex_To_Byte(&hex_str[i * 2]);
@@ -156,11 +158,11 @@ static void Handle_DevEUI(const char* const hex_str) {
 		Save_EUIs_To_Flash(devEUI, joinEUI);
 		Print_EUI("New DevEUI: ", devEUI);
 	} else {
-		vcom_Trace((uint8_t *)"Please try again\r\n", 18);
+		vcom_Trace((uint8_t*) "Please try again\r\n", 18);
 	}
 }
 
-static void Handle_JoinEUI(const char* const hex_str) {
+static void Handle_JoinEUI(const char *const hex_str) {
 	uint8_t new_joinEUI[EUI_SIZE];
 	for (uint8_t i = 0; i < EUI_SIZE; i++) {
 		new_joinEUI[i] = Hex_To_Byte(&hex_str[i * 2]);
@@ -171,13 +173,20 @@ static void Handle_JoinEUI(const char* const hex_str) {
 		Save_EUIs_To_Flash(devEUI, joinEUI);
 		Print_EUI("New JoinEUI: ", joinEUI);
 	} else {
-		vcom_Trace((uint8_t *)"Please try again\r\n", 18);
+		vcom_Trace((uint8_t*) "Please try again\r\n", 18);
 	}
 }
 
 static void Handle_Join(void) {
 	vcom_Trace((uint8_t*) "Trying join...\r\n", 16);
 	LmHandlerJoin(LORAWAN_DEFAULT_ACTIVATION_TYPE);
+}
+
+static void Handle_Status(void) {
+	vcom_Trace((uint8_t*) "Joined: ", 8);
+	Is_Joined() ?
+			vcom_Trace((uint8_t*) "TRUE\r\n", 6) :
+			vcom_Trace((uint8_t*) "FALSE\r\n", 7);
 }
 
 static bool Set_DevEUI(uint8_t *EUI) {
@@ -200,7 +209,8 @@ static bool Set_DevEUI(uint8_t *EUI) {
 		HAL_Delay(100);
 	}
 
-	vcom_Trace((uint8_t*) "Failed to set DevEUI after multiple attempts\r\n", 47);
+	vcom_Trace((uint8_t*) "Failed to set DevEUI after multiple attempts\r\n",
+			47);
 	return false;
 }
 
@@ -224,16 +234,16 @@ static bool Set_JoinEUI(uint8_t *EUI) {
 		HAL_Delay(100);
 	}
 
-	vcom_Trace((uint8_t*) "Failed to set JoinEUI after multiple attempts\r\n", 48);
+	vcom_Trace((uint8_t*) "Failed to set JoinEUI after multiple attempts\r\n",
+			48);
 	return false;
 }
 
-void Refresh_EUIs(void) {
-	LmHandlerSetDevEUI(devEUI);
-	LmHandlerSetAppEUI(joinEUI);
-}
-
-void Get_Currently_Used_EUIs(void) {
+static void Get_Currently_Used_EUIs(void) {
 	LmHandlerGetDevEUI(devEUI);
 	LmHandlerGetAppEUI(joinEUI);
+}
+
+static bool Is_Joined(void) {
+	return LmHandlerJoinStatus() == LORAMAC_HANDLER_SET;
 }
