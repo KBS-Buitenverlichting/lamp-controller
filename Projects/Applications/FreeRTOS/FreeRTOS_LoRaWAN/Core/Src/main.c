@@ -77,7 +77,7 @@ osThreadId LoRaWAN_TaskHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 void StartLoRaWANTask(void const *argument);
-void General_Task(void const *argument);
+void Start_General_Task(void const *argument);
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
@@ -124,7 +124,7 @@ int main(void) {
 
   /* Initialize all configured peripherals */
   /* USER CODE BEGIN 2 */
-  osThreadDef(General_Task, General_Task, osPriorityLow, 0, 128);
+  osThreadDef(General_Task, Start_General_Task, osPriorityLow, 0, 128);
   general_taskhandle = osThreadCreate(osThread(General_Task), NULL);
   osThreadDef(LoRaWAN_Task, StartLoRaWANTask, osPriorityNormal, 0, 1024);
   LoRaWAN_TaskHandle = osThreadCreate(osThread(LoRaWAN_Task), NULL);
@@ -306,7 +306,7 @@ void StartLoRaWANTask(void const *argument) {
   /* USER CODE END 5 */
 }
 /* USER CODE END 4 */
-void General_Task(void const *argument) {
+void Start_General_Task(void const *argument) {
   LED_control(1);
   vcom_Init(Tx_Done);
   vcom_ReceiveInit(Rx_Done);
