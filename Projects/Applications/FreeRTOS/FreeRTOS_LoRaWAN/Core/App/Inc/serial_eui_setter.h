@@ -21,6 +21,7 @@
 #define PRINT_BUFFER_SIZE 64
 #define MAX_RETRIES 25
 #define EUI_SIZE 8
+#define EMPTY_EUI { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
 
 void Add_To_Rx_Buffer(const uint8_t* const rx_char);
 void Serial_Init(void);

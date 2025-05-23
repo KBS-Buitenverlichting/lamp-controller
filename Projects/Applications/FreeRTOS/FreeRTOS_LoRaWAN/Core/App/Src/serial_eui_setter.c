@@ -18,17 +18,19 @@ static void Handle_Status(void);
 static bool Set_DevEUI(uint8_t *EUI);
 static bool Set_JoinEUI(uint8_t *EUI);
 static void Get_Currently_Used_EUIs(void);
+static bool Is_EUI_Empty(const uint8_t *eui);
 static bool Is_Joined(void);
 
 // Below are the standard EUIs, note that these will be reverted to when a power cycle occurs
-uint8_t devEUI[8]; // 70B3D57ED0070297
-uint8_t joinEUI[8]; // 0908070605040201
+uint8_t devEUI[8] = { 0 }; // 70B3D57ED0070297
+uint8_t joinEUI[8] = { 0 }; // 0908070605040201
 
 uint8_t rx_buffer[RX_BUFFER_SIZE];
 uint8_t rx_buffer_index = 0;
 
 typedef enum CommandTypes {
-	CMD_UNKNOWN, CMD_DEVEUI,		// !DEVEUI=...
+	CMD_UNKNOWN,
+	CMD_DEVEUI,		// !DEVEUI=...
 	CMD_JOINEUI,	// !JOINEUI=...
 	CMD_JOIN,		// !JOIN
 	CMD_PRINT,		// !PRINT
@@ -40,8 +42,19 @@ void Serial_Init(void) {
 	LmHandlerStop();
 	LmHandlerSetDevEUI(devEUI);
 	LmHandlerSetAppEUI(joinEUI);
-	//Handle_Join();
-	vcom_Trace((uint8_t*) "Lamp unit ready!\r\n", 18);
+
+	if (Is_EUI_Empty(devEUI) && Is_EUI_Empty(joinEUI)) {
+		vcom_Trace((uint8_t*) "No EUIs set, set them with the correct commands\r\n", 49);
+	} else {
+		Handle_Join();
+		HAL_Delay(5000);
+		if (Is_Joined()) {
+			vcom_Trace((uint8_t*) "Lamp unit ready\r\n", 17);
+		} else {
+			LmHandlerStop();
+			vcom_Trace((uint8_t*) "Could not join, check and try manually\r\n", 40);
+		}
+	}
 }
 
 void Add_To_Rx_Buffer(const uint8_t *const rx_char) {
@@ -138,12 +151,8 @@ static bool Interpret_Rx_Buffer(void) {
 }
 
 static uint8_t Hex_To_Byte(const char *const hex) {
-	uint8_t high = (
-			isdigit((uint8_t )hex[0]) ?
-					hex[0] - '0' : toupper(hex[0]) - 'A' + 10);
-	uint8_t low = (
-			isdigit((uint8_t )hex[1]) ?
-					hex[1] - '0' : toupper(hex[1]) - 'A' + 10);
+	uint8_t high = (isdigit((uint8_t )hex[0]) ? hex[0] - '0' : toupper(hex[0]) - 'A' + 10);
+	uint8_t low = (isdigit((uint8_t )hex[1]) ? hex[1] - '0' : toupper(hex[1]) - 'A' + 10);
 	return (high << 4) | low;
 }
 
@@ -184,15 +193,12 @@ static void Handle_Join(void) {
 
 static void Handle_Status(void) {
 	vcom_Trace((uint8_t*) "Joined: ", 8);
-	Is_Joined() ?
-			vcom_Trace((uint8_t*) "TRUE\r\n", 6) :
-			vcom_Trace((uint8_t*) "FALSE\r\n", 7);
+	Is_Joined() ? vcom_Trace((uint8_t*) "TRUE\r\n", 6) : vcom_Trace((uint8_t*) "FALSE\r\n", 7);
 }
 
 static bool Set_DevEUI(uint8_t *EUI) {
 	uint8_t tempEUI[EUI_SIZE];
 	uint8_t attempts = 0;
-	//Save_EUIs_To_Flash(EUI, joinEUI);
 
 	// Retry setting DevEUI until it matches or max_attempts is reached
 	vcom_Trace((uint8_t*) "Trying to update DevEUI...\r\n", 28);
@@ -217,7 +223,6 @@ static bool Set_DevEUI(uint8_t *EUI) {
 static bool Set_JoinEUI(uint8_t *EUI) {
 	uint8_t tempEUI[EUI_SIZE];
 	uint8_t attempts = 0;
-	//Save_EUIs_To_Flash(devEUI, EUI);
 
 	// Retry setting JoinEUI until it matches or max_attempts is reached
 	vcom_Trace((uint8_t*) "Trying to update JoinEUI...\r\n", 29);
@@ -242,6 +247,11 @@ static bool Set_JoinEUI(uint8_t *EUI) {
 static void Get_Currently_Used_EUIs(void) {
 	LmHandlerGetDevEUI(devEUI);
 	LmHandlerGetAppEUI(joinEUI);
+}
+
+static bool Is_EUI_Empty(const uint8_t *eui) {
+	static const uint8_t EMPTY[EUI_SIZE] = { 0 };
+	return memcmp(eui, EMPTY, EUI_SIZE) == 0;
 }
 
 static bool Is_Joined(void) {
