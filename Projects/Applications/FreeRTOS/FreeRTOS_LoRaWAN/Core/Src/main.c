@@ -20,7 +20,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "app_lorawan.h"
-//#include "sys_app.h"
 #include "lamp_state.h"
 #include "schedules.h"
 #include "cmsis_os.h"
@@ -131,10 +130,10 @@ int main(void) {
   osThreadDef(LampStateTask, Start_LampState_Task, osPriorityNormal, 0, 256);
   osThreadCreate(osThread(LampStateTask), NULL);
   osThreadDef(MotionSensorTask, Start_Motion_Sensor_Task, osPriorityNormal, 0,
-              256);
+              128);
   osThreadCreate(osThread(MotionSensorTask), NULL);
-	osThreadDef(ProcessSchedulesTask, Start_Process_Schedules_Task, osPriorityNormal, 0, 256);
-	osThreadCreate(osThread(ProcessSchedulesTask), NULL);
+  osThreadDef(ProcessSchedulesTask, Start_Process_Schedules_Task, osPriorityNormal, 0, 128);
+  osThreadCreate(osThread(ProcessSchedulesTask), NULL);
   osKernelStart();
   /* USER CODE END 2 */
 #endif

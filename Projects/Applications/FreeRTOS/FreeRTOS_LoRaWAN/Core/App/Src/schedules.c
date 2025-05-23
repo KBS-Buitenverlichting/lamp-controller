@@ -17,6 +17,8 @@ void ScheduleList_Init();
 
 void Start_Process_Schedules_Task(void const *argument) {
 	ScheduleList_Init();
+	osDelay(200);
+	RTC_Init_AlarmB();
 	for(;;) {
 		if(xSemaphoreTake(sem_process_alarm, portMAX_DELAY) != pdPASS) {
 			Error_Handler();

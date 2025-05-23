@@ -94,7 +94,6 @@ void MX_RTC_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN RTC_Init 2 */
-  RTC_Init_AlarmB();
 
   /* USER CODE END RTC_Init 2 */
 
