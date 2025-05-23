@@ -381,6 +381,7 @@ static void OnJoinRequest(LmHandlerJoinParams_t *joinParams)
   {
     if (joinParams->Status == LORAMAC_HANDLER_SUCCESS)
     {
+    	vcom_Trace((uint8_t*) "Successfully joined\r\n", 21);
       APP_LOG(TS_OFF, VLEVEL_M, "\r\n###### = JOINED = ");
       if (joinParams->Mode == ACTIVATION_TYPE_ABP)
       {
@@ -393,6 +394,7 @@ static void OnJoinRequest(LmHandlerJoinParams_t *joinParams)
     }
     else
     {
+    	vcom_Trace((uint8_t*) "Join failed\r\n", 13);
       APP_LOG(TS_OFF, VLEVEL_M, "\r\n###### = JOIN FAILED\r\n");
     }
   }
