@@ -1289,6 +1289,7 @@ LmHandlerErrorStatus_t LmHandlerGetDevEUI(uint8_t *devEUI)
 LmHandlerErrorStatus_t LmHandlerSetDevEUI(uint8_t *devEUI)
 {
     MibRequestConfirm_t mibReq;
+    //Load_DevEUI_From_Flash(devEUI); // Pull EUI from flash instead of parameter of function
 
     /* Not yet joined */
     if (LmHandlerJoinStatus() != LORAMAC_HANDLER_SET)
@@ -1329,6 +1330,7 @@ LmHandlerErrorStatus_t LmHandlerGetAppEUI(uint8_t *appEUI)
 LmHandlerErrorStatus_t LmHandlerSetAppEUI(uint8_t *appEUI)
 {
     MibRequestConfirm_t mibReq;
+    //Load_JoinEUI_From_Flash(*appEUI); // Pull EUI from flash instead of parameter of function
 
     /* Not yet joined */
     if (LmHandlerJoinStatus() != LORAMAC_HANDLER_SET)

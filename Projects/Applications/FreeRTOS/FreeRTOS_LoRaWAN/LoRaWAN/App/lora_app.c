@@ -224,7 +224,7 @@ void LoRaWAN_Init(void)
 
   /* USER CODE END LoRaWAN_Init_2 */
 
-  LmHandlerJoin(ActivationType);
+  //LmHandlerJoin(ActivationType);
 
   if (EventType == TX_ON_TIMER)
   {

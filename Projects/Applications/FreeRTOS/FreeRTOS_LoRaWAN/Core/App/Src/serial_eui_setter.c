@@ -11,9 +11,9 @@ static void Print_Rx_Buffer(void);
 static void Print_EUI(const char* const label, const uint8_t* const eui);
 static bool Interpret_Rx_Buffer(void);
 static uint8_t Hex_To_Byte(const char* const hex);
-static void Handle_DevEUI_Command(const char* const hex_str);
-static void Handle_JoinEUI_Command(const char* const hex_str);
-static void Handle_Join_Command(void);
+static void Handle_DevEUI(const char* const hex_str);
+static void Handle_JoinEUI(const char* const hex_str);
+static void Handle_Join(void);
 static bool Set_DevEUI(uint8_t *EUI);
 static bool Set_JoinEUI(uint8_t *EUI);
 
@@ -33,7 +33,22 @@ typedef enum CommandTypes {
 } CommandType;
 
 void Serial_Init(void) {
+	uint8_t devEUI_compare[8];
+	uint8_t joinEUI_compare[8];
+
 	Load_EUIs_From_Flash(devEUI, joinEUI);
+	LmHandlerGetDevEUI(devEUI_compare);
+	LmHandlerGetAppEUI(joinEUI_compare);
+
+	if (devEUI != devEUI_compare || joinEUI != joinEUI_compare) {
+		LmHandlerStop();
+		Refresh_EUIs();
+		//Handle_Join();
+		//while (!LmHandlerJoinStatus() != LORAMAC_HANDLER_SET);
+		vcom_Trace((uint8_t*) "Lamp unit ready!\r\n", 18);
+	}
+
+
 }
 
 void Add_To_Rx_Buffer(const uint8_t* const rx_char) {
@@ -53,7 +68,7 @@ void Add_To_Rx_Buffer(const uint8_t* const rx_char) {
 }
 
 static void Print_EUIs(void) {
-	Load_EUIs_From_Flash(devEUI, joinEUI);
+	Get_Currently_Used_EUIs();
 	Print_EUI("DevEUI=", devEUI);
 	Print_EUI("JoinEUI=", joinEUI);
 }
@@ -104,15 +119,13 @@ static bool Interpret_Rx_Buffer(void) {
 
 	switch (cmd_type) {
 	case CMD_DEVEUI:
-		Handle_DevEUI_Command(hex_str);
-		Save_EUIs_To_Flash(devEUI, joinEUI);
+		Handle_DevEUI(hex_str);
 		break;
 	case CMD_JOINEUI:
-		Handle_JoinEUI_Command(hex_str);
-		Save_EUIs_To_Flash(devEUI, joinEUI);
+		Handle_JoinEUI(hex_str);
 		break;
 	case CMD_JOIN:
-		Handle_Join_Command();
+		Handle_Join();
 		break;
 	case CMD_PRINT:
 		Print_EUIs();
@@ -132,33 +145,37 @@ static uint8_t Hex_To_Byte(const char* const hex) {
 	return (high << 4) | low;
 }
 
-static void Handle_DevEUI_Command(const char* const hex_str) {
+static void Handle_DevEUI(const char* const hex_str) {
 	uint8_t new_devEUI[EUI_SIZE];
 	for (uint8_t i = 0; i < EUI_SIZE; i++) {
 		new_devEUI[i] = Hex_To_Byte(&hex_str[i * 2]);
 	}
 	LmHandlerStop();
 	if (Set_DevEUI(new_devEUI)) {
+		Get_Currently_Used_EUIs();
+		Save_EUIs_To_Flash(devEUI, joinEUI);
 		Print_EUI("New DevEUI: ", devEUI);
 	} else {
 		vcom_Trace((uint8_t *)"Please try again\r\n", 18);
 	}
 }
 
-static void Handle_JoinEUI_Command(const char* const hex_str) {
+static void Handle_JoinEUI(const char* const hex_str) {
 	uint8_t new_joinEUI[EUI_SIZE];
 	for (uint8_t i = 0; i < EUI_SIZE; i++) {
 		new_joinEUI[i] = Hex_To_Byte(&hex_str[i * 2]);
 	}
 	LmHandlerStop();
 	if (Set_JoinEUI(new_joinEUI)) {
+		Get_Currently_Used_EUIs();
+		Save_EUIs_To_Flash(devEUI, joinEUI);
 		Print_EUI("New JoinEUI: ", joinEUI);
 	} else {
 		vcom_Trace((uint8_t *)"Please try again\r\n", 18);
 	}
 }
 
-static void Handle_Join_Command(void) {
+static void Handle_Join(void) {
 	vcom_Trace((uint8_t*) "Trying join...\r\n", 16);
 	LmHandlerJoin(LORAWAN_DEFAULT_ACTIVATION_TYPE);
 }
@@ -166,6 +183,7 @@ static void Handle_Join_Command(void) {
 static bool Set_DevEUI(uint8_t *EUI) {
 	uint8_t tempEUI[EUI_SIZE];
 	uint8_t attempts = 0;
+	//Save_EUIs_To_Flash(EUI, joinEUI);
 
 	// Retry setting DevEUI until it matches or max_attempts is reached
 	vcom_Trace((uint8_t*) "Trying to update DevEUI...\r\n", 28);
@@ -189,6 +207,7 @@ static bool Set_DevEUI(uint8_t *EUI) {
 static bool Set_JoinEUI(uint8_t *EUI) {
 	uint8_t tempEUI[EUI_SIZE];
 	uint8_t attempts = 0;
+	//Save_EUIs_To_Flash(devEUI, EUI);
 
 	// Retry setting JoinEUI until it matches or max_attempts is reached
 	vcom_Trace((uint8_t*) "Trying to update JoinEUI...\r\n", 29);
@@ -207,4 +226,14 @@ static bool Set_JoinEUI(uint8_t *EUI) {
 
 	vcom_Trace((uint8_t*) "Failed to set JoinEUI after multiple attempts\r\n", 48);
 	return false;
+}
+
+void Refresh_EUIs(void) {
+	LmHandlerSetDevEUI(devEUI);
+	LmHandlerSetAppEUI(joinEUI);
+}
+
+void Get_Currently_Used_EUIs(void) {
+	LmHandlerGetDevEUI(devEUI);
+	LmHandlerGetAppEUI(joinEUI);
 }
