@@ -22,8 +22,8 @@ static bool Is_EUI_Empty(const uint8_t *eui);
 static bool Is_Joined(void);
 
 // Below are the standard EUIs, note that these will be reverted to when a power cycle occurs
-uint8_t devEUI[8] = { 0 }; // 70B3D57ED0070297
-uint8_t joinEUI[8] = { 0 }; // 0908070605040201
+uint8_t devEUI[EUI_SIZE] = { 0 }; // 70B3D57ED0070297
+uint8_t joinEUI[EUI_SIZE] = { 0 }; // 0908070605040201
 
 uint8_t rx_buffer[RX_BUFFER_SIZE];
 uint8_t rx_buffer_index = 0;
@@ -47,7 +47,7 @@ void Serial_Init(void) {
 		vcom_Trace((uint8_t*) "No EUIs set, set them with the correct commands\r\n", 49);
 	} else {
 		Handle_Join();
-		HAL_Delay(5000);
+		HAL_Delay(DELAY);
 		if (Is_Joined()) {
 			vcom_Trace((uint8_t*) "Lamp unit ready\r\n", 17);
 		} else {
