@@ -23,3 +23,4 @@
 #define EUI_SIZE 8
 
 void Add_To_Rx_Buffer(const uint8_t* const rx_char);
+void Serial_Init(void);

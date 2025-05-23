@@ -18,8 +18,8 @@ static bool Set_DevEUI(uint8_t *EUI);
 static bool Set_JoinEUI(uint8_t *EUI);
 
 // Below are the standard EUIs, note that these will be reverted to when a power cycle occurs
-uint8_t devEUI[] = { 0x70, 0xB3, 0xD5, 0x7E, 0xD0, 0x07, 0x02, 0x97 };
-uint8_t joinEUI[] = { 0x09, 0x08, 0x07, 0x06, 0x05, 0x04, 0x02, 0x01 };
+uint8_t devEUI[8]; // 70B3D57ED0070297
+uint8_t joinEUI[8]; // 0908070605040201
 
 uint8_t rx_buffer[RX_BUFFER_SIZE];
 uint8_t rx_buffer_index = 0;
@@ -31,6 +31,10 @@ typedef enum CommandTypes {
 	CMD_JOIN,		// !JOIN
 	CMD_PRINT		// !PRINT
 } CommandType;
+
+void Serial_Init(void) {
+	Load_EUIs_From_Flash(devEUI, joinEUI);
+}
 
 void Add_To_Rx_Buffer(const uint8_t* const rx_char) {
 	if (rx_buffer_index < RX_BUFFER_SIZE) {
@@ -49,6 +53,7 @@ void Add_To_Rx_Buffer(const uint8_t* const rx_char) {
 }
 
 static void Print_EUIs(void) {
+	Load_EUIs_From_Flash(devEUI, joinEUI);
 	Print_EUI("DevEUI=", devEUI);
 	Print_EUI("JoinEUI=", joinEUI);
 }
@@ -100,9 +105,11 @@ static bool Interpret_Rx_Buffer(void) {
 	switch (cmd_type) {
 	case CMD_DEVEUI:
 		Handle_DevEUI_Command(hex_str);
+		Save_EUIs_To_Flash(devEUI, joinEUI);
 		break;
 	case CMD_JOINEUI:
 		Handle_JoinEUI_Command(hex_str);
+		Save_EUIs_To_Flash(devEUI, joinEUI);
 		break;
 	case CMD_JOIN:
 		Handle_Join_Command();

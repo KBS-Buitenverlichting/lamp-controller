@@ -43,6 +43,7 @@ extern "C"
 /* Includes ------------------------------------------------------------------*/
 #include "LmHandlerTypes.h"
 #include "LoRaMacClassB.h"
+#include "variable_credentials.h"
 
 /* Exported defines ----------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
