@@ -20,7 +20,7 @@ Schedule Create_Test_Schedule(void) {
 		.seconds = 0
 	};
 	schedule.lamp_config = (LampConfig) {
-		.lamp_state = ON,
+		.state = ON,
 		.brightness = 255
 	};
 	schedule.time_start = timestamp;
