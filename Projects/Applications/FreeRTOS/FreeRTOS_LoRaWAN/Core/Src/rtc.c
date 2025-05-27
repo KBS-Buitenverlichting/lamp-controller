@@ -26,23 +26,6 @@
 
 RTC_HandleTypeDef hrtc;
 
-void RTC_Init_AlarmB(void) {
-	RTC_AlarmTypeDef alarm_b = {0};
-	RTC_TimeTypeDef cur_time = {0};
-
-	HAL_RTC_GetTime(&hrtc, &cur_time, FORMAT_BCD);
-
-	alarm_b.AlarmTime.SubSeconds = 0;
-	alarm_b.AlarmTime.Seconds = cur_time.Seconds + 0x10;
-
-
-	alarm_b.AlarmMask = RTC_ALARMMASK_DATEWEEKDAY | RTC_ALARMMASK_HOURS | RTC_ALARMMASK_MINUTES;
-	alarm_b.Alarm = RTC_ALARM_B;
-	if (HAL_RTC_SetAlarm_IT(&hrtc, &alarm_b, FORMAT_BCD) != HAL_OK) {
-		Error_Handler();
-	}
-}
-
 /* RTC init function */
 void MX_RTC_Init(void)
 {
@@ -94,7 +77,6 @@ void MX_RTC_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN RTC_Init 2 */
-  RTC_Init_AlarmB();
 
   /* USER CODE END RTC_Init 2 */
 
@@ -126,7 +108,7 @@ void HAL_RTC_MspInit(RTC_HandleTypeDef* rtcHandle)
     /* RTC interrupt Init */
     HAL_NVIC_SetPriority(TAMP_STAMP_LSECSS_SSRU_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(TAMP_STAMP_LSECSS_SSRU_IRQn);
-    HAL_NVIC_SetPriority(RTC_Alarm_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(RTC_Alarm_IRQn, 6, 0); // needs to have this priority or higher to work with RTOS
     HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
   /* USER CODE BEGIN RTC_MspInit 1 */
 

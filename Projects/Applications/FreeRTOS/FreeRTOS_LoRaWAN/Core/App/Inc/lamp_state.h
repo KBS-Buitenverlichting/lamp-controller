@@ -18,12 +18,21 @@
 #include "dac.h"
 #include "transmit.h"
 
+#define MAX_BRIGHTNESS UINT8_MAX
+#define MIN_BRIGHTNESS 0
+
 typedef enum {
     OFF,
     ON,
     MOTION_SENSOR
 }LampState;
 
+typedef struct LampConfig {
+	LampState state;
+	uint8_t brightness;
+} LampConfig;
+
+extern LampConfig previous_lamp_config;
 extern SemaphoreHandle_t sem_motion_sensor_signal;
 
 void LampState_Init(void);
