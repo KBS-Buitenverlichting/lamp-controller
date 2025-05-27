@@ -34,7 +34,6 @@ bool Load_JoinEUI_From_Flash(uint8_t *joinEUI) {
 bool Save_EUIs_To_Flash(const uint8_t *devEUI, const uint8_t *joinEUI) {
 	HAL_FLASH_Unlock();
 
-	// Erase de flashpagina
 	FLASH_EraseInitTypeDef eraseInitStruct = { .TypeErase =
 			FLASH_TYPEERASE_PAGES, .Page = (FLASH_EUI_ADDRESS - FLASH_BASE)
 			/ FLASH_PAGE_SIZE, .NbPages = 1 };
@@ -44,12 +43,10 @@ bool Save_EUIs_To_Flash(const uint8_t *devEUI, const uint8_t *joinEUI) {
 		return false;
 	}
 
-	// Voorbereiden van te schrijven data
 	EUIStorage dataToSave = { .valid_marker = FLASH_VALID_MARKER };
 	memcpy(dataToSave.devEUI, devEUI, EUI_SIZE);
 	memcpy(dataToSave.joinEUI, joinEUI, EUI_SIZE);
 
-	// Schrijven in 64-bit blokken
 	uint64_t *src = (uint64_t*) &dataToSave;
 	for (uint32_t offset = 0; offset < sizeof(EUIStorage); offset += 8) {
 		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,

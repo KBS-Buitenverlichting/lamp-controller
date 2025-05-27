@@ -23,8 +23,8 @@ static bool Is_Joined(void);
 static void Disconnect(void);
 
 // Below are the standard EUIs, note that these will be reverted to when a power cycle occurs
-uint8_t devEUI[EUI_SIZE] = { 0 }; // 70B3D57ED0070297
-uint8_t joinEUI[EUI_SIZE] = { 0 }; // 0908070605040201
+uint8_t devEUI[EUI_SIZE] = { 0 };
+uint8_t joinEUI[EUI_SIZE] = { 0 };
 
 static const uint8_t empty_EUI[EUI_SIZE] = { 0 };
 
