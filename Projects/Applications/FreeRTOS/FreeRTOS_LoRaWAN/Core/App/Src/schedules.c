@@ -20,8 +20,8 @@ void ScheduleList_Init();
 /// 	   schedules over LoRa works
 void ScheduleList_Fill_With_Test_Schedules() {
 	const uint8_t TEST_SCHEDULE_DURATION = 5;
-	// 9 elements, the RTC init inserts the first of a total 10
-	LampConfig test_configs[SCHEDULE_LIST_MAX_LENGTH-1] = {
+	LampConfig test_configs[SCHEDULE_LIST_MAX_LENGTH] = {
+			{ON, 0xFF},
 			{ON, 0x40},
 			{MOTION_SENSOR, 0x80},
 			{OFF, 0x00},
@@ -29,8 +29,8 @@ void ScheduleList_Fill_With_Test_Schedules() {
 			{MOTION_SENSOR, 0x40},
 			{ON, 0xFF},
 			{ON, 0x40},
-			{ON, 0x40},
-			{ON, 0x40},
+			{MOTION_SENSOR, 0xFF},
+			{OFF, 0x00},
 	};
 	ScheduleList_Clear();
 
@@ -59,7 +59,7 @@ void ScheduleList_Fill_With_Test_Schedules() {
 
 
 	// i = 1 because the first config has already been inserted
-	for (uint8_t i = 1; i < SCHEDULE_LIST_MAX_LENGTH-1; i++)
+	for (uint8_t i = 1; i < SCHEDULE_LIST_MAX_LENGTH; i++)
 	{
 		test_schedule.time_start.seconds += TEST_SCHEDULE_DURATION*2;
 		if (test_schedule.time_start.seconds >= 60) {
@@ -76,6 +76,9 @@ void ScheduleList_Fill_With_Test_Schedules() {
 		(void)ScheduleList_Insert_After(test_node, test_schedule);
 		test_node = test_node->next;
 	}
+
+	ScheduleNode* first_node = ScheduleList_Get_First_Node();
+	RTC_Set_AlarmB_ScheduleTimestamp(first_node->schedule.time_start);
 }
 
 void RTC_Set_AlarmB_ScheduleTimestamp(ScheduleTimestamp ts) {
@@ -96,9 +99,8 @@ void RTC_Set_AlarmB_ScheduleTimestamp(ScheduleTimestamp ts) {
 }
 
 void Start_Process_Schedules_Task(void const *argument) {
-	ScheduleList_Init();
 	osDelay(200); // this is enough time for LoRa to init the RTC before this task configures Alarm B
-	RTC_Init_AlarmB();
+	ScheduleList_Init();
 	for(;;) {
 		if(xSemaphoreTake(sem_process_alarm, portMAX_DELAY) != pdPASS) {
 			Error_Handler();

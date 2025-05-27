@@ -27,33 +27,6 @@
 
 RTC_HandleTypeDef hrtc;
 
-/// @brief test function, remove when inserting over LoRa works.
-void RTC_Init_AlarmB(void) {
-	RTC_TimeTypeDef cur_time = {0};
-	RTC_DateTypeDef cur_date = {0};
-
-	HAL_RTC_GetTime(&hrtc, &cur_time, FORMAT_BIN);
-	HAL_RTC_GetDate(&hrtc, &cur_date, FORMAT_BIN);
-
-	ScheduleTimestamp ts_start = RTC_DateTime_To_ScheduleTimestamp(&cur_date, &cur_time);
-	ScheduleTimestamp ts_end = ts_start;
-	Schedule schedule;
-
-	ts_start.seconds += 10;
-
-	schedule.time_start = ts_start;
-
-	ts_end.seconds = ts_start.seconds + 10;
-
-	schedule.time_end = ts_end;
-	schedule.lamp_config.brightness = MAX_BRIGHTNESS;
-	schedule.lamp_config.state = ON;
-
-	ScheduleList_Insert_First(schedule);
-
-	RTC_Set_AlarmB_ScheduleTimestamp(ts_start);
-}
-
 /* RTC init function */
 void MX_RTC_Init(void)
 {
