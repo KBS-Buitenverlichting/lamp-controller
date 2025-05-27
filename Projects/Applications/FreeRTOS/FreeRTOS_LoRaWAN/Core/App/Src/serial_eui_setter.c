@@ -20,13 +20,18 @@ static bool Set_JoinEUI(uint8_t *EUI);
 static void Get_Currently_Used_EUIs(void);
 static bool Is_EUI_Empty(const uint8_t *eui);
 static bool Is_Joined(void);
+static void Disconnect(void);
 
 // Below are the standard EUIs, note that these will be reverted to when a power cycle occurs
 uint8_t devEUI[EUI_SIZE] = { 0 }; // 70B3D57ED0070297
 uint8_t joinEUI[EUI_SIZE] = { 0 }; // 0908070605040201
 
+static const uint8_t empty_EUI[EUI_SIZE] = { 0 };
+
 uint8_t rx_buffer[RX_BUFFER_SIZE];
 uint8_t rx_buffer_index = 0;
+
+bool continue_lora = false;
 
 typedef enum CommandTypes {
 	CMD_UNKNOWN,
@@ -38,20 +43,20 @@ typedef enum CommandTypes {
 } CommandType;
 
 void Serial_Init(void) {
-	Load_EUIs_From_Flash(devEUI, joinEUI);
-	LmHandlerStop();
-	LmHandlerSetDevEUI(devEUI);
-	LmHandlerSetAppEUI(joinEUI);
+	vcom_Trace((uint8_t*) "Beginning initialisation...\r\n", 29);
+	Update_EUIs();
 
-	if (Is_EUI_Empty(devEUI) && Is_EUI_Empty(joinEUI)) {
-		vcom_Trace((uint8_t*) "No EUIs set, set them with the correct commands\r\n", 49);
+	while (!continue_lora)
+		;
+
+	if (Is_Joined()) {
+		vcom_Trace((uint8_t*) "Successful setup! lamp unit is ready to use\r\n", 45);
 	} else {
-		Handle_Join();
-		HAL_Delay(DELAY);
-		if (Is_Joined()) {
-			vcom_Trace((uint8_t*) "Lamp unit ready\r\n", 17);
+		Disconnect();
+		if (Is_EUI_Empty(devEUI) && Is_EUI_Empty(joinEUI)) {
+			vcom_Trace(
+					(uint8_t*) "No EUIs set, set them with the correct commands\r\n", 49);
 		} else {
-			LmHandlerStop();
 			vcom_Trace((uint8_t*) "Could not join, check and try manually\r\n", 40);
 		}
 	}
@@ -71,6 +76,12 @@ void Add_To_Rx_Buffer(const uint8_t *const rx_char) {
 		rx_buffer[0] = *rx_char;
 		rx_buffer_index = 1;
 	}
+}
+
+void Update_EUIs(void) {
+	Load_EUIs_From_Flash(devEUI, joinEUI);
+	LmHandlerSetDevEUI(devEUI);
+	LmHandlerSetAppEUI(joinEUI);
 }
 
 static void Print_EUIs(void) {
@@ -161,10 +172,10 @@ static void Handle_DevEUI(const char *const hex_str) {
 	for (uint8_t i = 0; i < EUI_SIZE; i++) {
 		new_devEUI[i] = Hex_To_Byte(&hex_str[i * 2]);
 	}
-	LmHandlerStop();
 	if (Set_DevEUI(new_devEUI)) {
 		Get_Currently_Used_EUIs();
-		Save_EUIs_To_Flash(devEUI, joinEUI);
+		while(!Save_EUIs_To_Flash(devEUI, joinEUI))
+			;
 		Print_EUI("New DevEUI: ", devEUI);
 	} else {
 		vcom_Trace((uint8_t*) "Please try again\r\n", 18);
@@ -176,10 +187,10 @@ static void Handle_JoinEUI(const char *const hex_str) {
 	for (uint8_t i = 0; i < EUI_SIZE; i++) {
 		new_joinEUI[i] = Hex_To_Byte(&hex_str[i * 2]);
 	}
-	LmHandlerStop();
 	if (Set_JoinEUI(new_joinEUI)) {
 		Get_Currently_Used_EUIs();
-		Save_EUIs_To_Flash(devEUI, joinEUI);
+		while (!Save_EUIs_To_Flash(devEUI, joinEUI))
+			;
 		Print_EUI("New JoinEUI: ", joinEUI);
 	} else {
 		vcom_Trace((uint8_t*) "Please try again\r\n", 18);
@@ -188,12 +199,14 @@ static void Handle_JoinEUI(const char *const hex_str) {
 
 static void Handle_Join(void) {
 	vcom_Trace((uint8_t*) "Trying join...\r\n", 16);
-	LmHandlerJoin(LORAWAN_DEFAULT_ACTIVATION_TYPE);
+	LoRaWAN_Init();
 }
 
 static void Handle_Status(void) {
 	vcom_Trace((uint8_t*) "Joined: ", 8);
-	Is_Joined() ? vcom_Trace((uint8_t*) "TRUE\r\n", 6) : vcom_Trace((uint8_t*) "FALSE\r\n", 7);
+	Is_Joined() ?
+			vcom_Trace((uint8_t*) "TRUE\r\n", 6) :
+			vcom_Trace((uint8_t*) "FALSE\r\n", 7);
 }
 
 static bool Set_DevEUI(uint8_t *EUI) {
@@ -250,10 +263,14 @@ static void Get_Currently_Used_EUIs(void) {
 }
 
 static bool Is_EUI_Empty(const uint8_t *eui) {
-	static const uint8_t EMPTY[EUI_SIZE] = { 0 };
-	return memcmp(eui, EMPTY, EUI_SIZE) == 0;
+	return memcmp(eui, empty_EUI, EUI_SIZE) == 0;
 }
 
 static bool Is_Joined(void) {
 	return LmHandlerJoinStatus() == LORAMAC_HANDLER_SET;
+}
+
+static void Disconnect(void) {
+	while (LmHandlerStop() != LORAMAC_HANDLER_SUCCESS)
+		;
 }

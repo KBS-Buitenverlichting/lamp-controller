@@ -37,6 +37,7 @@
 #include "sys_conf.h"
 #include "CayenneLpp.h"
 #include "sys_sensors.h"
+#include "serial_eui_setter.h"
 
 /* USER CODE BEGIN Includes */
 #include "transmit.h"
@@ -187,6 +188,7 @@ static UTIL_TIMER_Object_t TxTimer;
 void LoRaWAN_Init(void)
 {
   /* USER CODE BEGIN LoRaWAN_Init_1 */
+	Update_EUIs();
 
   BSP_LED_Init(LED_RED);
   BSP_PB_Init(BUTTON_SW1, BUTTON_MODE_EXTI);
@@ -224,7 +226,7 @@ void LoRaWAN_Init(void)
 
   /* USER CODE END LoRaWAN_Init_2 */
 
-  //LmHandlerJoin(ActivationType);
+  LmHandlerJoin(ActivationType);
 
   if (EventType == TX_ON_TIMER)
   {
@@ -397,6 +399,7 @@ static void OnJoinRequest(LmHandlerJoinParams_t *joinParams)
     	vcom_Trace((uint8_t*) "Join failed\r\n", 13);
       APP_LOG(TS_OFF, VLEVEL_M, "\r\n###### = JOIN FAILED\r\n");
     }
+	continue_lora = true;
   }
   /* USER CODE END OnJoinRequest_1 */
 }
