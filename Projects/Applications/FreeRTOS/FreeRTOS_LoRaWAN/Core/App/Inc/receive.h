@@ -27,3 +27,4 @@ void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint
 void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_t buffer_size);
 void Handle_Remove_Timeschedule_Instruction(const uint8_t *const buffer, const uint8_t buffer_size);
 void Print_Current_RTC_Time(void);
+void Print_Timestamp(const ScheduleTimestamp* const timestamp);

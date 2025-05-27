@@ -103,3 +103,16 @@ ScheduleFuncStatus ScheduleList_Remove_After(ScheduleNode * const schedule_node)
 	schedules.size--;
 	return SCHEDULE_FUNC_OK;
 }
+
+int ScheduleTimestamp_Compare(const ScheduleTimestamp* a, const ScheduleTimestamp* b)
+{
+    if (a->year != b->year)       return a->year - b->year;
+    if (a->month != b->month)     return a->month - b->month;
+    if (a->date != b->date)       return a->date - b->date;
+    if (a->hours != b->hours)     return a->hours - b->hours;
+    if (a->minutes != b->minutes) return a->minutes - b->minutes;
+    if (a->seconds != b->seconds) return a->seconds - b->seconds;
+
+    return 0; // Equal
+}
+

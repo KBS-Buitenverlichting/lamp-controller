@@ -3,6 +3,7 @@
 #include "sys_app.h" // Used for APP_LOG to write output to serial
 #include "rtc.h"
 #include "stm32wlxx_hal_rtc.h"
+#include <stdio.h>  // for snprintf
 
 /// Brief: Handles incoming LoRaWAN data and calls message interpreter.
 void Process_Rx_Data(const LmHandlerAppData_t *const app_data,
@@ -205,52 +206,159 @@ void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, c
 
 void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
-	APP_LOG(TS_OFF, VLEVEL_M, "Set new timeslot\r\n");
+    char msg[100];
+
+    if (buffer_size < SET_TIMESCHEDULE_BYTE_COUNT) {
+        int len = snprintf(msg, sizeof(msg), "Set timeschedule command input is too short!\r\n");
+        if (len > 0 && len < sizeof(msg)) vcom_Trace((uint8_t*)msg, (uint16_t)len);
+
+        const uint8_t params[] = { SET_TIMESCHEDULE };
+        Tx_Set_Buffer(RESPONSE_OUT, MISSING_DATA, params, sizeof(params));
+        return;
+    }
+
+    Schedule new_schedule;
+    new_schedule.time_start = (ScheduleTimestamp){
+        .year = buffer[2], .month = buffer[3], .weekday = buffer[4],
+        .date = buffer[5], .hours = buffer[6], .minutes = buffer[7], .seconds = buffer[8]
+    };
+    new_schedule.time_end = (ScheduleTimestamp){
+        .year = buffer[9], .month = buffer[10], .weekday = buffer[11],
+        .date = buffer[12], .hours = buffer[13], .minutes = buffer[14], .seconds = buffer[15]
+    };
+    new_schedule.lamp_config = (LampConfig){
+        .lamp_state = buffer[16], .brightness = buffer[17]
+    };
+
+    if (ScheduleTimestamp_Compare(&new_schedule.time_start, &new_schedule.time_end) == 0 || ScheduleTimestamp_Compare(&new_schedule.time_start, &new_schedule.time_end) > 0) {
+        int len = snprintf(msg, sizeof(msg), "Start and end timestamps are equal, or end time is before start time. Ignoring schedule.\r\n");
+        if (len > 0 && len < sizeof(msg)) vcom_Trace((uint8_t*)msg, (uint16_t)len);
+
+        const uint8_t params[] = { SET_TIMESCHEDULE };
+        Tx_Set_Buffer(RESPONSE_OUT, INVALID_DATA, params, sizeof(params));
+        return;
+    }
+
+    ScheduleNode* current = ScheduleList_Get_First_Node();
+
+    // Empty list so insert first
+    if (!current) {
+        ScheduleFuncStatus status = ScheduleList_Insert_First(new_schedule);
+        if (status == SCHEDULE_FUNC_OK) {
+            int len = snprintf(msg, sizeof(msg), "Schedule list was empty. Inserted first.\r\n");
+            if (len > 0 && len < sizeof(msg)) vcom_Trace((uint8_t*)msg, (uint16_t)len);
+            Tx_Set_Ack(SET_TIMESCHEDULE);
+        } else {
+            const uint8_t params[] = { SET_TIMESCHEDULE };
+            Tx_Set_Buffer(RESPONSE_OUT, LIST_FULL, params, sizeof(params));
+        }
+        return;
+    }
+
+    // Check if new schedule is earlier than the first
+    if (ScheduleTimestamp_Compare(&new_schedule.time_start, &current->schedule.time_start) < 0) {
+        ScheduleFuncStatus status = ScheduleList_Insert_First(new_schedule);
+        if (status == SCHEDULE_FUNC_OK) {
+            int len = snprintf(msg, sizeof(msg), "Inserted schedule at beginning.\r\n");
+            if (len > 0 && len < sizeof(msg)) vcom_Trace((uint8_t*)msg, (uint16_t)len);
+            Tx_Set_Ack(SET_TIMESCHEDULE);
+        } else {
+            const uint8_t params[] = { SET_TIMESCHEDULE };
+            Tx_Set_Buffer(RESPONSE_OUT, LIST_FULL, params, sizeof(params));
+        }
+        return;
+    }
+
+    // Check everything to find correct insert point
+    while (current->next && ScheduleTimestamp_Compare(&new_schedule.time_start, &current->next->schedule.time_start) > 0) {
+        current = current->next;
+    }
+
+    // Check for overlap with previous (current)
+    if (ScheduleTimestamp_Compare(&current->schedule.time_end, &new_schedule.time_start) > 0) {
+        int len = snprintf(msg, sizeof(msg), "Overlap detected with previous schedule. Ignoring.\r\n");
+        if (len > 0 && len < sizeof(msg)) vcom_Trace((uint8_t*)msg, (uint16_t)len);
+
+        const uint8_t params[] = { SET_TIMESCHEDULE };
+        Tx_Set_Buffer(RESPONSE_OUT, INVALID_DATA, params, sizeof(params));
+        return;
+    }
+
+    // Check for overlap with next
+    if (current->next && ScheduleTimestamp_Compare(&new_schedule.time_end, &current->next->schedule.time_start) > 0) {
+        int len = snprintf(msg, sizeof(msg), "Overlap detected with next schedule. Ignoring.\r\n");
+        if (len > 0 && len < sizeof(msg)) vcom_Trace((uint8_t*)msg, (uint16_t)len);
+
+        const uint8_t params[] = { SET_TIMESCHEDULE };
+        Tx_Set_Buffer(RESPONSE_OUT, INVALID_DATA, params, sizeof(params));
+        return;
+    }
+
+    ScheduleFuncStatus status = ScheduleList_Insert_After(current, new_schedule);
+    if (status == SCHEDULE_FUNC_OK) {
+        int len = snprintf(msg, sizeof(msg), "Inserted schedule in sorted position.\r\n");
+        if (len > 0 && len < sizeof(msg)) vcom_Trace((uint8_t*)msg, (uint16_t)len);
+        Tx_Set_Ack(SET_TIMESCHEDULE);
+    } else {
+        const uint8_t params[] = { SET_TIMESCHEDULE };
+        Tx_Set_Buffer(RESPONSE_OUT, LIST_FULL, params, sizeof(params));
+    }
 }
 
 void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
 	// Below is for testing purposes
-	ScheduleList_Clear();
+//	ScheduleList_Clear();
 
-	Schedule test_schedule;
-	ScheduleTimestamp timestamp = {
-		.year = 25,
-		.month = 5,
-		.weekday = 3,
-		.date = 16,
-		.hours = 11,
-		.minutes = 30,
-		.seconds = 0
-	};
-	test_schedule.lamp_config = (LampConfig) {
-		.lamp_state = ON,
-		.brightness = 255
-	};
-	test_schedule.time_start = timestamp;
-	test_schedule.time_end = timestamp;
-	test_schedule.time_end.hours++;
-	(void)ScheduleList_Insert_First(test_schedule);
-
-	ScheduleNode* test_node = ScheduleList_Get_First_Node();
-
-
-	for (uint8_t i = 0; i < 9; i++)
-	{
-		(void)ScheduleList_Insert_After(test_node, test_schedule);
-		test_node = test_node->next;
-	}
+//	Schedule test_schedule;
+//	ScheduleTimestamp timestamp = {
+//		.year = 25,
+//		.month = 5,
+//		.weekday = 3,
+//		.date = 16,
+//		.hours = 11,
+//		.minutes = 30,
+//		.seconds = 0
+//	};
+//	test_schedule.lamp_config = (LampConfig) {
+//		.lamp_state = ON,
+//		.brightness = 255
+//	};
+//	test_schedule.time_start = timestamp;
+//	test_schedule.time_end = timestamp;
+//	test_schedule.time_end.hours++;
+//	(void)ScheduleList_Insert_First(test_schedule);
+//
+//	ScheduleNode* test_node = ScheduleList_Get_First_Node();
+//
+//
+//	for (uint8_t i = 0; i < 9; i++)
+//	{
+//		(void)ScheduleList_Insert_After(test_node, test_schedule);
+//		test_node = test_node->next;
+//	}
 	// Above is for testing purposes
 
 	APP_LOG(TS_OFF, VLEVEL_M, "Show timetable\r\n");
 
 	const ScheduleNode* node = ScheduleList_Get_First_Node();
-	uint8_t params[IDENTIFIER_BYTE_COUNT + (ScheduleList_Get_Size() * sizeof(Schedule))];
+	uint8_t params[IDENTIFIER_BYTE_COUNT + (SCHEDULE_LIST_MAX_LENGTH * sizeof(Schedule))] = {0};
 	params[IDENTIFIER_BYTE] = SHOW_TIMETABLE;
 
 	for (uint8_t i = 0; i < ScheduleList_Get_Size() && node; i++)
 	{
 		const uint8_t index = IDENTIFIER_BYTE_COUNT + (i * sizeof(Schedule));
+
+		Print_Timestamp(&node->schedule.time_start);
+		Print_Timestamp(&node->schedule.time_end);
+		char msg[100];
+		int len = snprintf(msg, sizeof(msg),
+		                   "Lamp state: %u, Brightness: %u\r\n",
+		                   node->schedule.lamp_config.lamp_state,
+		                   node->schedule.lamp_config.brightness);
+		if (len > 0 && len < sizeof(msg)) {
+		    vcom_Trace((uint8_t*)msg, (uint16_t)len);
+		}
 
 		params[index] = node->schedule.time_start.year;
 		params[index + 1] = node->schedule.time_start.month;
@@ -277,7 +385,7 @@ void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_
 	Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION, (const uint8_t* const)&params, sizeof(params));
 
 	// Below is for testing purposes
-	ScheduleList_Clear();
+//	ScheduleList_Clear();
 	// Above is for testing purposes
 }
 
@@ -401,3 +509,29 @@ void Print_Current_RTC_Time(void)
             2000 + current_date.Year,	// adding 2000 years to get the full year =)
             weekday_str);
 }
+
+void Print_Timestamp(const ScheduleTimestamp* const timestamp)
+{
+    const char *weekday_names[] = {
+        "Forbidden", "Monday", "Tuesday", "Wednesday",
+        "Thursday", "Friday", "Saturday", "Sunday"
+    };
+
+    const char *weekday_str = (timestamp->weekday <= 7) ? weekday_names[timestamp->weekday] : "Unknown";
+
+    char buffer[100];  // big enough for our formatted string
+    int len = snprintf(buffer, sizeof(buffer),
+                       "%02u:%02u:%02u on %02u-%02u-%04u (Weekday %s)",
+                       timestamp->hours,
+                       timestamp->minutes,
+                       timestamp->seconds,
+                       timestamp->date,
+                       timestamp->month,
+                       2000 + timestamp->year,		// adding 2000 years to get the full year =)
+                       weekday_str);
+
+    if (len > 0 && len < sizeof(buffer)) {
+        vcom_Trace((uint8_t*)buffer, (uint16_t)len);
+    }
+}
+
