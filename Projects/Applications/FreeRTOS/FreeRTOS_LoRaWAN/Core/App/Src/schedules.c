@@ -113,12 +113,12 @@ void Start_Process_Schedules_Task(void const *argument) {
 			// schedule has reached end time, remove it
 			ScheduleList_Remove_First();
 
-			ScheduleNode* next_alarm_schedule_node = ScheduleList_Get_First_Node();
-
+			
 			// restore saved lamp config
 			Send_LampState(previous_lamp_config.state);
 			Send_Brightness(previous_lamp_config.brightness);
-
+			
+			ScheduleNode* next_alarm_schedule_node = ScheduleList_Get_First_Node();
 			// queue up the next schedule alarm
 			if (next_alarm_schedule_node != NULL) {
 				Schedule next_alarm_schedule = next_alarm_schedule_node->schedule;
