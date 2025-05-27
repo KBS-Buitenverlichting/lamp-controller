@@ -105,6 +105,9 @@ void Start_Process_Schedules_Task(void const *argument) {
 		if(xSemaphoreTake(sem_process_alarm, portMAX_DELAY) != pdPASS) {
 			Error_Handler();
 		}
+		if (ScheduleList_Get_Size() <= 0) {
+			continue; // false alarm, there is no schedule to process
+		}
 		if (schedule_active) {
 			vcom_Trace((uint8_t *)"SCHEDULE END\r\n", 14);
 			// schedule has reached end time, remove it
