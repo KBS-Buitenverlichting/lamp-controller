@@ -22,11 +22,9 @@ static bool Is_EUI_Empty(const uint8_t *eui);
 static bool Is_Joined(void);
 static void Disconnect(void);
 
-// Below are the standard EUIs, note that these will be reverted to when a power cycle occurs
+static const uint8_t empty_EUI[EUI_SIZE] = { 0 };
 uint8_t devEUI[EUI_SIZE] = { 0 };
 uint8_t joinEUI[EUI_SIZE] = { 0 };
-
-static const uint8_t empty_EUI[EUI_SIZE] = { 0 };
 
 uint8_t rx_buffer[RX_BUFFER_SIZE];
 uint8_t rx_buffer_index = 0;
@@ -55,7 +53,7 @@ void Serial_Init(void) {
 		Disconnect();
 		if (Is_EUI_Empty(devEUI) && Is_EUI_Empty(joinEUI)) {
 			vcom_Trace(
-					(uint8_t*) "No EUIs set, set them with the correct commands\r\n", 49);
+					(uint8_t*) "No EUIs set, set them with !DEVEUI=... & !JOINEUI=...\r\n", 55);
 		} else {
 			vcom_Trace((uint8_t*) "Could not join, check and try manually\r\n", 40);
 		}

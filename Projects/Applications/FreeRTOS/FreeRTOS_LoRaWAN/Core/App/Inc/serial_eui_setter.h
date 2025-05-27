@@ -20,7 +20,6 @@
 #define RX_BUFFER_SIZE 64
 #define PRINT_BUFFER_SIZE 64
 #define MAX_RETRIES 25
-#define EUI_SIZE 8
 
 extern bool continue_lora;
 
