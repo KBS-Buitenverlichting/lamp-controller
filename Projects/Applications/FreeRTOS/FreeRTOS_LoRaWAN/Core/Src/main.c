@@ -309,6 +309,7 @@ void Start_General_Task(void const *argument) {
   LED_control(1);
   vcom_Init(Tx_Done);
   vcom_ReceiveInit(Rx_Done);
+  Serial_Init();
   for (;;) {
     LED_control(0);
     osDelay(500);
