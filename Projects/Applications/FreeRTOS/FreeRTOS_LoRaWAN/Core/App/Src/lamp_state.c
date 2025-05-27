@@ -7,9 +7,6 @@
 
 #include "lamp_state.h"
 
-#define MAX_BRIGHTNESS UINT8_MAX
-#define MIN_BRIGHTNESS 0
-
 LampConfig previous_lamp_config = {MOTION_SENSOR, MAX_BRIGHTNESS};
 
 static LampConfig current_lamp_config = {MOTION_SENSOR, MAX_BRIGHTNESS};

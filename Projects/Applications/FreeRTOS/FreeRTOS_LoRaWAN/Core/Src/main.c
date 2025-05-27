@@ -132,7 +132,7 @@ int main(void) {
   osThreadDef(MotionSensorTask, Start_Motion_Sensor_Task, osPriorityNormal, 0,
               128);
   osThreadCreate(osThread(MotionSensorTask), NULL);
-  osThreadDef(ProcessSchedulesTask, Start_Process_Schedules_Task, osPriorityNormal, 0, 128);
+  osThreadDef(ProcessSchedulesTask, Start_Process_Schedules_Task, osPriorityNormal, 0, 512);
   osThreadCreate(osThread(ProcessSchedulesTask), NULL);
   osKernelStart();
   /* USER CODE END 2 */

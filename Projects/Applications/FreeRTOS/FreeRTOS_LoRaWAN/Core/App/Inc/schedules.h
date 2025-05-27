@@ -49,6 +49,8 @@ typedef struct ScheduleList {
 
 extern SemaphoreHandle_t sem_process_alarm;
 
+void RTC_Set_AlarmB_ScheduleTimestamp(ScheduleTimestamp ts);
+
 void Start_Process_Schedules_Task(void const *argument);
 
 uint8_t ScheduleList_Get_Size(void);

@@ -18,6 +18,9 @@
 #include "dac.h"
 #include "transmit.h"
 
+#define MAX_BRIGHTNESS UINT8_MAX
+#define MIN_BRIGHTNESS 0
+
 typedef enum {
     OFF,
     ON,
