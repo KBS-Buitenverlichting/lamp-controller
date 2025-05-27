@@ -20,7 +20,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "rtc.h"
 #include "timer_if.h"
-#include "schedules.h"
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
