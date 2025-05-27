@@ -201,10 +201,10 @@ static void Handle_Join(void) {
 }
 
 static void Handle_Status(void) {
-	vcom_Trace((uint8_t*) "Joined: ", 8);
+	vcom_Trace((uint8_t *) "Status: ", 8);
 	Is_Joined() ?
-			vcom_Trace((uint8_t*) "TRUE\r\n", 6) :
-			vcom_Trace((uint8_t*) "FALSE\r\n", 7);
+			vcom_Trace((uint8_t*) "Joined\r\n", 8) :
+			vcom_Trace((uint8_t*) "Disconnected\r\n", 14);
 }
 
 static bool Set_DevEUI(uint8_t *EUI) {
