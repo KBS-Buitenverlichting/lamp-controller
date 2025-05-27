@@ -108,7 +108,7 @@ void HAL_RTC_MspInit(RTC_HandleTypeDef* rtcHandle)
     /* RTC interrupt Init */
     HAL_NVIC_SetPriority(TAMP_STAMP_LSECSS_SSRU_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(TAMP_STAMP_LSECSS_SSRU_IRQn);
-    HAL_NVIC_SetPriority(RTC_Alarm_IRQn, 6, 0);
+    HAL_NVIC_SetPriority(RTC_Alarm_IRQn, 6, 0); // needs to have this priority or higher to work with RTOS
     HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
   /* USER CODE BEGIN RTC_MspInit 1 */
 
