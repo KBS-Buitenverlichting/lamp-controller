@@ -20,6 +20,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "app_lorawan.h"
+#include "lamp_state.h"
+#include "schedules.h"
 #include "cmsis_os.h"
 #include "dac.h"
 #include "lamp_state.h"
@@ -74,7 +76,7 @@ osThreadId LoRaWAN_TaskHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 void StartLoRaWANTask(void const *argument);
-void General_Task(void const *argument);
+void Start_General_Task(void const *argument);
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
@@ -117,20 +119,21 @@ int main(void) {
   Lamp_GPIO_Init();
   Motion_Sensor_GPIO_Init();
   LampState_Init();
-
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   /* USER CODE BEGIN 2 */
-  osThreadDef(General_Task, General_Task, osPriorityLow, 0, 128);
+  osThreadDef(General_Task, Start_General_Task, osPriorityLow, 0, 128);
   general_taskhandle = osThreadCreate(osThread(General_Task), NULL);
   osThreadDef(LoRaWAN_Task, StartLoRaWANTask, osPriorityNormal, 0, 1024);
   LoRaWAN_TaskHandle = osThreadCreate(osThread(LoRaWAN_Task), NULL);
   osThreadDef(LampStateTask, Start_LampState_Task, osPriorityNormal, 0, 256);
   osThreadCreate(osThread(LampStateTask), NULL);
   osThreadDef(MotionSensorTask, Start_Motion_Sensor_Task, osPriorityNormal, 0,
-              256);
+              128);
   osThreadCreate(osThread(MotionSensorTask), NULL);
+  osThreadDef(ProcessSchedulesTask, Start_Process_Schedules_Task, osPriorityNormal, 0, 512);
+  osThreadCreate(osThread(ProcessSchedulesTask), NULL);
   osKernelStart();
   /* USER CODE END 2 */
 #endif
@@ -302,10 +305,11 @@ void StartLoRaWANTask(void const *argument) {
   /* USER CODE END 5 */
 }
 /* USER CODE END 4 */
-void General_Task(void const *argument) {
+void Start_General_Task(void const *argument) {
   LED_control(1);
   vcom_Init(Tx_Done);
   vcom_ReceiveInit(Rx_Done);
+  Serial_Init();
   for (;;) {
     LED_control(0);
     osDelay(500);

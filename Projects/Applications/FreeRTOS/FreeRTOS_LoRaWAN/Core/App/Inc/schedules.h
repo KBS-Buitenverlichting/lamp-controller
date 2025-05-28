@@ -29,11 +29,6 @@ typedef struct ScheduleTimestamp {
 	uint8_t seconds;
 } ScheduleTimestamp;
 
-typedef struct LampConfig {
-	LampState lamp_state;
-	uint8_t brightness;
-} LampConfig;
-
 typedef struct Schedule {
 	ScheduleTimestamp time_start;
 	ScheduleTimestamp time_end;
@@ -52,6 +47,11 @@ typedef struct ScheduleList {
 	ScheduleNode* first;
 } ScheduleList;
 
+extern SemaphoreHandle_t sem_process_alarm;
+
+void RTC_Set_AlarmB_ScheduleTimestamp(ScheduleTimestamp ts);
+
+void Start_Process_Schedules_Task(void const *argument);
 
 uint8_t ScheduleList_Get_Size(void);
 void ScheduleList_Clear(void);
