@@ -58,10 +58,10 @@ void ScheduleList_Clear(void);
 
 void ScheduleTimestamp_To_RTC_DateTime(const ScheduleTimestamp* const timestamp, RTC_DateTypeDef* const out_date, RTC_TimeTypeDef* const out_time);
 ScheduleTimestamp RTC_DateTime_To_ScheduleTimestamp(const RTC_DateTypeDef* const date, const RTC_TimeTypeDef* const time);
-bool ScheduleTimestamp_Equals(const ScheduleTimestamp* const ts1, const ScheduleTimestamp* const ts2);
 
 ScheduleNode* ScheduleList_Get_First_Node(void);
 ScheduleFuncStatus ScheduleList_Insert_First(Schedule new_schedule);
 ScheduleFuncStatus ScheduleList_Insert_After(ScheduleNode* const schedule_node, Schedule new_schedule);
 ScheduleFuncStatus ScheduleList_Remove_First(void);
 ScheduleFuncStatus ScheduleList_Remove_After(ScheduleNode* const schedule_node);
+uint8_t ScheduleTimestamp_Compare(const ScheduleTimestamp* a, const ScheduleTimestamp* b);

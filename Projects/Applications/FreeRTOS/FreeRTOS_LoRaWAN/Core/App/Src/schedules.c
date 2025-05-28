@@ -15,72 +15,6 @@ static bool schedule_active = false;
 
 void ScheduleList_Init();
 
-
-/// @brief test function, should be removed when inserting
-/// 	   schedules over LoRa works
-void ScheduleList_Fill_With_Test_Schedules() {
-	const uint8_t TEST_SCHEDULE_DURATION = 5;
-	LampConfig test_configs[SCHEDULE_LIST_MAX_LENGTH] = {
-			{ON, 0xFF},
-			{ON, 0x40},
-			{MOTION_SENSOR, 0x80},
-			{OFF, 0x00},
-			{ON, 0x01},
-			{MOTION_SENSOR, 0x40},
-			{ON, 0xFF},
-			{ON, 0x40},
-			{MOTION_SENSOR, 0xFF},
-			{OFF, 0x00},
-	};
-	ScheduleList_Clear();
-
-	Schedule test_schedule;
-	ScheduleTimestamp timestamp = {
-		.year = 25,
-		.month = 5,
-		.weekday = 2,
-		.date = 27,
-		.hours = 11,
-		.minutes = 0,
-		.seconds = 30
-	};
-	test_schedule.time_start = timestamp;
-	test_schedule.time_end = timestamp;
-	test_schedule.time_end.seconds += TEST_SCHEDULE_DURATION;
-	test_schedule.lamp_config = test_configs[0];
-	if (test_schedule.time_end.seconds >= 60) {
-		test_schedule.time_end.seconds -= 60;
-		test_schedule.time_end.minutes++;
-	}
-
-
-	(void)ScheduleList_Insert_First(test_schedule);
-	ScheduleNode* test_node = ScheduleList_Get_First_Node();
-
-
-	// i = 1 because the first config has already been inserted
-	for (uint8_t i = 1; i < SCHEDULE_LIST_MAX_LENGTH; i++)
-	{
-		test_schedule.time_start.seconds += TEST_SCHEDULE_DURATION*2;
-		if (test_schedule.time_start.seconds >= 60) {
-			test_schedule.time_start.seconds -= 60;
-			test_schedule.time_start.minutes++;
-		}
-		test_schedule.time_end.minutes = test_schedule.time_start.minutes;
-		test_schedule.time_end.seconds = test_schedule.time_start.seconds + TEST_SCHEDULE_DURATION;
-		if (test_schedule.time_end.seconds >= 60) {
-			test_schedule.time_end.seconds -= 60;
-			test_schedule.time_end.minutes++;
-		}
-		test_schedule.lamp_config = test_configs[i];
-		(void)ScheduleList_Insert_After(test_node, test_schedule);
-		test_node = test_node->next;
-	}
-
-	ScheduleNode* first_node = ScheduleList_Get_First_Node();
-	RTC_Set_AlarmB_ScheduleTimestamp(first_node->schedule.time_start);
-}
-
 void RTC_Set_AlarmB_ScheduleTimestamp(ScheduleTimestamp ts) {
 	RTC_AlarmTypeDef alarm_b = {0};
 
@@ -99,7 +33,6 @@ void RTC_Set_AlarmB_ScheduleTimestamp(ScheduleTimestamp ts) {
 }
 
 void Start_Process_Schedules_Task(void const *argument) {
-	osDelay(200); // this is enough time for LoRa to init the RTC before this task configures Alarm B
 	ScheduleList_Init();
 	for(;;) {
 		if(xSemaphoreTake(sem_process_alarm, portMAX_DELAY) != pdPASS) {
@@ -146,9 +79,7 @@ void Start_Process_Schedules_Task(void const *argument) {
 }
 
 void ScheduleList_Init() {
-	ScheduleList_Clear();
 	sem_process_alarm = xSemaphoreCreateBinary();
-	ScheduleList_Fill_With_Test_Schedules();
 }
 
 uint8_t ScheduleList_Get_Size(void) {
@@ -179,17 +110,6 @@ ScheduleTimestamp RTC_DateTime_To_ScheduleTimestamp(
 			.weekday = date->WeekDay, .date = date->Date, .hours = time->Hours,
 			.minutes = time->Minutes, .seconds = time->Seconds };
 	return timestamp;
-}
-
-bool ScheduleTimestamp_Equals(const ScheduleTimestamp* const ts1, const ScheduleTimestamp* const ts2)
-{
-	return (ts1->year == ts2->year &&
-			ts1->month == ts2->month &&
-			ts1->weekday == ts2->weekday &&
-			ts1->date == ts2->date &&
-			ts1->hours == ts2->hours &&
-			ts1->minutes == ts2->minutes &&
-			ts1->seconds == ts2->seconds);
 }
 
 ScheduleNode* ScheduleList_Get_First_Node(void) {
@@ -245,7 +165,7 @@ ScheduleFuncStatus ScheduleList_Remove_After(ScheduleNode * const schedule_node)
 	return SCHEDULE_FUNC_OK;
 }
 
-int ScheduleTimestamp_Compare(const ScheduleTimestamp* a, const ScheduleTimestamp* b)
+uint8_t ScheduleTimestamp_Compare(const ScheduleTimestamp* a, const ScheduleTimestamp* b)
 {
     if (a->year != b->year)       return a->year - b->year;
     if (a->month != b->month)     return a->month - b->month;

@@ -227,10 +227,10 @@ void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint
         .date = buffer[12], .hours = buffer[13], .minutes = buffer[14], .seconds = buffer[15]
     };
     new_schedule.lamp_config = (LampConfig){
-        .lamp_state = buffer[16], .brightness = buffer[17]
+        .state = buffer[16], .brightness = buffer[17]
     };
 
-    if (ScheduleTimestamp_Compare(&new_schedule.time_start, &new_schedule.time_end) == 0 || ScheduleTimestamp_Compare(&new_schedule.time_start, &new_schedule.time_end) > 0) {
+    if (ScheduleTimestamp_Compare(&new_schedule.time_start, &new_schedule.time_end) == 0 || ScheduleTimestamp_Compare(&new_schedule.time_start, &new_schedule.time_end) < 0) {
         int len = snprintf(msg, sizeof(msg), "Start and end timestamps are equal, or end time is before start time. Ignoring schedule.\r\n");
         if (len > 0 && len < sizeof(msg)) vcom_Trace((uint8_t*)msg, (uint16_t)len);
 
@@ -354,7 +354,7 @@ void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_
 		char msg[100];
 		int len = snprintf(msg, sizeof(msg),
 		                   "Lamp state: %u, Brightness: %u\r\n",
-		                   node->schedule.lamp_config.lamp_state,
+		                   node->schedule.lamp_config.state,
 		                   node->schedule.lamp_config.brightness);
 		if (len > 0 && len < sizeof(msg)) {
 		    vcom_Trace((uint8_t*)msg, (uint16_t)len);
@@ -392,39 +392,39 @@ void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_
 void Handle_Remove_Timeschedule_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
 	// Below is for testing purposes
-	ScheduleList_Clear();
-
-	Schedule test_schedule;
-	ScheduleTimestamp timestamp = {
-		.year = 25,
-		.month = 5,
-		.weekday = 3,
-		.date = 16,
-		.hours = 11,
-		.minutes = 30,
-		.seconds = 0
-	};
-	test_schedule.lamp_config = (LampConfig) {
-		.state = ON,
-		.brightness = 255
-	};
-	test_schedule.time_start = timestamp;
-	test_schedule.time_end = timestamp;
-	test_schedule.time_end.hours++;
-	(void)ScheduleList_Insert_First(test_schedule);
-
-	ScheduleNode* test_node = ScheduleList_Get_First_Node();
-
-
-	for (uint8_t i = 0; i < 9; i++)
-	{
-		test_schedule.time_start.year++;
-		test_schedule.time_end.year++;
-		(void)ScheduleList_Insert_After(test_node, test_schedule);
-		test_node = test_node->next;
-	}
-
-	uint8_t node_counter = 0;
+//	ScheduleList_Clear();
+//
+//	Schedule test_schedule;
+//	ScheduleTimestamp timestamp = {
+//		.year = 25,
+//		.month = 5,
+//		.weekday = 3,
+//		.date = 16,
+//		.hours = 11,
+//		.minutes = 30,
+//		.seconds = 0
+//	};
+//	test_schedule.lamp_config = (LampConfig) {
+//		.state = ON,
+//		.brightness = 255
+//	};
+//	test_schedule.time_start = timestamp;
+//	test_schedule.time_end = timestamp;
+//	test_schedule.time_end.hours++;
+//	(void)ScheduleList_Insert_First(test_schedule);
+//
+//	ScheduleNode* test_node = ScheduleList_Get_First_Node();
+//
+//
+//	for (uint8_t i = 0; i < 9; i++)
+//	{
+//		test_schedule.time_start.year++;
+//		test_schedule.time_end.year++;
+//		(void)ScheduleList_Insert_After(test_node, test_schedule);
+//		test_node = test_node->next;
+//	}
+//
+//	uint8_t node_counter = 0;
 	// Above is for testing purposes
 
 	APP_LOG(TS_OFF, VLEVEL_M, "Remove timeschedule\r\n");
@@ -448,13 +448,13 @@ void Handle_Remove_Timeschedule_Instruction(const uint8_t *const buffer, const u
 	ScheduleNode* node = ScheduleList_Get_First_Node();
 
 	// Check the first node
-	if (ScheduleTimestamp_Equals(&(node->schedule.time_start), &start_time))
+	if (ScheduleTimestamp_Compare(&(node->schedule.time_start), &start_time) == 0)
 	{
 		ScheduleList_Remove_First();
 		Tx_Set_Ack(REMOVE_TIMESCHEDULE);
 		// Below is for testing purposes
-        APP_LOG(TS_OFF, VLEVEL_M, "Removed first\r\n");
-    	ScheduleList_Clear();
+//        APP_LOG(TS_OFF, VLEVEL_M, "Removed first\r\n");
+//    	ScheduleList_Clear();
 		// Above is for testing purposes
         return;
 	}
@@ -466,15 +466,15 @@ void Handle_Remove_Timeschedule_Instruction(const uint8_t *const buffer, const u
 		while (node)
 		{
 			// Below is for testing purposes
-			node_counter++;
+//			node_counter++;
 			// Above is for testing purposes
-			if (ScheduleTimestamp_Equals(&(node->schedule.time_start), &start_time))
+			if (ScheduleTimestamp_Compare(&(node->schedule.time_start), &start_time) == 0)
 			{
 				ScheduleList_Remove_After(previous_node);
 				Tx_Set_Ack(REMOVE_TIMESCHEDULE);
-				// Below is for testing purposes
-		        APP_LOG(TS_OFF, VLEVEL_M, "Removed %u\r\n", node_counter);
-		    	ScheduleList_Clear();
+//				// Below is for testing purposes
+//		        APP_LOG(TS_OFF, VLEVEL_M, "Removed %u\r\n", node_counter);
+//		    	ScheduleList_Clear();
 				// Above is for testing purposes
 				return;
 			}
