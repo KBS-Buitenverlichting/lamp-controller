@@ -376,7 +376,7 @@ void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_
 		params[index + 12] = node->schedule.time_end.minutes;
 		params[index + 13] = node->schedule.time_end.seconds;
 
-		params[index + 14] = node->schedule.lamp_config.lamp_state;
+		params[index + 14] = node->schedule.lamp_config.state;
 		params[index + 15] = node->schedule.lamp_config.brightness;
 
 		node = node->next;
@@ -405,7 +405,7 @@ void Handle_Remove_Timeschedule_Instruction(const uint8_t *const buffer, const u
 		.seconds = 0
 	};
 	test_schedule.lamp_config = (LampConfig) {
-		.lamp_state = ON,
+		.state = ON,
 		.brightness = 255
 	};
 	test_schedule.time_start = timestamp;

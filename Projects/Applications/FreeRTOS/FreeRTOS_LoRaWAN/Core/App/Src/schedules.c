@@ -6,9 +6,150 @@
  */
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include "schedules.h"
 
+SemaphoreHandle_t sem_process_alarm;
 static ScheduleList schedules = { 0 };
+static bool schedule_active = false;
+
+void ScheduleList_Init();
+
+
+/// @brief test function, should be removed when inserting
+/// 	   schedules over LoRa works
+void ScheduleList_Fill_With_Test_Schedules() {
+	const uint8_t TEST_SCHEDULE_DURATION = 5;
+	LampConfig test_configs[SCHEDULE_LIST_MAX_LENGTH] = {
+			{ON, 0xFF},
+			{ON, 0x40},
+			{MOTION_SENSOR, 0x80},
+			{OFF, 0x00},
+			{ON, 0x01},
+			{MOTION_SENSOR, 0x40},
+			{ON, 0xFF},
+			{ON, 0x40},
+			{MOTION_SENSOR, 0xFF},
+			{OFF, 0x00},
+	};
+	ScheduleList_Clear();
+
+	Schedule test_schedule;
+	ScheduleTimestamp timestamp = {
+		.year = 25,
+		.month = 5,
+		.weekday = 2,
+		.date = 27,
+		.hours = 11,
+		.minutes = 0,
+		.seconds = 30
+	};
+	test_schedule.time_start = timestamp;
+	test_schedule.time_end = timestamp;
+	test_schedule.time_end.seconds += TEST_SCHEDULE_DURATION;
+	test_schedule.lamp_config = test_configs[0];
+	if (test_schedule.time_end.seconds >= 60) {
+		test_schedule.time_end.seconds -= 60;
+		test_schedule.time_end.minutes++;
+	}
+
+
+	(void)ScheduleList_Insert_First(test_schedule);
+	ScheduleNode* test_node = ScheduleList_Get_First_Node();
+
+
+	// i = 1 because the first config has already been inserted
+	for (uint8_t i = 1; i < SCHEDULE_LIST_MAX_LENGTH; i++)
+	{
+		test_schedule.time_start.seconds += TEST_SCHEDULE_DURATION*2;
+		if (test_schedule.time_start.seconds >= 60) {
+			test_schedule.time_start.seconds -= 60;
+			test_schedule.time_start.minutes++;
+		}
+		test_schedule.time_end.minutes = test_schedule.time_start.minutes;
+		test_schedule.time_end.seconds = test_schedule.time_start.seconds + TEST_SCHEDULE_DURATION;
+		if (test_schedule.time_end.seconds >= 60) {
+			test_schedule.time_end.seconds -= 60;
+			test_schedule.time_end.minutes++;
+		}
+		test_schedule.lamp_config = test_configs[i];
+		(void)ScheduleList_Insert_After(test_node, test_schedule);
+		test_node = test_node->next;
+	}
+
+	ScheduleNode* first_node = ScheduleList_Get_First_Node();
+	RTC_Set_AlarmB_ScheduleTimestamp(first_node->schedule.time_start);
+}
+
+void RTC_Set_AlarmB_ScheduleTimestamp(ScheduleTimestamp ts) {
+	RTC_AlarmTypeDef alarm_b = {0};
+
+	HAL_RTC_GetAlarm(&hrtc, &alarm_b, RTC_ALARM_B, FORMAT_BIN);
+
+	alarm_b.AlarmMask = RTC_ALARMMASK_NONE;
+	alarm_b.AlarmTime.Hours = ts.hours;
+	alarm_b.AlarmTime.Minutes = ts.minutes;
+	alarm_b.AlarmTime.Seconds = ts.seconds;
+	alarm_b.AlarmDateWeekDay = ts.date;
+	alarm_b.AlarmDateWeekDaySel = RTC_ALARMDATEWEEKDAYSEL_DATE;
+
+	if (HAL_RTC_SetAlarm_IT(&hrtc, &alarm_b, FORMAT_BIN) != HAL_OK) {
+		Error_Handler();
+	}
+}
+
+void Start_Process_Schedules_Task(void const *argument) {
+	osDelay(200); // this is enough time for LoRa to init the RTC before this task configures Alarm B
+	ScheduleList_Init();
+	for(;;) {
+		if(xSemaphoreTake(sem_process_alarm, portMAX_DELAY) != pdPASS) {
+			Error_Handler();
+		}
+		if (ScheduleList_Get_Size() <= 0) {
+			continue; // false alarm, there is no schedule to process
+		}
+		if (schedule_active) {
+			vcom_Trace((uint8_t *)"SCHEDULE END\r\n", 14);
+			// schedule has reached end time, remove it
+			ScheduleList_Remove_First();
+
+			
+			// restore saved lamp config
+			Send_LampState(previous_lamp_config.state);
+			Send_Brightness(previous_lamp_config.brightness);
+			
+			ScheduleNode* next_alarm_schedule_node = ScheduleList_Get_First_Node();
+			// queue up the next schedule alarm
+			if (next_alarm_schedule_node != NULL) {
+				Schedule next_alarm_schedule = next_alarm_schedule_node->schedule;
+				RTC_Set_AlarmB_ScheduleTimestamp(next_alarm_schedule.time_start);
+			}
+			schedule_active = false;
+		} else {
+			vcom_Trace((uint8_t *)"SCHEDULE START\r\n", 16);
+			Schedule current_schedule = ScheduleList_Get_First_Node()->schedule;
+
+			// save current lamp config
+			previous_lamp_config.state = Get_State_LampState();
+			previous_lamp_config.brightness = Get_Brightness();
+
+			// configure lamp based on the new schedule
+			Send_LampState(current_schedule.lamp_config.state);
+			Send_Brightness(current_schedule.lamp_config.brightness);
+
+			// set next alarm to end of current schedule
+			RTC_Set_AlarmB_ScheduleTimestamp(current_schedule.time_end);
+			schedule_active = true;
+		}
+
+	}
+}
+
+void ScheduleList_Init() {
+	ScheduleList_Clear();
+	sem_process_alarm = xSemaphoreCreateBinary();
+	ScheduleList_Fill_With_Test_Schedules();
+}
 
 uint8_t ScheduleList_Get_Size(void) {
 	return schedules.size;
