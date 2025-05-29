@@ -17,6 +17,8 @@ static QueueHandle_t brightness_queue;
 
 SemaphoreHandle_t sem_motion_sensor_signal;
 
+extern TIM_HandleTypeDef tim17;
+
 ///Brief: Initializes lamp state and brightness queues and mutex.
 void LampState_Init(void) {
     state_mutex = xSemaphoreCreateMutex();
@@ -67,6 +69,18 @@ void Send_Brightness(const uint8_t brightness) {
     }
 }
 
+void Lamp_On(void)
+{
+	__HAL_RCC_TIM17_CLK_ENABLE(); // Enable the clock
+	HAL_TIM_PWM_Start(&tim17, TIM_CHANNEL_1); // Start the timer
+}
+
+void Lamp_Off(void)
+{
+	HAL_TIM_PWM_Stop(&tim17, TIM_CHANNEL_1); // Disable the timer
+	__HAL_RCC_TIM17_CLK_DISABLE(); // Disable the clock
+}
+
 uint8_t Get_Brightness(void) {
     uint8_t copy = MAX_BRIGHTNESS;
     if (xSemaphoreTake(state_mutex, portMAX_DELAY) == pdTRUE) {
@@ -76,13 +90,24 @@ uint8_t Get_Brightness(void) {
     return copy;
 }
 
+void Set_Brightness(const uint8_t brightness)
+{
+	if (brightness == 0 && Get_State_LampState() == ON) {
+		Send_LampState(OFF);
+		return;
+	}
+
+	if(Get_State_LampState() == OFF) {
+		Send_LampState(ON);
+	}
+
+	__HAL_TIM_SET_COMPARE(&tim17, TIM_CHANNEL_1, brightness); // Set output compare value to brightness
+}
+
 /// Brief: Main task loop for handling lamp state and brightness.
 void Start_LampState_Task(void const *argument) {
 	LampState incoming_state;
 	uint8_t incoming_brightness;
-
-	// Initialize DAC (runs on PA10)
-	DAC_Init();
 
 	for (;;) {
 	    // Check for state change
@@ -94,10 +119,10 @@ void Start_LampState_Task(void const *argument) {
 
 	        switch (current_lamp_config.state) {
 	            case OFF:
-	                DAC_Disable();
+	            	Lamp_Off();
 	            	break;
 	            case ON:
-	            	DAC_Enable();
+	            	Lamp_On();
 	            	break;
 	            case MOTION_SENSOR:
 	            	xSemaphoreGive(sem_motion_sensor_signal);
@@ -115,14 +140,7 @@ void Start_LampState_Task(void const *argument) {
 	            xSemaphoreGive(state_mutex);
 	        }
 
-	        Warning result = DAC_Set_Brightness(current_lamp_config.brightness);
-
-	    	if (result != NO_WARNING)
-	    	{
-	    		const uint8_t params[] = { CHANGE_BRIGHTNESS, result };
-	    		Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_WARNING, (const uint8_t* const)&params, sizeof(params));
-	    		return;
-	    	}
+	        Set_Brightness(current_lamp_config.brightness);
 	    }
 
 	    osDelay(10);  // Give other tasks a chance
@@ -136,10 +154,9 @@ void Start_Motion_Sensor_Task(void const *argument) {
 		}
 		if(Get_State_LampState() == MOTION_SENSOR) {
 			if (GPIOA->IDR & GPIO_PIN_0) {
-				DAC_Enable();
-				DAC_Set_Brightness(Get_Brightness());
+				Set_Brightness(Get_Brightness());
 			} else {
-				DAC_Disable();
+				Set_Brightness(0);
 			}
 		}
 	}
