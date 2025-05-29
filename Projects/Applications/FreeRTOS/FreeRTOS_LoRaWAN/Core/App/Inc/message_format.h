@@ -62,7 +62,6 @@ typedef enum ResponseWithDataSubtypes
 typedef enum Warnings
 {
 	NO_WARNING = 0x00,
-	BATTERY_BELOW_LAMP_MAX_VDD = 0x30,
 	MIN_VREF_BELOW_CUTOFF_BOARD = 0x50,
 	MIN_VREF_ABOVE_MAX_VDD_BOARD = 0x51,
 	MAX_VREF_ABOVE_MAX_VDD_BOARD = 0x52

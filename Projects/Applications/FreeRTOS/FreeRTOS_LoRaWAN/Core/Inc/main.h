@@ -33,7 +33,14 @@ extern "C" {
 #include "usart_if.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "stm32wlxx_hal_tim.h"
 
+#define PB9_AF_TIM17_CH1 14
+
+#define CLOCK_SPEED 48000000 // 48 MHZ
+#define TIM17_FREQUENCY 100 // 100 HZ (slow enough that led can handle the switching, while not visibly flickering)
+#define TIM17_PERIOD UINT8_MAX // Led brightness is set using a single byte
+#define TIM17_PRESCALER ((CLOCK_SPEED / (TIM17_FREQUENCY * (TIM17_PERIOD + 1))) - 1) // Prescaler value to get said frequency
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
