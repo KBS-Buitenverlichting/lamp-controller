@@ -274,12 +274,12 @@ void TIM17_Init(void)
 
     /* Configure TIM17 Output Compare
      * Mode PWM
-     * Pulse same as period (Duty cycle 100%)
+     * Pulse 0 (start with duty cycle of 0%, lamp off)
      * Polarity HIGH (lamp on/ active on high)
      * Fast mode disabled
      */
 	tim17_oc.OCMode = TIM_OCMODE_PWM1;
-	tim17_oc.Pulse = TIM17_PERIOD;
+	tim17_oc.Pulse = 0;
 	tim17_oc.OCPolarity = TIM_OCPOLARITY_HIGH;
 	tim17_oc.OCFastMode = TIM_OCFAST_DISABLE;
 
