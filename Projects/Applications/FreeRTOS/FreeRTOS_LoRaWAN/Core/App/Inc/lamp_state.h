@@ -44,5 +44,5 @@ void Start_Motion_Sensor_Task(void const *argument);
 void Lamp_On(void);
 void Lamp_Off(void);
 uint8_t Get_Brightness(void);
-void Set_Brightness(const uint8_t brightness);
+void Set_Dutycycle(const uint8_t dutycycle);
 

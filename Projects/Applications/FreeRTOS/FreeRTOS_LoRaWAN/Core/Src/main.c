@@ -43,7 +43,6 @@ void MX_GPIO_Init(void);
 static void MX_LPTIM1_Init(void);
 /* USER CODE BEGIN PFP */
 int32_t LED_control(int value);
-void TIM17_Init(void);
 void Lamp_GPIO_Init(void);
 void Rx_Done(uint8_t *rx_char, uint16_t size, uint8_t error);
 void Tx_Done(void *arg);
@@ -268,10 +267,6 @@ void TIM17_Init(void)
 	  tim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
 	  tim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
 
-	  if (HAL_TIM_PWM_Init(&tim17) != HAL_OK) {
-	      Error_Handler();
-	  }
-
     /* Configure TIM17 Output Compare
      * Mode PWM
      * Pulse 0 (start with duty cycle of 0%, lamp off)
@@ -285,6 +280,11 @@ void TIM17_Init(void)
 
     if (HAL_TIM_PWM_ConfigChannel(&tim17, &tim17_oc, TIM_CHANNEL_1) != HAL_OK) {
         Error_Handler();
+    }
+
+    // Timer init after output compare init to prevent short burst of pwm before switching to 0% duty cycle
+    if (HAL_TIM_PWM_Init(&tim17) != HAL_OK) {
+	    Error_Handler();
     }
 
     if (HAL_TIM_PWM_Start(&tim17, TIM_CHANNEL_1) != HAL_OK) {

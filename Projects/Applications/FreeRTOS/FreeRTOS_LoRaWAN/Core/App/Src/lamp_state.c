@@ -71,14 +71,14 @@ void Send_Brightness(const uint8_t brightness) {
 
 void Lamp_On(void)
 {
-	__HAL_RCC_TIM17_CLK_ENABLE(); // Enable the clock
-	HAL_TIM_PWM_Start(&tim17, TIM_CHANNEL_1); // Start the timer
+	// Re-initialize after turning everything off
+	TIM17_Init();
 }
 
 void Lamp_Off(void)
 {
 	HAL_TIM_PWM_Stop(&tim17, TIM_CHANNEL_1); // Disable the timer
-	__HAL_RCC_TIM17_CLK_DISABLE(); // Disable the clock
+	__HAL_RCC_TIM17_CLK_DISABLE(); // Disable the peripheral clock
 }
 
 uint8_t Get_Brightness(void) {
@@ -90,18 +90,9 @@ uint8_t Get_Brightness(void) {
     return copy;
 }
 
-void Set_Brightness(const uint8_t brightness)
+void Set_Dutycycle(const uint8_t dutycycle)
 {
-	if (brightness == 0 && Get_State_LampState() == ON) {
-		Send_LampState(OFF);
-		return;
-	}
-
-	if(Get_State_LampState() == OFF) {
-		Send_LampState(ON);
-	}
-
-	__HAL_TIM_SET_COMPARE(&tim17, TIM_CHANNEL_1, brightness); // Set output compare value to brightness
+	__HAL_TIM_SET_COMPARE(&tim17, TIM_CHANNEL_1, dutycycle); // Set output compare value
 }
 
 /// Brief: Main task loop for handling lamp state and brightness.
@@ -136,11 +127,11 @@ void Start_LampState_Task(void const *argument) {
 	    // Check for brightness change
 	    if (xQueueReceive(brightness_queue, &incoming_brightness, 0) == pdTRUE) {
 	        if (xSemaphoreTake(state_mutex, portMAX_DELAY) == pdTRUE) {
-	            current_lamp_config.brightness = incoming_brightness;
-	            xSemaphoreGive(state_mutex);
+	        	current_lamp_config.brightness = incoming_brightness;
+	        	xSemaphoreGive(state_mutex);
 	        }
 
-	        Set_Brightness(current_lamp_config.brightness);
+	        Set_Dutycycle(current_lamp_config.brightness);
 	    }
 
 	    osDelay(10);  // Give other tasks a chance
@@ -154,9 +145,10 @@ void Start_Motion_Sensor_Task(void const *argument) {
 		}
 		if(Get_State_LampState() == MOTION_SENSOR) {
 			if (GPIOA->IDR & GPIO_PIN_0) {
-				Set_Brightness(Get_Brightness());
+				Lamp_On();
+				Set_Dutycycle(Get_Brightness());
 			} else {
-				Set_Brightness(0);
+				Lamp_Off();
 			}
 		}
 	}
