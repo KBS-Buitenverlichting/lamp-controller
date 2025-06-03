@@ -90,9 +90,9 @@ uint8_t Get_Brightness(void) {
     return copy;
 }
 
-void Set_Dutycycle(const uint8_t dutycycle)
+void Set_Duty_Cycle(const uint8_t duty_cycle)
 {
-	__HAL_TIM_SET_COMPARE(&tim17, TIM_CHANNEL_1, dutycycle); // Set output compare value
+	__HAL_TIM_SET_COMPARE(&tim17, TIM_CHANNEL_1, duty_cycle); // Set output compare value
 }
 
 /// Brief: Main task loop for handling lamp state and brightness.
@@ -131,7 +131,7 @@ void Start_LampState_Task(void const *argument) {
 	        	xSemaphoreGive(state_mutex);
 	        }
 
-	        Set_Dutycycle(current_lamp_config.brightness);
+	        Set_Duty_Cycle(current_lamp_config.brightness);
 	    }
 
 	    osDelay(10);  // Give other tasks a chance
@@ -146,7 +146,7 @@ void Start_Motion_Sensor_Task(void const *argument) {
 		if(Get_State_LampState() == MOTION_SENSOR) {
 			if (GPIOA->IDR & GPIO_PIN_0) {
 				Lamp_On();
-				Set_Dutycycle(Get_Brightness());
+				Set_Duty_Cycle(Get_Brightness());
 			} else {
 				Lamp_Off();
 			}
