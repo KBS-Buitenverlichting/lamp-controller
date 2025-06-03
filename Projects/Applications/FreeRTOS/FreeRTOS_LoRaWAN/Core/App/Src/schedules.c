@@ -244,3 +244,57 @@ ScheduleFuncStatus ScheduleList_Remove_After(ScheduleNode * const schedule_node)
 	schedules.size--;
 	return SCHEDULE_FUNC_OK;
 }
+
+bool Save_ScheduleList_To_Flash(void) {
+	HAL_FLASH_Unlock();
+
+	// Flash wissen
+	FLASH_EraseInitTypeDef eraseInitStruct = {
+		.TypeErase = FLASH_TYPEERASE_PAGES,
+		.Page = (FLASH_SCHEDULE_ADDRESS - FLASH_BASE) / FLASH_PAGE_SIZE,
+		.NbPages = 1
+	};
+	uint32_t sectorError = 0;
+	if (HAL_FLASHEx_Erase(&eraseInitStruct, &sectorError) != HAL_OK) {
+		HAL_FLASH_Lock();
+		return false;
+	}
+
+	// Struct opbouwen
+	FlashScheduleStorage dataToSave = {
+		.valid_marker = FLASH_SCHEDULE_VALID_MARKER,
+		.size = ScheduleList_Get_Size()
+	};
+
+	ScheduleNode* current = ScheduleList_Get_First_Node();
+	for (uint8_t i = 0; i < dataToSave.size && i < SCHEDULE_LIST_MAX_LENGTH; i++) {
+		dataToSave.schedules[i] = current->schedule;
+		current = current->next;
+	}
+
+	// Flash programmeren (64-bit aligned)
+	uint64_t* src = (uint64_t*) &dataToSave;
+	for (uint32_t offset = 0; offset < sizeof(FlashScheduleStorage); offset += 8) {
+		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,
+		                      FLASH_SCHEDULE_ADDRESS + offset,
+		                      src[offset / 8]) != HAL_OK) {
+			HAL_FLASH_Lock();
+			return false;
+		}
+	}
+
+	HAL_FLASH_Lock();
+	return true;
+}
+
+bool Load_ScheduleList_From_Flash(void) {
+	if (FLASH_SCHEDULE_PTR->valid_marker != FLASH_SCHEDULE_VALID_MARKER)
+		return false;
+
+	ScheduleList_Clear();
+
+	for (uint8_t i = 0; i < FLASH_SCHEDULE_PTR->size && i < SCHEDULE_LIST_MAX_LENGTH; i++) {
+		ScheduleList_Insert_After(NULL, FLASH_SCHEDULE_PTR->schedules[i]);
+	}
+	return true;
+}
