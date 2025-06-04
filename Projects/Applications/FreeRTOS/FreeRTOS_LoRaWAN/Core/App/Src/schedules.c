@@ -59,7 +59,7 @@ void ScheduleList_Fill_With_Test_Schedules() {
 
 
 	// i = 1 because the first config has already been inserted
-	for (uint8_t i = 1; i < SCHEDULE_LIST_MAX_LENGTH; i++)
+	for (uint8_t i = 1; i < 4; i++)
 	{
 		test_schedule.time_start.seconds += TEST_SCHEDULE_DURATION*2;
 		if (test_schedule.time_start.seconds >= 60) {
@@ -146,9 +146,10 @@ void Start_Process_Schedules_Task(void const *argument) {
 }
 
 void ScheduleList_Init() {
-	ScheduleList_Clear();
+	//ScheduleList_Clear();
 	sem_process_alarm = xSemaphoreCreateBinary();
-	ScheduleList_Fill_With_Test_Schedules();
+	//ScheduleList_Fill_With_Test_Schedules();
+	Load_ScheduleList_From_Flash();
 }
 
 uint8_t ScheduleList_Get_Size(void) {
@@ -206,6 +207,7 @@ ScheduleFuncStatus ScheduleList_Insert_First(Schedule new_schedule) {
 	new_schedule_node->next = schedules.first;
 	schedules.first = new_schedule_node;
 	schedules.size++;
+	Save_ScheduleList_To_Flash();
 	return SCHEDULE_FUNC_OK;
 }
 
@@ -220,6 +222,7 @@ ScheduleFuncStatus ScheduleList_Insert_After(ScheduleNode * const schedule_node,
 	new_schedule_node->next = schedule_node->next;
 	schedule_node->next = new_schedule_node;
 	schedules.size++;
+	Save_ScheduleList_To_Flash();
 	return SCHEDULE_FUNC_OK;
 }
 
@@ -291,10 +294,14 @@ bool Load_ScheduleList_From_Flash(void) {
 	if (FLASH_SCHEDULE_PTR->valid_marker != FLASH_SCHEDULE_VALID_MARKER)
 		return false;
 
-	ScheduleList_Clear();
+	//ScheduleList_Clear();
 
-	for (uint8_t i = 0; i < FLASH_SCHEDULE_PTR->size && i < SCHEDULE_LIST_MAX_LENGTH; i++) {
-		ScheduleList_Insert_After(NULL, FLASH_SCHEDULE_PTR->schedules[i]);
+	uint8_t stored_size = FLASH_SCHEDULE_PTR->size;
+
+	for (uint8_t i = 0; i < stored_size && i < SCHEDULE_LIST_MAX_LENGTH; i++) {
+		while (FLASH->SR & FLASH_SR_BSY)
+			;
+		ScheduleList_Insert_First(FLASH_SCHEDULE_PTR->schedules[i]);
 	}
 	return true;
 }
