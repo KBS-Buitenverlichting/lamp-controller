@@ -73,6 +73,7 @@ void Lamp_On(void)
 {
 	// Re-initialize after turning everything off
 	TIM17_Init();
+	Set_Duty_Cycle(Get_Brightness());
 }
 
 void Lamp_Off(void)
@@ -146,7 +147,6 @@ void Start_Motion_Sensor_Task(void const *argument) {
 		if(Get_State_LampState() == MOTION_SENSOR) {
 			if (GPIOA->IDR & GPIO_PIN_0) {
 				Lamp_On();
-				Set_Duty_Cycle(Get_Brightness());
 			} else {
 				Lamp_Off();
 			}
