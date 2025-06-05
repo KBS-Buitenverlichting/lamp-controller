@@ -78,3 +78,6 @@ ScheduleFuncStatus ScheduleList_Insert_First(Schedule new_schedule);
 ScheduleFuncStatus ScheduleList_Insert_After(ScheduleNode* const schedule_node, Schedule new_schedule);
 ScheduleFuncStatus ScheduleList_Remove_First(void);
 ScheduleFuncStatus ScheduleList_Remove_After(ScheduleNode* const schedule_node);
+
+void ScheduleList_Fill_With_Test_Schedules(void);
+
