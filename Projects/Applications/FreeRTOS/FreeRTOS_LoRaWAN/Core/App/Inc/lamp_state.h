@@ -15,7 +15,6 @@
 #include "queue.h"
 #include "semphr.h"
 #include "main.h"  // for GPIO control
-#include "dac.h"
 #include "transmit.h"
 
 #define MAX_BRIGHTNESS UINT8_MAX
@@ -42,5 +41,8 @@ const char* LampState_ToString(const LampState state);
 void Start_LampState_Task(void const *argument);
 void Send_Brightness(const uint8_t brightness);
 void Start_Motion_Sensor_Task(void const *argument);
+void Lamp_On(void);
+void Lamp_Off(void);
 uint8_t Get_Brightness(void);
+void Set_Duty_Cycle(const uint8_t duty_cycle);
 
