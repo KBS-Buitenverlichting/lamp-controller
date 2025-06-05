@@ -12,6 +12,9 @@
 #include "stdbool.h"
 
 #define SCHEDULE_LIST_MAX_LENGTH 10
+#define FLASH_SCHEDULE_VALID_MARKER 0xBEEFBEEF
+#define FLASH_SCHEDULE_ADDRESS 0x0803F000
+#define FLASH_SCHEDULE_PTR ((const FlashScheduleStorage*) FLASH_SCHEDULE_ADDRESS)
 
 typedef enum ScheduleFuncStatus {
 	SCHEDULE_FUNC_OK,
@@ -47,6 +50,16 @@ typedef struct ScheduleList {
 	ScheduleNode* first;
 } ScheduleList;
 
+typedef struct {
+	uint32_t valid_marker;
+	uint8_t size;
+	uint8_t padding[3]; // Padding to ensure the total struct size is a multiple of 8
+	Schedule schedules[SCHEDULE_LIST_MAX_LENGTH];
+} FlashScheduleStorage;
+
+bool Save_ScheduleList_To_Flash(void);
+bool Load_ScheduleList_From_Flash(void);
+
 extern SemaphoreHandle_t sem_process_alarm;
 
 void RTC_Set_AlarmB_ScheduleTimestamp(ScheduleTimestamp ts);
@@ -65,3 +78,6 @@ ScheduleFuncStatus ScheduleList_Insert_First(Schedule new_schedule);
 ScheduleFuncStatus ScheduleList_Insert_After(ScheduleNode* const schedule_node, Schedule new_schedule);
 ScheduleFuncStatus ScheduleList_Remove_First(void);
 ScheduleFuncStatus ScheduleList_Remove_After(ScheduleNode* const schedule_node);
+
+void ScheduleList_Fill_With_Test_Schedules(void);
+

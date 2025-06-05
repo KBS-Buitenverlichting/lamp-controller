@@ -146,9 +146,8 @@ void Start_Process_Schedules_Task(void const *argument) {
 }
 
 void ScheduleList_Init() {
-	ScheduleList_Clear();
 	sem_process_alarm = xSemaphoreCreateBinary();
-	ScheduleList_Fill_With_Test_Schedules();
+	Load_ScheduleList_From_Flash();
 }
 
 uint8_t ScheduleList_Get_Size(void) {
@@ -206,6 +205,7 @@ ScheduleFuncStatus ScheduleList_Insert_First(Schedule new_schedule) {
 	new_schedule_node->next = schedules.first;
 	schedules.first = new_schedule_node;
 	schedules.size++;
+	Save_ScheduleList_To_Flash();
 	return SCHEDULE_FUNC_OK;
 }
 
@@ -220,6 +220,7 @@ ScheduleFuncStatus ScheduleList_Insert_After(ScheduleNode * const schedule_node,
 	new_schedule_node->next = schedule_node->next;
 	schedule_node->next = new_schedule_node;
 	schedules.size++;
+	Save_ScheduleList_To_Flash();
 	return SCHEDULE_FUNC_OK;
 }
 
@@ -231,6 +232,7 @@ ScheduleFuncStatus ScheduleList_Remove_First(void) {
 	schedules.first = schedules.first->next;
 	free(node_to_remove);
 	schedules.size--;
+	Save_ScheduleList_To_Flash();
 	return SCHEDULE_FUNC_OK;
 }
 
@@ -242,5 +244,72 @@ ScheduleFuncStatus ScheduleList_Remove_After(ScheduleNode * const schedule_node)
 	schedule_node->next = node_to_remove->next;
 	free(node_to_remove);
 	schedules.size--;
+	Save_ScheduleList_To_Flash();
 	return SCHEDULE_FUNC_OK;
+}
+
+bool Save_ScheduleList_To_Flash(void)
+{
+    FlashScheduleStorage data_to_save;
+    data_to_save.size = schedules.size;
+
+    ScheduleNode *current = schedules.first;
+    for (uint8_t i = 0; i < data_to_save.size && i < SCHEDULE_LIST_MAX_LENGTH; i++) {
+        data_to_save.schedules[i] = current->schedule;
+        current = current->next;
+    }
+
+    data_to_save.valid_marker = FLASH_SCHEDULE_VALID_MARKER;
+
+    HAL_FLASH_Unlock();
+
+    FLASH_EraseInitTypeDef erase_init;
+    erase_init.TypeErase = FLASH_TYPEERASE_PAGES;
+    erase_init.Page = (FLASH_SCHEDULE_ADDRESS - FLASH_BASE) / FLASH_PAGE_SIZE;
+    erase_init.NbPages = 1;
+
+    uint32_t page_error;
+    if (HAL_FLASHEx_Erase(&erase_init, &page_error) != HAL_OK) {
+        HAL_FLASH_Lock();
+        return false;
+    }
+
+    uint32_t double_word_count = (sizeof(FlashScheduleStorage) + 7) / 8; // Rounds up the total size to ensure it's evenly divisible into 8-byte chunks
+    uint64_t flash_buffer[double_word_count];
+    memcpy(flash_buffer, &data_to_save, sizeof(FlashScheduleStorage));
+
+    for (uint32_t i = 0; i < double_word_count; i++) {
+        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,
+                              FLASH_SCHEDULE_ADDRESS + (i * 8), // Calculates the byte offset for each 8-byte chunk
+                              flash_buffer[i]) != HAL_OK) {
+            HAL_FLASH_Lock();
+            return false;
+        }
+    }
+
+    HAL_FLASH_Lock();
+    return true;
+}
+
+
+bool Load_ScheduleList_From_Flash(void) {
+    if (FLASH_SCHEDULE_PTR->valid_marker != FLASH_SCHEDULE_VALID_MARKER)
+        return false;
+
+    uint8_t stored_size = FLASH_SCHEDULE_PTR->size;
+
+    if (stored_size == 0 || stored_size > SCHEDULE_LIST_MAX_LENGTH)
+        return false;
+
+    Schedule temp_array[SCHEDULE_LIST_MAX_LENGTH];
+
+    for (uint8_t i = 0; i < stored_size; i++) {
+        memcpy(&temp_array[i], &FLASH_SCHEDULE_PTR->schedules[i], sizeof(Schedule));
+    }
+
+    for (int8_t i = stored_size - 1; i >= 0; i--) {
+        ScheduleList_Insert_First(temp_array[i]);
+    }
+
+    return true;
 }
