@@ -59,7 +59,7 @@ void ScheduleList_Fill_With_Test_Schedules() {
 
 
 	// i = 1 because the first config has already been inserted
-	for (uint8_t i = 1; i < 4; i++)
+	for (uint8_t i = 1; i < SCHEDULE_LIST_MAX_LENGTH; i++)
 	{
 		test_schedule.time_start.seconds += TEST_SCHEDULE_DURATION*2;
 		if (test_schedule.time_start.seconds >= 60) {
@@ -248,60 +248,72 @@ ScheduleFuncStatus ScheduleList_Remove_After(ScheduleNode * const schedule_node)
 	return SCHEDULE_FUNC_OK;
 }
 
-bool Save_ScheduleList_To_Flash(void) {
-	HAL_FLASH_Unlock();
+bool Save_ScheduleList_To_Flash(void)
+{
+    FlashScheduleStorage dataToSave;
+    dataToSave.size = schedules.size;  // Aantal actieve items
 
-	// Flash wissen
-	FLASH_EraseInitTypeDef eraseInitStruct = {
-		.TypeErase = FLASH_TYPEERASE_PAGES,
-		.Page = (FLASH_SCHEDULE_ADDRESS - FLASH_BASE) / FLASH_PAGE_SIZE,
-		.NbPages = 1
-	};
-	uint32_t sectorError = 0;
-	if (HAL_FLASHEx_Erase(&eraseInitStruct, &sectorError) != HAL_OK) {
-		HAL_FLASH_Lock();
-		return false;
-	}
+    ScheduleNode *current = schedules.first;
+    for (uint8_t i = 0; i < dataToSave.size && i < SCHEDULE_LIST_MAX_LENGTH; i++) {
+        dataToSave.schedules[i] = current->schedule;  // Directe array-toegang
+        current = current->next;
+    }
 
-	// Struct opbouwen
-	FlashScheduleStorage dataToSave = {
-		.valid_marker = FLASH_SCHEDULE_VALID_MARKER,
-		.size = ScheduleList_Get_Size()
-	};
+    dataToSave.valid_marker = FLASH_SCHEDULE_VALID_MARKER;
 
-	ScheduleNode* current = ScheduleList_Get_First_Node();
-	for (uint8_t i = 0; i < dataToSave.size && i < SCHEDULE_LIST_MAX_LENGTH; i++) {
-		dataToSave.schedules[i] = current->schedule;
-		current = current->next;
-	}
+    HAL_FLASH_Unlock();
 
-	// Flash programmeren (64-bit aligned)
-	uint64_t* src = (uint64_t*) &dataToSave;
-	for (uint32_t offset = 0; offset < sizeof(FlashScheduleStorage); offset += 8) {
-		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,
-		                      FLASH_SCHEDULE_ADDRESS + offset,
-		                      src[offset / 8]) != HAL_OK) {
-			HAL_FLASH_Lock();
-			return false;
-		}
-	}
+    FLASH_EraseInitTypeDef eraseInit;
+    eraseInit.TypeErase = FLASH_TYPEERASE_PAGES;
+    eraseInit.Page = (FLASH_SCHEDULE_ADDRESS - FLASH_BASE) / FLASH_PAGE_SIZE;
+    eraseInit.NbPages = 1;
 
-	HAL_FLASH_Lock();
-	return true;
+    uint32_t pageError;
+    if (HAL_FLASHEx_Erase(&eraseInit, &pageError) != HAL_OK) {
+        HAL_FLASH_Lock();
+        return false;
+    }
+
+    // Maak aligned buffer
+    uint32_t doubleWordCount = (sizeof(FlashScheduleStorage) + 7) / 8;
+    uint64_t flash_buffer[doubleWordCount];
+    memcpy(flash_buffer, &dataToSave, sizeof(FlashScheduleStorage));
+
+    for (uint32_t i = 0; i < doubleWordCount; i++) {
+        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,
+                              FLASH_SCHEDULE_ADDRESS + (i * 8),
+                              flash_buffer[i]) != HAL_OK) {
+            HAL_FLASH_Lock();
+            return false;
+        }
+    }
+
+    HAL_FLASH_Lock();
+    return true;
 }
 
+
 bool Load_ScheduleList_From_Flash(void) {
-	if (FLASH_SCHEDULE_PTR->valid_marker != FLASH_SCHEDULE_VALID_MARKER)
-		return false;
+    if (FLASH_SCHEDULE_PTR->valid_marker != FLASH_SCHEDULE_VALID_MARKER)
+        return false;
 
-	//ScheduleList_Clear();
+    uint8_t stored_size = FLASH_SCHEDULE_PTR->size;
 
-	uint8_t stored_size = FLASH_SCHEDULE_PTR->size;
+    if (stored_size == 0 || stored_size > SCHEDULE_LIST_MAX_LENGTH)
+        return false;
 
-	for (uint8_t i = 0; i < stored_size && i < SCHEDULE_LIST_MAX_LENGTH; i++) {
-		while (FLASH->SR & FLASH_SR_BSY)
-			;
-		ScheduleList_Insert_First(FLASH_SCHEDULE_PTR->schedules[i]);
-	}
-	return true;
+    Schedule temp_array[SCHEDULE_LIST_MAX_LENGTH];
+
+    // Stap 1: kopieer eerst alles naar een tijdelijke array
+    for (uint8_t i = 0; i < stored_size; i++) {
+        memcpy(&temp_array[i], &FLASH_SCHEDULE_PTR->schedules[i], sizeof(Schedule));
+    }
+
+    // Stap 2: voeg ze in omgekeerde volgorde toe zodat de originele volgorde behouden blijft
+    for (int8_t i = stored_size - 1; i >= 0; i--) {
+        ScheduleList_Insert_First(temp_array[i]);
+    }
+
+    vcom_Trace("Ready\r\n", 7);
+    return true;
 }
