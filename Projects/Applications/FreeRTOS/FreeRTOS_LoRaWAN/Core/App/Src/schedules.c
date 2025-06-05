@@ -232,6 +232,7 @@ ScheduleFuncStatus ScheduleList_Remove_First(void) {
 	schedules.first = schedules.first->next;
 	free(node_to_remove);
 	schedules.size--;
+	Save_ScheduleList_To_Flash();
 	return SCHEDULE_FUNC_OK;
 }
 
@@ -243,17 +244,18 @@ ScheduleFuncStatus ScheduleList_Remove_After(ScheduleNode * const schedule_node)
 	schedule_node->next = node_to_remove->next;
 	free(node_to_remove);
 	schedules.size--;
+	Save_ScheduleList_To_Flash();
 	return SCHEDULE_FUNC_OK;
 }
 
 bool Save_ScheduleList_To_Flash(void)
 {
     FlashScheduleStorage dataToSave;
-    dataToSave.size = schedules.size;  // Aantal actieve items
+    dataToSave.size = schedules.size;
 
     ScheduleNode *current = schedules.first;
     for (uint8_t i = 0; i < dataToSave.size && i < SCHEDULE_LIST_MAX_LENGTH; i++) {
-        dataToSave.schedules[i] = current->schedule;  // Directe array-toegang
+        dataToSave.schedules[i] = current->schedule;
         current = current->next;
     }
 
@@ -272,7 +274,6 @@ bool Save_ScheduleList_To_Flash(void)
         return false;
     }
 
-    // Maak aligned buffer
     uint32_t doubleWordCount = (sizeof(FlashScheduleStorage) + 7) / 8;
     uint64_t flash_buffer[doubleWordCount];
     memcpy(flash_buffer, &dataToSave, sizeof(FlashScheduleStorage));
@@ -302,12 +303,10 @@ bool Load_ScheduleList_From_Flash(void) {
 
     Schedule temp_array[SCHEDULE_LIST_MAX_LENGTH];
 
-    // Stap 1: kopieer eerst alles naar een tijdelijke array
     for (uint8_t i = 0; i < stored_size; i++) {
         memcpy(&temp_array[i], &FLASH_SCHEDULE_PTR->schedules[i], sizeof(Schedule));
     }
 
-    // Stap 2: voeg ze in omgekeerde volgorde toe zodat de originele volgorde behouden blijft
     for (int8_t i = stored_size - 1; i >= 0; i--) {
         ScheduleList_Insert_First(temp_array[i]);
     }

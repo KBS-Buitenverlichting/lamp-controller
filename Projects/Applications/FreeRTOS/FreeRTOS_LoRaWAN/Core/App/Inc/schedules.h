@@ -53,11 +53,9 @@ typedef struct ScheduleList {
 typedef struct {
 	uint32_t valid_marker;
 	uint8_t size;
-	// Add padding here to ensure 'size' and 'schedules' are correctly aligned,
-	// and the total struct size is a multiple of 8.
-	uint8_t padding[3]; // 1 byte for size + 3 bytes padding = 4 bytes, so valid_marker + size + padding = 8 bytes
-	Schedule schedules[SCHEDULE_LIST_MAX_LENGTH]; // 10 * 16 bytes = 160 bytes
-} FlashScheduleStorage; // Total: 4 (valid_marker) + 1 (size) + 3 (padding) + 160 (schedules) = 168 bytes, which is a multiple of 8.
+	uint8_t padding[3];	// Padding to ensure the total struct size is a multiple of 8
+	Schedule schedules[SCHEDULE_LIST_MAX_LENGTH];
+} FlashScheduleStorage;
 
 bool Save_ScheduleList_To_Flash(void);
 bool Load_ScheduleList_From_Flash(void);
