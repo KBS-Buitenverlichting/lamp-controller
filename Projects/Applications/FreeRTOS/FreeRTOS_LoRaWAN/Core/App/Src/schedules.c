@@ -259,28 +259,28 @@ bool Save_ScheduleList_To_Flash(void)
         current = current->next;
     }
 
-    dataToSave.valid_marker = FLASH_SCHEDULE_VALID_MARKER;
+    data_to_save.valid_marker = FLASH_SCHEDULE_VALID_MARKER;
 
     HAL_FLASH_Unlock();
 
-    FLASH_EraseInitTypeDef eraseInit;
-    eraseInit.TypeErase = FLASH_TYPEERASE_PAGES;
-    eraseInit.Page = (FLASH_SCHEDULE_ADDRESS - FLASH_BASE) / FLASH_PAGE_SIZE;
-    eraseInit.NbPages = 1;
+    FLASH_EraseInitTypeDef erase_init;
+    erase_init.TypeErase = FLASH_TYPEERASE_PAGES;
+    erase_init.Page = (FLASH_SCHEDULE_ADDRESS - FLASH_BASE) / FLASH_PAGE_SIZE;
+    erase_init.NbPages = 1;
 
-    uint32_t pageError;
-    if (HAL_FLASHEx_Erase(&eraseInit, &pageError) != HAL_OK) {
+    uint32_t page_error;
+    if (HAL_FLASHEx_Erase(&erase_init, &page_error) != HAL_OK) {
         HAL_FLASH_Lock();
         return false;
     }
 
-    uint32_t doubleWordCount = (sizeof(FlashScheduleStorage) + 7) / 8;
-    uint64_t flash_buffer[doubleWordCount];
-    memcpy(flash_buffer, &dataToSave, sizeof(FlashScheduleStorage));
+    uint32_t double_word_count = (sizeof(FlashScheduleStorage) + 7) / 8; // Rounds up the total size to ensure it's evenly divisible into 8-byte chunks
+    uint64_t flash_buffer[double_word_count];
+    memcpy(flash_buffer, &data_to_save, sizeof(FlashScheduleStorage));
 
-    for (uint32_t i = 0; i < doubleWordCount; i++) {
+    for (uint32_t i = 0; i < double_word_count; i++) {
         if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,
-                              FLASH_SCHEDULE_ADDRESS + (i * 8),
+                              FLASH_SCHEDULE_ADDRESS + (i * 8), // Calculates the byte offset for each 8-byte chunk
                               flash_buffer[i]) != HAL_OK) {
             HAL_FLASH_Lock();
             return false;
