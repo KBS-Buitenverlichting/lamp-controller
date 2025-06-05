@@ -250,12 +250,12 @@ ScheduleFuncStatus ScheduleList_Remove_After(ScheduleNode * const schedule_node)
 
 bool Save_ScheduleList_To_Flash(void)
 {
-    FlashScheduleStorage dataToSave;
-    dataToSave.size = schedules.size;
+    FlashScheduleStorage data_to_save;
+    data_to_save.size = schedules.size;
 
     ScheduleNode *current = schedules.first;
-    for (uint8_t i = 0; i < dataToSave.size && i < SCHEDULE_LIST_MAX_LENGTH; i++) {
-        dataToSave.schedules[i] = current->schedule;
+    for (uint8_t i = 0; i < data_to_save.size && i < SCHEDULE_LIST_MAX_LENGTH; i++) {
+        data_to_save.schedules[i] = current->schedule;
         current = current->next;
     }
 
