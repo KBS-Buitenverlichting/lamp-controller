@@ -204,19 +204,58 @@ void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, c
 	}
 }
 
+ScheduleValidationResult ScheduleList_Can_Insert(const Schedule* new_schedule, ScheduleNode** out_insert_after)
+{
+    if (ScheduleTimestamp_Compare(&new_schedule->time_start, &new_schedule->time_end) >= 0) {
+//			Start and end timestamps are equal, or end time is before start time. Ignoring schedule.
+        return SCHEDULE_INVALID_DATA;
+    }
+
+    if (ScheduleList_Get_Size() == SCHEDULE_LIST_MAX_LENGTH) {
+        return SCHEDULE_LIST_FULL;
+    }
+
+
+    ScheduleNode* current = ScheduleList_Get_First_Node();
+    if (!current || ScheduleTimestamp_Compare(&new_schedule->time_start, &current->schedule.time_start) < 0) {
+        if (current && ScheduleTimestamp_Compare(&new_schedule->time_end, &current->schedule.time_start) >= 0) {
+            return SCHEDULE_INVALID_OVERLAP_NEXT;
+        }
+        *out_insert_after = NULL;
+        return SCHEDULE_VALID_INSERT;
+    }
+//			Check where the start time fits in the linked list
+    while (current->next && ScheduleTimestamp_Compare(&new_schedule->time_start, &current->next->schedule.time_start) > 0) {
+        current = current->next;
+    }
+
+    if (current->next && ScheduleTimestamp_Compare(&new_schedule->time_end, &current->next->schedule.time_start) >= 0) {
+           return SCHEDULE_INVALID_OVERLAP_NEXT;
+       }
+
+
+   if (ScheduleTimestamp_Compare(&new_schedule->time_start, &current->schedule.time_end) <= 0) {
+	   return SCHEDULE_INVALID_OVERLAP_PREVIOUS;
+   }
+
+    *out_insert_after = current;
+    return SCHEDULE_VALID_INSERT;
+}
+
 void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
     char msg[100];
 
     if (buffer_size < SET_TIMESCHEDULE_BYTE_COUNT) {
         int len = snprintf(msg, sizeof(msg), "Set timeschedule command input is too short!\r\n");
-        if (len > 0 && len < sizeof(msg)) vcom_Trace((uint8_t*)msg, (uint16_t)len);
+        if (len > 0 && len < sizeof(msg)) {
+            vcom_Trace((uint8_t*)msg, (uint16_t)len);
+        }
 
         const uint8_t params[] = { SET_TIMESCHEDULE };
         Tx_Set_Buffer(RESPONSE_OUT, MISSING_DATA, params, sizeof(params));
         return;
     }
-
     Schedule new_schedule;
     new_schedule.time_start = (ScheduleTimestamp){
         .year = buffer[2], .month = buffer[3], .weekday = buffer[4],
@@ -230,81 +269,74 @@ void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint
         .state = buffer[16], .brightness = buffer[17]
     };
 
-    if (ScheduleTimestamp_Compare(&new_schedule.time_start, &new_schedule.time_end) == 0 || ScheduleTimestamp_Compare(&new_schedule.time_start, &new_schedule.time_end) < 0) {
-        int len = snprintf(msg, sizeof(msg), "Start and end timestamps are equal, or end time is before start time. Ignoring schedule.\r\n");
-        if (len > 0 && len < sizeof(msg)) vcom_Trace((uint8_t*)msg, (uint16_t)len);
+    ScheduleNode* insert_after = NULL;
+    ScheduleValidationResult result = ScheduleList_Can_Insert(&new_schedule, &insert_after);
 
-        const uint8_t params[] = { SET_TIMESCHEDULE };
-        Tx_Set_Buffer(RESPONSE_OUT, INVALID_DATA, params, sizeof(params));
-        return;
-    }
-
-    ScheduleNode* current = ScheduleList_Get_First_Node();
-
-    // Empty list so insert first
-    if (!current) {
-        ScheduleFuncStatus status = ScheduleList_Insert_First(new_schedule);
-        if (status == SCHEDULE_FUNC_OK) {
-            int len = snprintf(msg, sizeof(msg), "Schedule list was empty. Inserted first.\r\n");
-            if (len > 0 && len < sizeof(msg)) vcom_Trace((uint8_t*)msg, (uint16_t)len);
-            Tx_Set_Ack(SET_TIMESCHEDULE);
-        } else {
-            const uint8_t params[] = { SET_TIMESCHEDULE };
-            Tx_Set_Buffer(RESPONSE_OUT, LIST_FULL, params, sizeof(params));
+    if (result == SCHEDULE_INVALID_DATA) {
+        int len = snprintf(msg, sizeof(msg), "Start and end timestamps are equal, or end time is before start time.\r\n");
+        if (len > 0 && len < sizeof(msg)) {
+            vcom_Trace((uint8_t*)msg, (uint16_t)len);
         }
+
+        const uint8_t params[] = { SET_TIMESCHEDULE };
+        Tx_Set_Buffer(RESPONSE_OUT, INVALID_DATA, params, sizeof(params));
         return;
     }
 
-    // Check if new schedule is earlier than the first
-    if (ScheduleTimestamp_Compare(&new_schedule.time_start, &current->schedule.time_start) < 0) {
-        ScheduleFuncStatus status = ScheduleList_Insert_First(new_schedule);
-        if (status == SCHEDULE_FUNC_OK) {
-            int len = snprintf(msg, sizeof(msg), "Inserted schedule at beginning.\r\n");
-            if (len > 0 && len < sizeof(msg)) vcom_Trace((uint8_t*)msg, (uint16_t)len);
-            Tx_Set_Ack(SET_TIMESCHEDULE);
-        } else {
-            const uint8_t params[] = { SET_TIMESCHEDULE };
-            Tx_Set_Buffer(RESPONSE_OUT, LIST_FULL, params, sizeof(params));
+    if (result == SCHEDULE_INVALID_OVERLAP_PREVIOUS) {
+        int len = snprintf(msg, sizeof(msg), "Overlap detected with previous schedule.\r\n");
+        if (len > 0 && len < sizeof(msg)) {
+            vcom_Trace((uint8_t*)msg, (uint16_t)len);
         }
-        return;
-    }
-
-    // Check everything to find correct insert point
-    while (current->next && ScheduleTimestamp_Compare(&new_schedule.time_start, &current->next->schedule.time_start) > 0) {
-        current = current->next;
-    }
-
-    // Check for overlap with previous (current)
-    if (ScheduleTimestamp_Compare(&current->schedule.time_end, &new_schedule.time_start) > 0) {
-        int len = snprintf(msg, sizeof(msg), "Overlap detected with previous schedule. Ignoring.\r\n");
-        if (len > 0 && len < sizeof(msg)) vcom_Trace((uint8_t*)msg, (uint16_t)len);
 
         const uint8_t params[] = { SET_TIMESCHEDULE };
         Tx_Set_Buffer(RESPONSE_OUT, INVALID_DATA, params, sizeof(params));
         return;
     }
 
-    // Check for overlap with next
-    if (current->next && ScheduleTimestamp_Compare(&new_schedule.time_end, &current->next->schedule.time_start) > 0) {
-        int len = snprintf(msg, sizeof(msg), "Overlap detected with next schedule. Ignoring.\r\n");
-        if (len > 0 && len < sizeof(msg)) vcom_Trace((uint8_t*)msg, (uint16_t)len);
+    if (result == SCHEDULE_INVALID_OVERLAP_NEXT) {
+        int len = snprintf(msg, sizeof(msg), "Overlap detected with next schedule.\r\n");
+        if (len > 0 && len < sizeof(msg)) {
+            vcom_Trace((uint8_t*)msg, (uint16_t)len);
+        }
 
         const uint8_t params[] = { SET_TIMESCHEDULE };
         Tx_Set_Buffer(RESPONSE_OUT, INVALID_DATA, params, sizeof(params));
         return;
     }
 
-    ScheduleFuncStatus status = ScheduleList_Insert_After(current, new_schedule);
+    if (result == SCHEDULE_LIST_FULL) {
+        int len = snprintf(msg, sizeof(msg), "Schedule list is full.\r\n");
+        if (len > 0 && len < sizeof(msg)) {
+            vcom_Trace((uint8_t*)msg, (uint16_t)len);
+        }
+
+        const uint8_t params[] = { SET_TIMESCHEDULE };
+        Tx_Set_Buffer(RESPONSE_OUT, LIST_FULL, params, sizeof(params));
+        return;
+    }
+
+    // Schedule is valid, now insert
+    ScheduleFuncStatus status;
+    if (insert_after == NULL) {
+        status = ScheduleList_Insert_First(new_schedule);
+    } else {
+        status = ScheduleList_Insert_After(insert_after, new_schedule);
+    }
+
     if (status == SCHEDULE_FUNC_OK) {
-        int len = snprintf(msg, sizeof(msg), "Inserted schedule in sorted position.\r\n");
-        if (len > 0 && len < sizeof(msg)) vcom_Trace((uint8_t*)msg, (uint16_t)len);
+        int len = snprintf(msg, sizeof(msg),
+            insert_after == NULL ? "Inserted schedule at beginning.\r\n" : "Inserted schedule in sorted position.\r\n");
+        if (len > 0 && len < sizeof(msg)) {
+            vcom_Trace((uint8_t*)msg, (uint16_t)len);
+        }
+
         Tx_Set_Ack(SET_TIMESCHEDULE);
     } else {
         const uint8_t params[] = { SET_TIMESCHEDULE };
         Tx_Set_Buffer(RESPONSE_OUT, LIST_FULL, params, sizeof(params));
     }
 }
-
 void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
 	// Below is for testing purposes

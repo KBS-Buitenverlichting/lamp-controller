@@ -64,4 +64,4 @@ ScheduleFuncStatus ScheduleList_Insert_First(Schedule new_schedule);
 ScheduleFuncStatus ScheduleList_Insert_After(ScheduleNode* const schedule_node, Schedule new_schedule);
 ScheduleFuncStatus ScheduleList_Remove_First(void);
 ScheduleFuncStatus ScheduleList_Remove_After(ScheduleNode* const schedule_node);
-uint8_t ScheduleTimestamp_Compare(const ScheduleTimestamp* a, const ScheduleTimestamp* b);
+int8_t ScheduleTimestamp_Compare(const ScheduleTimestamp* a, const ScheduleTimestamp* b);

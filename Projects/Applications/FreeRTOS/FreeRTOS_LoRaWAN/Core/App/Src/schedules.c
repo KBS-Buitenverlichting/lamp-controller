@@ -165,7 +165,7 @@ ScheduleFuncStatus ScheduleList_Remove_After(ScheduleNode * const schedule_node)
 	return SCHEDULE_FUNC_OK;
 }
 
-uint8_t ScheduleTimestamp_Compare(const ScheduleTimestamp* a, const ScheduleTimestamp* b)
+int8_t ScheduleTimestamp_Compare(const ScheduleTimestamp* a, const ScheduleTimestamp* b)
 {
     if (a->year != b->year)       return a->year - b->year;
     if (a->month != b->month)     return a->month - b->month;
