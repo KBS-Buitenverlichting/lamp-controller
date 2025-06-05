@@ -205,11 +205,14 @@ void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, c
 
 void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
+
+	ScheduleList_Fill_With_Test_Schedules();
 	APP_LOG(TS_OFF, VLEVEL_M, "Set new timeslot\r\n");
 }
 
 void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
+	/*
 	// Below is for testing purposes
 	ScheduleList_Clear();
 
@@ -241,7 +244,7 @@ void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_
 		test_node = test_node->next;
 	}
 	// Above is for testing purposes
-
+	*/
 	APP_LOG(TS_OFF, VLEVEL_M, "Show timetable\r\n");
 
 	const ScheduleNode* node = ScheduleList_Get_First_Node();

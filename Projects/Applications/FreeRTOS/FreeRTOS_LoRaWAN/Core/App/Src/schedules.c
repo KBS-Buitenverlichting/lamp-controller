@@ -146,9 +146,7 @@ void Start_Process_Schedules_Task(void const *argument) {
 }
 
 void ScheduleList_Init() {
-	//ScheduleList_Clear();
 	sem_process_alarm = xSemaphoreCreateBinary();
-	//ScheduleList_Fill_With_Test_Schedules();
 	Load_ScheduleList_From_Flash();
 }
 
@@ -314,6 +312,5 @@ bool Load_ScheduleList_From_Flash(void) {
         ScheduleList_Insert_First(temp_array[i]);
     }
 
-    vcom_Trace("Ready\r\n", 7);
     return true;
 }
