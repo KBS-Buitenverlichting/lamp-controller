@@ -23,7 +23,6 @@
 #include "lamp_state.h"
 #include "schedules.h"
 #include "cmsis_os.h"
-#include "dac.h"
 #include "lamp_state.h"
 
 #ifdef TESTING
@@ -32,6 +31,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 LPTIM_HandleTypeDef hlptim1;
+TIM_HandleTypeDef tim17;
+TIM_OC_InitTypeDef tim17_oc;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -116,6 +117,7 @@ int main(void) {
   /* USER CODE BEGIN SysInit */
   MX_GPIO_Init();
   MX_LPTIM1_Init();
+  TIM17_Init();
   Lamp_GPIO_Init();
   Motion_Sensor_GPIO_Init();
   LampState_Init();
@@ -246,23 +248,68 @@ void MX_GPIO_Init(void) {
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 }
 
+void TIM17_Init(void)
+{
+	  /* Tim17 Clock Enable */
+	  __HAL_RCC_TIM17_CLK_ENABLE();
+
+	  /* Configure TIM17
+	   * Prescaler for 100 HZ frequency
+	   * CounterMode UP
+	   * Period 255
+	   * No clock division
+	   * AutoReloadPreload enabled
+	   */
+	  tim17.Instance = TIM17;
+	  tim17.Init.Prescaler = TIM17_PRESCALER;
+	  tim17.Init.CounterMode = TIM_COUNTERMODE_UP;
+	  tim17.Init.Period = TIM17_PERIOD;
+	  tim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	  tim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+
+    /* Configure TIM17 Output Compare
+     * Mode PWM
+     * Pulse 0 (start with duty cycle of 0%, lamp off)
+     * Polarity HIGH (lamp on/ active on high)
+     * Fast mode disabled
+     */
+	tim17_oc.OCMode = TIM_OCMODE_PWM1;
+	tim17_oc.Pulse = 0;
+	tim17_oc.OCPolarity = TIM_OCPOLARITY_HIGH;
+	tim17_oc.OCFastMode = TIM_OCFAST_DISABLE;
+
+    if (HAL_TIM_PWM_ConfigChannel(&tim17, &tim17_oc, TIM_CHANNEL_1) != HAL_OK) {
+        Error_Handler();
+    }
+
+    // Timer init after output compare init to prevent short burst of pwm before switching to 0% duty cycle
+    if (HAL_TIM_PWM_Init(&tim17) != HAL_OK) {
+	    Error_Handler();
+    }
+
+    if (HAL_TIM_PWM_Start(&tim17, TIM_CHANNEL_1) != HAL_OK) {
+        Error_Handler();
+    }
+}
+
 /* USER CODE BEGIN 4 */
 void Lamp_GPIO_Init(void) {
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
-  /* Configure GPIO pin : PA10
-   * Push Pull mode
+  /* Configure GPIO pin : NSS (PB9)
+   * Alternate function; Push Pull mode
    * No Pull-up or Pull-down active
-   * Speed low
+   * Speed very high
+   * Alternate function TIM17_CH1
    */
-  GPIO_InitStruct.Pin = GPIO_PIN_10;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  GPIO_InitStruct.Pin = GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Alternate = PB9_AF_TIM17_CH1;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 }
 
 void Motion_Sensor_GPIO_Init(void) {
