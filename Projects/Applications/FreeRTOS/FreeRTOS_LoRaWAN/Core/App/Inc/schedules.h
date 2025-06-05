@@ -53,7 +53,7 @@ typedef struct ScheduleList {
 typedef struct {
 	uint32_t valid_marker;
 	uint8_t size;
-	uint8_t padding[3];	// Padding to ensure the total struct size is a multiple of 8
+	uint8_t padding[3]; // Padding to ensure the total struct size is a multiple of 8
 	Schedule schedules[SCHEDULE_LIST_MAX_LENGTH];
 } FlashScheduleStorage;
 
