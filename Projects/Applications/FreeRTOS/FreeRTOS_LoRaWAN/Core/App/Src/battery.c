@@ -6,9 +6,35 @@
  */
 #include "battery.h"
 
+SemaphoreHandle_t sem_start_battery_read;
+
 static uint16_t battery_min_vref = 0; // Battery voltage when empty
 static uint16_t battery_max_vref = UINT16_MAX; // Battery voltage when full
 static bool vrefs_initialized = false; // Keeps track of if the voltage vrefs have been initialized
+
+void Start_Get_Battery_Level_Task(void const *argument) {
+	const uint8_t MAX17048_READ_ADDR = 0x6C;
+	const uint8_t MAX17048_REG_SOC = 0x04;
+	const uint8_t BUFFER_SIZE = 2;
+
+	uint8_t rx_buffer[BUFFER_SIZE];
+	sem_start_battery_read = xSemaphoreCreateBinary();
+	for(;;) {
+		// wait for signal to start read
+		if(xSemaphoreTake(sem_start_battery_read, portMAX_DELAY) != pdPASS) {
+			Error_Handler();
+		}
+		uint8_t send_buf = MAX17048_REG_SOC;
+		// send read request for address
+		if (HAL_I2C_Master_Transmit(&hi2c2, MAX17048_READ_ADDR, &send_buf, 1, HAL_MAX_DELAY) != HAL_OK) {
+			Error_Handler();
+		}
+		//HAL_I2C_Master_Receive(&hi2c2, MAX17048_READ_ADDR, (uint8_t *)rx_buffer, BUFFER_SIZE,1000); //Receiving in Blocking mode
+		const uint8_t params[] = { SEND_BATTERY_STATUS, rx_buffer[0]};
+		Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION, (const uint8_t* const)&params, sizeof(params));
+	}
+}
+
 
 Warning Set_Battery_Vref(const uint16_t min_vref, const uint16_t max_vref)
 {

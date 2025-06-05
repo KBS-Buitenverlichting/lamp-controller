@@ -105,17 +105,8 @@ void Handle_Change_Brightness_Instruction(const uint8_t *const buffer, const uin
 void Handle_Send_Battery_Status_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
 	APP_LOG(TS_OFF, VLEVEL_M, "Report battery state\r\n");
-
-	if (Vrefs_Initialized())
-	{
-		const uint8_t params[] = { SEND_BATTERY_STATUS, Get_Battery_Level() };
-		Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION, (const uint8_t* const)&params, sizeof(params));
-	}
-	else
-	{
-		const uint8_t params[] = { SEND_BATTERY_STATUS, VREFS_NOT_INITIALIZED };
-		Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
-	}
+	// battery task will perform the actual read, to not block the program
+	xSemaphoreGive(sem_start_battery_read);
 }
 
 void Handle_Set_Battery_Vrefs_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
