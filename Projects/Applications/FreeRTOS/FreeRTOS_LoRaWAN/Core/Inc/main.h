@@ -18,7 +18,7 @@
   */
 #pragma once
 
-#include "stdint.h"
+#include <stdint.h>
 #include "stm32wlxx_hal.h"
 
 #define RTC_N_PREDIV_S 10
@@ -82,32 +82,42 @@ void MX_LPTIM1_Init(void);
  */
 void Red_Led_GPIO_Init(void);
 
-/*
+/**
  * @brief Initializes the motion sensor
  */
 void Motion_Sensor_GPIO_Init(void);
 
-/*
+/**
  * @brief Sets up the LoRaWAN process
+ *
+ * @param[in] argument Any arguments that might be passed to the task
  */
 void Start_LoRaWAN_Task(void const *argument);
 
-/*
+/**
  * @brief General task handles blinking red led and usart communication for eui's
+ *
+ * @param[in] argument	Any arguments that might be passed to the task
  */
 void Start_General_Task(void const *argument);
 
-/*
+/**
  * @brief Callback for when usart Rx is done, handles the received message
+ *
+ * @param[in] rx_char	The input data
+ * @param[in] size		The length of the data
+ * @param[in] error		Error code if an error occurred
  */
 void Rx_Done(uint8_t *rx_char, uint16_t size, uint8_t error);
 
-/*
+/**
  * @brief Callback for when usart Tx is done
+ *
+ * @param[in] arg	Any arguments that might have been passed
  */
 void Tx_Done(void *arg);
 
-/*
+/**
  * @brief Halts all processing and blinks red led fast to indicate error
  */
 void Error_Handler(void);
