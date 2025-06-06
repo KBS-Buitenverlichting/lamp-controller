@@ -19,7 +19,14 @@ const uint8_t (*test_functions[])(void) = {
 	Test_Schedules_Insert_First_List_Full,
 	Test_Schedules_Insert_After,
 	Test_Schedules_Remove_From_Empty_List_Error,
-	Test_Schedules_Remove_After
+	Test_Schedules_Remove_After,
+	// Insert schedule tests
+	Test_Valid_Insert,
+	Test_Max_Schedules,
+	Test_Invalid_Data,
+	Test_Overlap_Next,
+	Test_Overlap_Previous,
+	Test_Day_Differences
 };
 
 void Main_Test(void)
