@@ -214,7 +214,43 @@ ScheduleValidationResult ScheduleList_Can_Insert(const Schedule* new_schedule, S
     if (ScheduleList_Get_Size() == SCHEDULE_LIST_MAX_LENGTH) {
         return SCHEDULE_LIST_FULL;
     }
+	#ifdef TESTING
+		ScheduleTimestamp Current_RTC_Time = {
+			.year = 25,
+			.month = 1,
+			.weekday = 3,
+			.date = 1,
+			.hours = 0,
+			.minutes = 0,
+			.seconds = 0
+		};
+	#else
+		RTC_TimeTypeDef current_time;
+		RTC_DateTypeDef current_date_1, current_date_2;
 
+		HAL_RTC_GetDate(&hrtc, &current_date_1, RTC_FORMAT_BIN);
+		HAL_RTC_GetTime(&hrtc, &current_time, RTC_FORMAT_BIN);
+		HAL_RTC_GetDate(&hrtc, &current_date_2, RTC_FORMAT_BIN);
+
+		if (memcmp(&current_date_1, &current_date_2, sizeof(RTC_DateTypeDef)) != 0) {
+			HAL_RTC_GetTime(&hrtc, &current_time, RTC_FORMAT_BIN);
+			HAL_RTC_GetDate(&hrtc, &current_date_1, RTC_FORMAT_BIN);
+		}
+
+		ScheduleTimestamp Current_RTC_Time = {
+			.year = current_date_1.Year,
+			.month = current_date_1.Month,
+			.weekday = current_date_1.WeekDay,
+			.date = current_date_1.Date,
+			.hours = current_time.Hours,
+			.minutes = current_time.Minutes,
+			.seconds = current_time.Seconds
+		};
+	#endif
+
+    if(ScheduleTimestamp_Compare(&new_schedule->time_start, &Current_RTC_Time) <= 0){
+    	return SCHEDULE_BEFORE_RTC_TIME;
+    }
 
     ScheduleNode* current = ScheduleList_Get_First_Node();
     if (!current || ScheduleTimestamp_Compare(&new_schedule->time_start, &current->schedule.time_start) < 0) {
@@ -289,8 +325,8 @@ void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint
             vcom_Trace((uint8_t*)msg, (uint16_t)len);
         }
 
-        const uint8_t params[] = { SET_TIMESCHEDULE };
-        Tx_Set_Buffer(RESPONSE_OUT, INVALID_DATA, params, sizeof(params));
+    	const uint8_t params[] = { SET_TIMESCHEDULE, SCHEDULE_OVERLAP };
+    	Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
         return;
     }
 
@@ -300,8 +336,8 @@ void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint
             vcom_Trace((uint8_t*)msg, (uint16_t)len);
         }
 
-        const uint8_t params[] = { SET_TIMESCHEDULE };
-        Tx_Set_Buffer(RESPONSE_OUT, INVALID_DATA, params, sizeof(params));
+    	const uint8_t params[] = { SET_TIMESCHEDULE, SCHEDULE_OVERLAP };
+    	Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
         return;
     }
 
@@ -314,6 +350,16 @@ void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint
         const uint8_t params[] = { SET_TIMESCHEDULE };
         Tx_Set_Buffer(RESPONSE_OUT, LIST_FULL, params, sizeof(params));
         return;
+    }
+    if(result == SCHEDULE_BEFORE_RTC_TIME){
+    	int len = snprintf(msg, sizeof(msg), "The to scheduled time starts before the RTC time.\r\n");
+		if (len > 0 && len < sizeof(msg)) {
+			vcom_Trace((uint8_t*)msg, (uint16_t)len);
+		}
+
+		const uint8_t params[] = { SET_TIMESCHEDULE, ERROR_SCHEDULE_BEFORE_RTC_TIME };
+		Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
+		return;
     }
 
     // Schedule is valid, now insert

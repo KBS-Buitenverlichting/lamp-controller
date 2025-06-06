@@ -11,7 +11,7 @@ void Create_Test_Schedules(uint8_t amount){
 	for(uint8_t i = 1; i <= amount; i++){
 		Schedule schedule = { 0 };
 		ScheduleTimestamp timestamp_start = {
-				.year = 25,
+				.year = 26,
 				.month = 1,
 				.weekday = 3,
 				.date = 1,
@@ -20,7 +20,7 @@ void Create_Test_Schedules(uint8_t amount){
 				.seconds = 0
 		};
 		ScheduleTimestamp timestamp_end = {
-				.year = 25,
+				.year = 26,
 				.month = 1,
 				.weekday = 3,
 				.date = 1,
@@ -49,7 +49,7 @@ uint8_t Test_Valid_Insert(void) {
 	for (uint8_t i = 1; i <= (SCHEDULE_LIST_MAX_LENGTH); i++) {
 		Schedule schedule = { 0 };
 		ScheduleTimestamp timestamp_start = {
-				.year = 25,
+				.year = 26,
 				.month = 5,
 				.weekday = 3,
 				.date = 1,
@@ -58,7 +58,7 @@ uint8_t Test_Valid_Insert(void) {
 				.seconds = 0
 		};
 		ScheduleTimestamp timestamp_end = {
-				.year = 25,
+				.year = 26,
 				.month = 5,
 				.weekday = 3,
 				.date = 1,
@@ -90,7 +90,7 @@ uint8_t Test_Valid_Insert(void) {
 		for (uint8_t i = SCHEDULE_LIST_MAX_LENGTH; i >= 1; i--) {
 			Schedule schedule = { 0 };
 			ScheduleTimestamp timestamp_start = {
-					.year = 25,
+					.year = 26,
 					.month = 5,
 					.weekday = 3,
 					.date = 1,
@@ -99,7 +99,7 @@ uint8_t Test_Valid_Insert(void) {
 					.seconds = 0
 			};
 			ScheduleTimestamp timestamp_end = {
-					.year = 25,
+					.year = 26,
 					.month = 5,
 					.weekday = 3,
 					.date = 1,
@@ -135,7 +135,7 @@ uint8_t Test_Max_Schedules(void){
 	Create_Test_Schedules(SCHEDULE_LIST_MAX_LENGTH);
 	Schedule schedule = { 0 };
 	ScheduleTimestamp timestamp_start = {
-			.year = 25,
+			.year = 26,
 			.month = 5,
 			.weekday = 3,
 			.date = 1,
@@ -144,7 +144,7 @@ uint8_t Test_Max_Schedules(void){
 			.seconds = 0
 	};
 	ScheduleTimestamp timestamp_end = {
-			.year = 25,
+			.year = 26,
 			.month = 5,
 			.weekday = 3,
 			.date = 1,
@@ -169,7 +169,7 @@ uint8_t Test_Invalid_Data(void) {
 	for (uint8_t i = 1; i <= (SCHEDULE_LIST_MAX_LENGTH); i++) {
 		Schedule schedule = { 0 };
 		ScheduleTimestamp timestamp = {
-				.year = 25,
+				.year = 26,
 				.month = 5,
 				.weekday = 3,
 				.date = 16,
@@ -194,7 +194,7 @@ uint8_t Test_Invalid_Data(void) {
 	for (uint8_t i = 1; i <= (SCHEDULE_LIST_MAX_LENGTH); i++) {
 		Schedule schedule = { 0 };
 		ScheduleTimestamp timestamp_start = {
-				.year = 25,
+				.year = 26,
 				.month = 5,
 				.weekday = 3,
 				.date = 1,
@@ -203,7 +203,7 @@ uint8_t Test_Invalid_Data(void) {
 				.seconds = 0
 		};
 		ScheduleTimestamp timestamp_end = {
-				.year = 25,
+				.year = 26,
 				.month = 5,
 				.weekday = 3,
 				.date = 1,
@@ -230,7 +230,7 @@ uint8_t Test_Overlap_Next(void){
 	Create_Test_Schedules(5);
 	Schedule schedule = { 0 };
 	ScheduleTimestamp timestamp_start = {
-			.year = 25,
+			.year = 26,
 			.month = 1,
 			.weekday = 3,
 			.date = 1,
@@ -239,7 +239,7 @@ uint8_t Test_Overlap_Next(void){
 			.seconds = 0
 	};
 	ScheduleTimestamp timestamp_end = {
-			.year = 25,
+			.year = 26,
 			.month = 1,
 			.weekday = 3,
 			.date = 1,
@@ -259,7 +259,7 @@ uint8_t Test_Overlap_Next(void){
 	for(uint8_t i = 1; i < 5; i++) {
 		Schedule schedule = { 0 };
 		ScheduleTimestamp timestamp_start = {
-					.year = 25,
+					.year = 26,
 					.month = 1,
 					.weekday = 3,
 					.date = 1,
@@ -268,7 +268,7 @@ uint8_t Test_Overlap_Next(void){
 					.seconds = 0
 			};
 			ScheduleTimestamp timestamp_end = {
-					.year = 25,
+					.year = 26,
 					.month = 1,
 					.weekday = 3,
 					.date = 1,
@@ -288,7 +288,7 @@ uint8_t Test_Overlap_Next(void){
 	}
 	Schedule schedule2 = { 0 };
 		ScheduleTimestamp timestamp_start2 = {
-				.year = 25,
+				.year = 26,
 				.month = 1,
 				.weekday = 3,
 				.date = 1,
@@ -297,7 +297,7 @@ uint8_t Test_Overlap_Next(void){
 				.seconds = 0
 		};
 		ScheduleTimestamp timestamp_end2 = {
-				.year = 25,
+				.year = 26,
 				.month = 1,
 				.weekday = 3,
 				.date = 1,
@@ -324,7 +324,7 @@ uint8_t Test_Overlap_Previous(void){
 	for(uint8_t i = 1; i < 5; i++) {
 		Schedule schedule = { 0 };
 		ScheduleTimestamp timestamp_start = {
-					.year = 25,
+					.year = 26,
 					.month = 1,
 					.weekday = 3,
 					.date = 1,
@@ -333,7 +333,7 @@ uint8_t Test_Overlap_Previous(void){
 					.seconds = 0
 			};
 			ScheduleTimestamp timestamp_end = {
-					.year = 25,
+					.year = 26,
 					.month = 1,
 					.weekday = 3,
 					.date = 1,
@@ -353,7 +353,7 @@ uint8_t Test_Overlap_Previous(void){
 		}
 	Schedule schedule = { 0 };
 	ScheduleTimestamp timestamp_start = {
-			.year = 25,
+			.year = 26,
 			.month = 1,
 			.weekday = 3,
 			.date = 1,
@@ -362,7 +362,7 @@ uint8_t Test_Overlap_Previous(void){
 			.seconds = 0
 	};
 	ScheduleTimestamp timestamp_end = {
-			.year = 25,
+			.year = 26,
 			.month = 1,
 			.weekday = 3,
 			.date = 1,
@@ -388,7 +388,7 @@ uint8_t Test_Day_Differences(void){
 	Create_Test_Schedules(2);
 	Schedule schedule = { 0 };
 			ScheduleTimestamp timestamp_start = {
-					.year = 25,
+					.year = 26,
 					.month = 1,
 					.weekday = 3,
 					.date = 2,
@@ -397,7 +397,7 @@ uint8_t Test_Day_Differences(void){
 					.seconds = 0
 			};
 			ScheduleTimestamp timestamp_end = {
-					.year = 25,
+					.year = 26,
 					.month = 1,
 					.weekday = 3,
 					.date = 2,
@@ -417,7 +417,7 @@ uint8_t Test_Day_Differences(void){
 				}
 			Schedule schedule2 = { 0 };
 			ScheduleTimestamp timestamp_start2 = {
-					.year = 25,
+					.year = 26,
 					.month = 1,
 					.weekday = 3,
 					.date = 1,
@@ -426,7 +426,7 @@ uint8_t Test_Day_Differences(void){
 					.seconds = 0
 			};
 			ScheduleTimestamp timestamp_end2 = {
-					.year = 25,
+					.year = 26,
 					.month = 1,
 					.weekday = 3,
 					.date = 2,
@@ -446,7 +446,7 @@ uint8_t Test_Day_Differences(void){
 				}
 			Schedule schedule3 = { 0 };
 			ScheduleTimestamp timestamp_start3 = {
-					.year = 24,
+					.year = 25,
 					.month = 12,
 					.weekday = 3,
 					.date = 31,
@@ -455,7 +455,7 @@ uint8_t Test_Day_Differences(void){
 					.seconds = 0
 			};
 			ScheduleTimestamp timestamp_end3 = {
-					.year = 25,
+					.year = 26,
 					.month = 1,
 					.weekday = 3,
 					.date = 1,
@@ -473,5 +473,72 @@ uint8_t Test_Day_Differences(void){
 			if (result3 != SCHEDULE_INVALID_OVERLAP_NEXT) {
 					return 62;
 				}
+	return 0;
+}
+
+uint8_t Test_Before_The_Beginning_Of_Time(void){
+	ScheduleList_Clear();
+	for(uint8_t i = 1; i <= SCHEDULE_LIST_MAX_LENGTH; i++){
+			Schedule schedule = { 0 };
+			ScheduleTimestamp timestamp_start = {
+					.year = 24,
+					.month = 1,
+					.weekday = 3,
+					.date = 1,
+					.hours = i,
+					.minutes = 30,
+					.seconds = 0
+			};
+			ScheduleTimestamp timestamp_end = {
+					.year = 24,
+					.month = 1,
+					.weekday = 3,
+					.date = 1,
+					.hours = i+1,
+					.minutes = 20,
+					.seconds = 0
+			};
+			schedule.lamp_config = (LampConfig ) { .state = ON, .brightness = 255 };
+			schedule.time_start = timestamp_start;
+			schedule.time_end = timestamp_end;
+
+			ScheduleNode* insert_after = NULL;
+			ScheduleValidationResult result = ScheduleList_Can_Insert(&schedule, &insert_after);
+
+			if (result != SCHEDULE_BEFORE_RTC_TIME) {
+					return 10+i;
+				}
+	}
+	for(uint8_t i = 1; i <= SCHEDULE_LIST_MAX_LENGTH; i++){
+			Schedule schedule2 = { 0 };
+			ScheduleTimestamp timestamp_start2 = {
+					.year = 25,
+					.month = 1,
+					.weekday = 3,
+					.date = 1,
+					.hours = i,
+					.minutes = 21,
+					.seconds = 0
+			};
+			ScheduleTimestamp timestamp_end2 = {
+					.year = 25,
+					.month = 1,
+					.weekday = 3,
+					.date = 2,
+					.hours = i+1,
+					.minutes = 29,
+					.seconds = 0
+			};
+			schedule2.lamp_config = (LampConfig ) { .state = ON, .brightness = 255 };
+			schedule2.time_start = timestamp_start2;
+			schedule2.time_end = timestamp_end2;
+
+			ScheduleNode* insert_after2 = NULL;
+			ScheduleValidationResult result2 = ScheduleList_Can_Insert(&schedule2, &insert_after2);
+
+			if (result2 != SCHEDULE_VALID_INSERT) {
+					return 10+i;
+				}
+	}
 	return 0;
 }

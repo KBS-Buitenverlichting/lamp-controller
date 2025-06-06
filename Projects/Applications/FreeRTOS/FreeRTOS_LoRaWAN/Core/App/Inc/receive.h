@@ -19,7 +19,8 @@ typedef enum {
 	SCHEDULE_INVALID_DATA,
     SCHEDULE_INVALID_OVERLAP_PREVIOUS,
     SCHEDULE_INVALID_OVERLAP_NEXT,
-    SCHEDULE_LIST_FULL
+    SCHEDULE_LIST_FULL,
+	SCHEDULE_BEFORE_RTC_TIME
 } ScheduleValidationResult;
 
 void Process_Rx_Data(const LmHandlerAppData_t *const app_data, const LmHandlerRxParams_t *const params);

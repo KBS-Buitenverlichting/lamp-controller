@@ -10,6 +10,8 @@
 #include "receive.h"
 #include "schedules.h"
 
+#define TESTING
+
 void Create_Test_Schedules(uint8_t amount);
 uint8_t Test_Valid_Insert(void);
 uint8_t Test_Max_Schedules(void);
@@ -17,3 +19,4 @@ uint8_t Test_Invalid_Data(void);
 uint8_t Test_Overlap_Next(void);
 uint8_t Test_Overlap_Previous(void);
 uint8_t Test_Day_Differences(void);
+uint8_t Test_Before_The_Beginning_Of_Time(void);
