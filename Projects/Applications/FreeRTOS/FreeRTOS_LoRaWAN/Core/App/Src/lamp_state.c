@@ -6,6 +6,7 @@
  */
 
 #include "lamp_state.h"
+#include "main.h"  // for GPIO control
 
 LampConfig previous_lamp_config = {MOTION_SENSOR, MAX_BRIGHTNESS};
 
@@ -17,7 +18,73 @@ static QueueHandle_t brightness_queue;
 
 SemaphoreHandle_t sem_motion_sensor_signal;
 
-extern TIM_HandleTypeDef tim17;
+TIM_HandleTypeDef tim17;
+
+void Lamp_GPIO_Init(void)
+{
+  /* GPIO Port B Clock Enable */
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /* Configure GPIO pin : NSS (PB9)
+   * Alternate function; Push Pull mode
+   * No Pull-up or Pull-down active
+   * Speed very high
+   * Alternate function TIM17_CH1
+   */
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  GPIO_InitStruct.Pin = GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Alternate = PB9_AF_TIM17_CH1;
+
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+}
+
+void Lamp_PWM_Init(void)
+{
+  /* TIM17 Clock Enable */
+  __HAL_RCC_TIM17_CLK_ENABLE();
+
+  /* Configure TIM17
+   * Prescaler for 100 HZ frequency
+   * CounterMode UP
+   * Period 255
+   * No clock division
+   * AutoReloadPreload enabled
+   */
+  tim17.Instance = TIM17;
+  tim17.Init.Prescaler = TIM17_PRESCALER;
+  tim17.Init.CounterMode = TIM_COUNTERMODE_UP;
+  tim17.Init.Period = TIM17_PERIOD;
+  tim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  tim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+
+  /* Configure TIM17 Output Compare
+   * Mode PWM
+   * Pulse 0 (start with duty cycle of 0%, lamp off)
+   * Polarity HIGH (lamp on/ active on high)
+   * Fast mode disabled
+   */
+  TIM_OC_InitTypeDef tim17_oc;
+  tim17_oc.OCMode = TIM_OCMODE_PWM1;
+  tim17_oc.Pulse = 0;
+  tim17_oc.OCPolarity = TIM_OCPOLARITY_HIGH;
+  tim17_oc.OCFastMode = TIM_OCFAST_DISABLE;
+
+  if (HAL_TIM_PWM_ConfigChannel(&tim17, &tim17_oc, TIM_CHANNEL_1) != HAL_OK) {
+	Error_Handler();
+  }
+
+  // Timer init after output compare init to prevent short burst of pwm before switching to 0% duty cycle
+  if (HAL_TIM_PWM_Init(&tim17) != HAL_OK) {
+	Error_Handler();
+  }
+
+  if (HAL_TIM_PWM_Start(&tim17, TIM_CHANNEL_1) != HAL_OK) {
+	Error_Handler();
+  }
+}
 
 ///Brief: Initializes lamp state and brightness queues and mutex.
 void LampState_Init(void) {
@@ -72,7 +139,7 @@ void Send_Brightness(const uint8_t brightness) {
 void Lamp_On(void)
 {
 	// Re-initialize after turning everything off
-	TIM17_Init();
+	Lamp_PWM_Init();
 	Set_Duty_Cycle(Get_Brightness());
 }
 

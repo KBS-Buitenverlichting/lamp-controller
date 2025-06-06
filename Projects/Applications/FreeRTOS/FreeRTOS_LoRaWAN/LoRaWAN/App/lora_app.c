@@ -38,6 +38,7 @@
 #include "CayenneLpp.h"
 #include "sys_sensors.h"
 #include "serial_eui_setter.h"
+#include "usart_if.h"
 
 /* USER CODE BEGIN Includes */
 #include "transmit.h"

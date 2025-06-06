@@ -14,7 +14,6 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "semphr.h"
-#include "main.h"  // for GPIO control
 #include "transmit.h"
 
 #define MAX_BRIGHTNESS UINT8_MAX
@@ -34,6 +33,8 @@ typedef struct LampConfig {
 extern LampConfig previous_lamp_config;
 extern SemaphoreHandle_t sem_motion_sensor_signal;
 
+void Lamp_GPIO_Init(void);
+void Lamp_PWM_Init(void);
 void LampState_Init(void);
 void Send_LampState(const LampState new_state);
 LampState Get_State_LampState(void);

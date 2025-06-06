@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "schedules.h"
+#include "usart_if.h"
 
 SemaphoreHandle_t sem_process_alarm;
 static ScheduleList schedules = { 0 };

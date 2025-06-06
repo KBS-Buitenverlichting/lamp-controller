@@ -5,6 +5,7 @@
  *      Author: robdr
  */
 #include "serial_eui_setter.h"
+#include "usart_if.h"
 
 static void Print_EUIs(void);
 static void Print_Rx_Buffer(void);
