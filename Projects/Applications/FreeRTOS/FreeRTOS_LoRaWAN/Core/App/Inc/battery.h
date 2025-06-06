@@ -7,7 +7,6 @@
 #pragma once
 
 #include "stdint.h"
-#include "stdio.h"
 #include "transmit.h"
 #include "stm32wlxx_hal.h"
 #include "FreeRTOS.h"
