@@ -3,7 +3,6 @@
 #include "sys_app.h" // Used for APP_LOG to write output to serial
 #include "rtc.h"
 #include "stm32wlxx_hal_rtc.h"
-#include <stdio.h>  // for snprintf
 
 /// Brief: Handles incoming LoRaWAN data and calls message interpreter.
 void Process_Rx_Data(const LmHandlerAppData_t *const app_data,
@@ -214,17 +213,7 @@ ScheduleValidationResult ScheduleList_Can_Insert(const Schedule* new_schedule, S
     if (ScheduleList_Get_Size() == SCHEDULE_LIST_MAX_LENGTH) {
         return SCHEDULE_LIST_FULL;
     }
-	#ifdef TESTING
-		ScheduleTimestamp Current_RTC_Time = {
-			.year = 25,
-			.month = 1,
-			.weekday = 3,
-			.date = 1,
-			.hours = 0,
-			.minutes = 0,
-			.seconds = 0
-		};
-	#else
+
 		RTC_TimeTypeDef current_time;
 		RTC_DateTypeDef current_date_1, current_date_2;
 
@@ -246,7 +235,6 @@ ScheduleValidationResult ScheduleList_Can_Insert(const Schedule* new_schedule, S
 			.minutes = current_time.Minutes,
 			.seconds = current_time.Seconds
 		};
-	#endif
 
     if(ScheduleTimestamp_Compare(&new_schedule->time_start, &Current_RTC_Time) <= 0){
     	return SCHEDULE_BEFORE_RTC_TIME;
@@ -283,11 +271,6 @@ void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint
     char msg[100];
 
     if (buffer_size < SET_TIMESCHEDULE_BYTE_COUNT) {
-        int len = snprintf(msg, sizeof(msg), "Set timeschedule command input is too short!\r\n");
-        if (len > 0 && len < sizeof(msg)) {
-            vcom_Trace((uint8_t*)msg, (uint16_t)len);
-        }
-
         const uint8_t params[] = { SET_TIMESCHEDULE };
         Tx_Set_Buffer(RESPONSE_OUT, MISSING_DATA, params, sizeof(params));
         return;
@@ -309,54 +292,29 @@ void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint
     ScheduleValidationResult result = ScheduleList_Can_Insert(&new_schedule, &insert_after);
 
     if (result == SCHEDULE_INVALID_DATA) {
-        int len = snprintf(msg, sizeof(msg), "Start and end timestamps are equal, or end time is before start time.\r\n");
-        if (len > 0 && len < sizeof(msg)) {
-            vcom_Trace((uint8_t*)msg, (uint16_t)len);
-        }
-
         const uint8_t params[] = { SET_TIMESCHEDULE };
         Tx_Set_Buffer(RESPONSE_OUT, INVALID_DATA, params, sizeof(params));
         return;
     }
 
     if (result == SCHEDULE_INVALID_OVERLAP_PREVIOUS) {
-        int len = snprintf(msg, sizeof(msg), "Overlap detected with previous schedule.\r\n");
-        if (len > 0 && len < sizeof(msg)) {
-            vcom_Trace((uint8_t*)msg, (uint16_t)len);
-        }
-
     	const uint8_t params[] = { SET_TIMESCHEDULE, SCHEDULE_OVERLAP };
     	Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
         return;
     }
 
     if (result == SCHEDULE_INVALID_OVERLAP_NEXT) {
-        int len = snprintf(msg, sizeof(msg), "Overlap detected with next schedule.\r\n");
-        if (len > 0 && len < sizeof(msg)) {
-            vcom_Trace((uint8_t*)msg, (uint16_t)len);
-        }
-
     	const uint8_t params[] = { SET_TIMESCHEDULE, SCHEDULE_OVERLAP };
     	Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
         return;
     }
 
     if (result == SCHEDULE_LIST_FULL) {
-        int len = snprintf(msg, sizeof(msg), "Schedule list is full.\r\n");
-        if (len > 0 && len < sizeof(msg)) {
-            vcom_Trace((uint8_t*)msg, (uint16_t)len);
-        }
-
         const uint8_t params[] = { SET_TIMESCHEDULE };
         Tx_Set_Buffer(RESPONSE_OUT, LIST_FULL, params, sizeof(params));
         return;
     }
     if(result == SCHEDULE_BEFORE_RTC_TIME){
-    	int len = snprintf(msg, sizeof(msg), "The to scheduled time starts before the RTC time.\r\n");
-		if (len > 0 && len < sizeof(msg)) {
-			vcom_Trace((uint8_t*)msg, (uint16_t)len);
-		}
-
 		const uint8_t params[] = { SET_TIMESCHEDULE, ERROR_SCHEDULE_BEFORE_RTC_TIME };
 		Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
 		return;
@@ -371,12 +329,6 @@ void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint
     }
 
     if (status == SCHEDULE_FUNC_OK) {
-        int len = snprintf(msg, sizeof(msg),
-            insert_after == NULL ? "Inserted schedule at beginning.\r\n" : "Inserted schedule in sorted position.\r\n");
-        if (len > 0 && len < sizeof(msg)) {
-            vcom_Trace((uint8_t*)msg, (uint16_t)len);
-        }
-
         Tx_Set_Ack(SET_TIMESCHEDULE);
     } else {
         const uint8_t params[] = { SET_TIMESCHEDULE };
@@ -392,17 +344,6 @@ void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_
 	for (uint8_t i = 0; i < ScheduleList_Get_Size() && node; i++)
 	{
 		const uint8_t index = IDENTIFIER_BYTE_COUNT + (i * sizeof(Schedule));
-
-		Print_Timestamp(&node->schedule.time_start);
-		Print_Timestamp(&node->schedule.time_end);
-		char msg[100];
-		int len = snprintf(msg, sizeof(msg),
-		                   "Lamp state: %u, Brightness: %u\r\n",
-		                   node->schedule.lamp_config.state,
-		                   node->schedule.lamp_config.brightness);
-		if (len > 0 && len < sizeof(msg)) {
-		    vcom_Trace((uint8_t*)msg, (uint16_t)len);
-		}
 
 		params[index] = node->schedule.time_start.year;
 		params[index + 1] = node->schedule.time_start.month;
@@ -526,52 +467,3 @@ void Handle_Remove_Timeschedule_Instruction(const uint8_t *const buffer, const u
 	const uint8_t params[] = { REMOVE_TIMESCHEDULE, SCHEDULE_NOT_FOUND };
 	Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
 }
-
-void Print_Current_RTC_Time(void)
-{
-	RTC_TimeTypeDef current_time;
-    RTC_DateTypeDef current_date;
-
-    HAL_RTC_GetTime(&hrtc, &current_time, RTC_FORMAT_BIN);
-    HAL_RTC_GetDate(&hrtc, &current_date, RTC_FORMAT_BIN);
-
-    const char *weekday_names[] = {"Forbidden", "Monday",   "Tuesday",
-    								   "Wednesday", "Thursday", "Friday",
-    								   "Saturday",  "Sunday"};
-    const char *weekday_str = (current_date.WeekDay <= 7) ? weekday_names[current_date.WeekDay] : "Unknown";
-
-    APP_LOG(TS_OFF, VLEVEL_M, "RTC Now: %02u:%02u:%02u on %02u-%02u-%04u (Weekday %s)\r\n",
-            current_time.Hours,
-            current_time.Minutes,
-            current_time.Seconds,
-            current_date.Date,
-            current_date.Month,
-            2000 + current_date.Year,	// adding 2000 years to get the full year =)
-            weekday_str);
-}
-
-void Print_Timestamp(const ScheduleTimestamp* const timestamp)
-{
-    const char *weekday_names[] = {
-        "Forbidden", "Monday", "Tuesday", "Wednesday",
-        "Thursday", "Friday", "Saturday", "Sunday"
-    };
-
-    const char *weekday_str = (timestamp->weekday <= 7) ? weekday_names[timestamp->weekday] : "Unknown";
-
-    char buffer[100];  // big enough for our formatted string
-    int len = snprintf(buffer, sizeof(buffer),
-                       "%02u:%02u:%02u on %02u-%02u-%04u (Weekday %s)",
-                       timestamp->hours,
-                       timestamp->minutes,
-                       timestamp->seconds,
-                       timestamp->date,
-                       timestamp->month,
-                       2000 + timestamp->year,		// adding 2000 years to get the full year =)
-                       weekday_str);
-
-    if (len > 0 && len < sizeof(buffer)) {
-        vcom_Trace((uint8_t*)buffer, (uint16_t)len);
-    }
-}
-

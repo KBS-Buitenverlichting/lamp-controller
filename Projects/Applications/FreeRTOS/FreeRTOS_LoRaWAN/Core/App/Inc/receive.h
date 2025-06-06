@@ -37,3 +37,4 @@ void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_
 void Handle_Remove_Timeschedule_Instruction(const uint8_t *const buffer, const uint8_t buffer_size);
 void Print_Current_RTC_Time(void);
 void Print_Timestamp(const ScheduleTimestamp* const timestamp);
+ScheduleValidationResult ScheduleList_Can_Insert(const Schedule* new_schedule, ScheduleNode** out_insert_after);

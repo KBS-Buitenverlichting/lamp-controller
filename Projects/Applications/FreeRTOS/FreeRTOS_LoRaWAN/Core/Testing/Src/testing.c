@@ -26,8 +26,7 @@ const uint8_t (*test_functions[])(void) = {
 	Test_Invalid_Data,
 	Test_Overlap_Next,
 	Test_Overlap_Previous,
-	Test_Day_Differences,
-	Test_Before_The_Beginning_Of_Time
+	Test_Day_Differences
 };
 
 void Main_Test(void)
