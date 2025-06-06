@@ -40,9 +40,6 @@ void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
 		case SEND_BATTERY_STATUS:
 			Handle_Send_Battery_Status_Instruction(buffer, buffer_size);
 			break;
-		case SET_BATTERY_VREFS:
-			Handle_Set_Battery_Vrefs_Instruction(buffer, buffer_size);
-			break;
 		case SYNCHRONIZE_TIME_AND_DATE:
 			Handle_Synchronize_Time_And_Date_Instruction(buffer, buffer_size);
 			break;
@@ -105,45 +102,8 @@ void Handle_Change_Brightness_Instruction(const uint8_t *const buffer, const uin
 void Handle_Send_Battery_Status_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
 	APP_LOG(TS_OFF, VLEVEL_M, "Report battery state\r\n");
-
-	if (Vrefs_Initialized())
-	{
-		const uint8_t params[] = { SEND_BATTERY_STATUS, Get_Battery_Level() };
-		Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION, (const uint8_t* const)&params, sizeof(params));
-	}
-	else
-	{
-		const uint8_t params[] = { SEND_BATTERY_STATUS, VREFS_NOT_INITIALIZED };
-		Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
-	}
-}
-
-void Handle_Set_Battery_Vrefs_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
-{
-	APP_LOG(TS_OFF, VLEVEL_M, "Setting battery min and max vref\r\n");
-
-	if (buffer_size < MESSAGE_MIN_BYTES + BATTERY_VREF_PARAMS_BYTE_COUNT)
-	{
-		const uint8_t params[] = { SET_BATTERY_VREFS };
-		Tx_Set_Buffer(RESPONSE_OUT, MISSING_DATA, (const uint8_t* const)&params, sizeof(params));
-		return;
-	}
-
-	const uint16_t min_vref = (buffer[PARAMETERS_START_BYTE] << 8) | buffer[PARAMETERS_START_BYTE + 1];
-	const uint16_t max_vref = (buffer[PARAMETERS_START_BYTE + 2] << 8) | buffer[PARAMETERS_START_BYTE + 3];
-
-	APP_LOG(TS_OFF, VLEVEL_M, "min: %u    max: %u\r\n", min_vref, max_vref);
-
-	Warning result = Set_Battery_Vref(min_vref, max_vref);
-
-	if (result != NO_WARNING)
-	{
-		const uint8_t params[] = { SET_BATTERY_VREFS, result };
-		Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_WARNING, (const uint8_t* const)&params, sizeof(params));
-		return;
-	}
-
-	Tx_Set_Ack(SET_BATTERY_VREFS);
+	// battery task will perform the actual read, to not block the program
+	xSemaphoreGive(sem_start_battery_read);
 }
 
 void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
