@@ -385,40 +385,6 @@ void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint
 }
 void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
-	// Below is for testing purposes
-//	ScheduleList_Clear();
-
-//	Schedule test_schedule;
-//	ScheduleTimestamp timestamp = {
-//		.year = 25,
-//		.month = 5,
-//		.weekday = 3,
-//		.date = 16,
-//		.hours = 11,
-//		.minutes = 30,
-//		.seconds = 0
-//	};
-//	test_schedule.lamp_config = (LampConfig) {
-//		.lamp_state = ON,
-//		.brightness = 255
-//	};
-//	test_schedule.time_start = timestamp;
-//	test_schedule.time_end = timestamp;
-//	test_schedule.time_end.hours++;
-//	(void)ScheduleList_Insert_First(test_schedule);
-//
-//	ScheduleNode* test_node = ScheduleList_Get_First_Node();
-//
-//
-//	for (uint8_t i = 0; i < 9; i++)
-//	{
-//		(void)ScheduleList_Insert_After(test_node, test_schedule);
-//		test_node = test_node->next;
-//	}
-	// Above is for testing purposes
-
-	APP_LOG(TS_OFF, VLEVEL_M, "Show timetable\r\n");
-
 	const ScheduleNode* node = ScheduleList_Get_First_Node();
 	uint8_t params[IDENTIFIER_BYTE_COUNT + (SCHEDULE_LIST_MAX_LENGTH * sizeof(Schedule))] = {0};
 	params[IDENTIFIER_BYTE] = SHOW_TIMETABLE;
@@ -461,10 +427,6 @@ void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_
 	}
 
 	Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION, (const uint8_t* const)&params, sizeof(params));
-
-	// Below is for testing purposes
-//	ScheduleList_Clear();
-	// Above is for testing purposes
 }
 
 void Handle_Remove_Timeschedule_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
