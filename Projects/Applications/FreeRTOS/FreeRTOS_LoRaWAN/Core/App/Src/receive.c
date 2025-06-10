@@ -321,6 +321,7 @@ void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint
     ScheduleFuncStatus status;
     if (insert_after == NULL) {
         status = ScheduleList_Insert_First(new_schedule);
+        RTC_Set_AlarmB_ScheduleTimestamp(new_schedule.time_start);
     } else {
         status = ScheduleList_Insert_After(insert_after, new_schedule);
     }

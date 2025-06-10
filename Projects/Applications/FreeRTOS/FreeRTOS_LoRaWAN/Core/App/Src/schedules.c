@@ -244,6 +244,7 @@ bool Load_ScheduleList_From_Flash(void) {
     for (int8_t i = stored_size - 1; i >= 0; i--) {
         ScheduleList_Insert_First(temp_array[i]);
     }
+    RTC_Set_AlarmB_ScheduleTimestamp(ScheduleList_Get_First_Node()->schedule.time_start);
 
     return true;
 }
