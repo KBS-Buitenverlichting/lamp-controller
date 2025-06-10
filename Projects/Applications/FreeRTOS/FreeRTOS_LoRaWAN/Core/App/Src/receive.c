@@ -194,7 +194,6 @@ void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, c
 			const uint8_t params[] = { SYNCHRONIZE_TIME_AND_DATE, FAILED_TO_SET_RTC};
 			Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
 		}
-			Print_Current_RTC_Time();
 //			An acknowledge is not possible because when it updates the time, it also resets the subseconds, TTN uses this to base their messaging timing on,
 //			and then you have to wait however long the microcontroller has been on, which could take a while.
 //			And during this time you can't use the LoRa. A reset fixes this, but then you won't get an acknowledge, so for this reason we don't have one.
@@ -268,8 +267,6 @@ ScheduleValidationResult ScheduleList_Can_Insert(const Schedule* new_schedule, S
 
 void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
-    char msg[100];
-
     if (buffer_size < SET_TIMESCHEDULE_BYTE_COUNT) {
         const uint8_t params[] = { SET_TIMESCHEDULE };
         Tx_Set_Buffer(RESPONSE_OUT, MISSING_DATA, params, sizeof(params));
