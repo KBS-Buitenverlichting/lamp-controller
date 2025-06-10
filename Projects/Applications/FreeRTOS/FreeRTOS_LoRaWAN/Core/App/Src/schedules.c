@@ -83,7 +83,7 @@ void ScheduleList_Init() {
 	Load_ScheduleList_From_Flash();
 }
 
-bool Get_schedule_active(void){
+bool Get_Schedule_Active(void){
 	return schedule_active;
 }
 

@@ -73,7 +73,7 @@ void ScheduleTimestamp_To_RTC_DateTime(const ScheduleTimestamp* const timestamp,
 ScheduleTimestamp RTC_DateTime_To_ScheduleTimestamp(const RTC_DateTypeDef* const date, const RTC_TimeTypeDef* const time);
 
 ScheduleNode* ScheduleList_Get_First_Node(void);
-bool Get_schedule_active(void);
+bool Get_Schedule_Active(void);
 ScheduleFuncStatus ScheduleList_Insert_First(Schedule new_schedule);
 ScheduleFuncStatus ScheduleList_Insert_After(ScheduleNode* const schedule_node, Schedule new_schedule);
 ScheduleFuncStatus ScheduleList_Remove_First(void);
