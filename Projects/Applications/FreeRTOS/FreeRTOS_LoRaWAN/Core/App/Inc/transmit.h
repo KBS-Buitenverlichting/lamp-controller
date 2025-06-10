@@ -1,12 +1,13 @@
-/*
- * transmit_test.h
+/*********************************************************************
+ * @file   transmit.h
+ * @brief  File for handling LoRa transmission
  *
- *  Created on: Apr 25, 2025
- *      Author: Bjorn Wakker
- */
+ * @author KBS Buitenverlichting
+ * @date   25 April 2025
+ *********************************************************************/
 #pragma once
 
-#include "stdint.h"
+#include <stdint.h>
 #include "message_format.h"
 #include "LmHandlerTypes.h"
 #include "LmHandler.h"
