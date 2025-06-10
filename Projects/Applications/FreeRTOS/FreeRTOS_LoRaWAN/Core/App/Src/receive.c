@@ -338,7 +338,7 @@ void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint
 void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
 	const ScheduleNode* node = ScheduleList_Get_First_Node();
-	uint8_t params[IDENTIFIER_BYTE_COUNT + (SCHEDULE_LIST_MAX_LENGTH * sizeof(Schedule))] = {0};
+	uint8_t params[IDENTIFIER_BYTE_COUNT + (ScheduleList_Get_Size() * sizeof(Schedule))];
 	params[IDENTIFIER_BYTE] = SHOW_TIMETABLE;
 
 	for (uint8_t i = 0; i < ScheduleList_Get_Size() && node; i++)
