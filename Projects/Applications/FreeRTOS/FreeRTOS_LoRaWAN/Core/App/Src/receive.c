@@ -166,7 +166,7 @@ void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, c
 void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
 	// Below is for testing purposes
-	ScheduleList_Fill_With_Test_Schedules();
+	//ScheduleList_Fill_With_Test_Schedules();
 	APP_LOG(TS_OFF, VLEVEL_M, "Set new timeslot\r\n");
 	// Above is for testing purposes
 }

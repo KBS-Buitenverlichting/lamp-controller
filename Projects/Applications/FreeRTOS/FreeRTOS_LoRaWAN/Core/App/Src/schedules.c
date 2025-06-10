@@ -1,10 +1,10 @@
-/*
- * schedules.c
+/*********************************************************************
+ * @file   schedules.h
+ * @brief  File for handling time/ task schedules
  *
- *  Created on: May 15, 2025
- *      Author: jacco
- */
-
+ * @author KBS Buitenverlichting
+ * @date   15 May 2025
+ *********************************************************************/
 #include <stdlib.h>
 #include <stdbool.h>
 #include "schedules.h"
@@ -13,74 +13,6 @@
 SemaphoreHandle_t sem_process_alarm;
 static ScheduleList schedules = { 0 };
 static bool schedule_active = false;
-
-void ScheduleList_Init();
-
-
-/// @brief test function, should be removed when inserting
-/// 	   schedules over LoRa works
-void ScheduleList_Fill_With_Test_Schedules() {
-	const uint8_t TEST_SCHEDULE_DURATION = 5;
-	LampConfig test_configs[SCHEDULE_LIST_MAX_LENGTH] = {
-			{ON, 0xFF},
-			{ON, 0x40},
-			{MOTION_SENSOR, 0x80},
-			{OFF, 0x00},
-			{ON, 0x01},
-			{MOTION_SENSOR, 0x40},
-			{ON, 0xFF},
-			{ON, 0x40},
-			{MOTION_SENSOR, 0xFF},
-			{OFF, 0x00},
-	};
-	ScheduleList_Clear();
-
-	Schedule test_schedule;
-	ScheduleTimestamp timestamp = {
-		.year = 25,
-		.month = 5,
-		.weekday = 2,
-		.date = 27,
-		.hours = 11,
-		.minutes = 0,
-		.seconds = 30
-	};
-	test_schedule.time_start = timestamp;
-	test_schedule.time_end = timestamp;
-	test_schedule.time_end.seconds += TEST_SCHEDULE_DURATION;
-	test_schedule.lamp_config = test_configs[0];
-	if (test_schedule.time_end.seconds >= 60) {
-		test_schedule.time_end.seconds -= 60;
-		test_schedule.time_end.minutes++;
-	}
-
-
-	(void)ScheduleList_Insert_First(test_schedule);
-	ScheduleNode* test_node = ScheduleList_Get_First_Node();
-
-
-	// i = 1 because the first config has already been inserted
-	for (uint8_t i = 1; i < SCHEDULE_LIST_MAX_LENGTH; i++)
-	{
-		test_schedule.time_start.seconds += TEST_SCHEDULE_DURATION*2;
-		if (test_schedule.time_start.seconds >= 60) {
-			test_schedule.time_start.seconds -= 60;
-			test_schedule.time_start.minutes++;
-		}
-		test_schedule.time_end.minutes = test_schedule.time_start.minutes;
-		test_schedule.time_end.seconds = test_schedule.time_start.seconds + TEST_SCHEDULE_DURATION;
-		if (test_schedule.time_end.seconds >= 60) {
-			test_schedule.time_end.seconds -= 60;
-			test_schedule.time_end.minutes++;
-		}
-		test_schedule.lamp_config = test_configs[i];
-		(void)ScheduleList_Insert_After(test_node, test_schedule);
-		test_node = test_node->next;
-	}
-
-	ScheduleNode* first_node = ScheduleList_Get_First_Node();
-	RTC_Set_AlarmB_ScheduleTimestamp(first_node->schedule.time_start);
-}
 
 void RTC_Set_AlarmB_ScheduleTimestamp(ScheduleTimestamp ts) {
 	RTC_AlarmTypeDef alarm_b = {0};
@@ -100,45 +32,50 @@ void RTC_Set_AlarmB_ScheduleTimestamp(ScheduleTimestamp ts) {
 }
 
 void Start_Process_Schedules_Task(void const *argument) {
-	osDelay(200); // this is enough time for LoRa to init the RTC before this task configures Alarm B
+	// Small delay to give LoRa task time to init the RTC before this task configures Alarm B
+	osDelay(200);
 	ScheduleList_Init();
+
 	for(;;) {
 		if(xSemaphoreTake(sem_process_alarm, portMAX_DELAY) != pdPASS) {
 			Error_Handler();
 		}
+
 		if (ScheduleList_Get_Size() <= 0) {
-			continue; // false alarm, there is no schedule to process
+			continue; // False alarm, there is no schedule to process
 		}
+
 		if (schedule_active) {
 			vcom_Trace((uint8_t *)"SCHEDULE END\r\n", 14);
-			// schedule has reached end time, remove it
+			// Schedule has reached end time, remove it
 			ScheduleList_Remove_First();
 
 			
-			// restore saved lamp config
+			// Restore saved lamp config
 			Send_LampState(previous_lamp_config.state);
 			Send_Brightness(previous_lamp_config.brightness);
 			
 			ScheduleNode* next_alarm_schedule_node = ScheduleList_Get_First_Node();
-			// queue up the next schedule alarm
+			// Queue up the next schedule alarm
 			if (next_alarm_schedule_node != NULL) {
 				Schedule next_alarm_schedule = next_alarm_schedule_node->schedule;
 				RTC_Set_AlarmB_ScheduleTimestamp(next_alarm_schedule.time_start);
 			}
 			schedule_active = false;
-		} else {
+		}
+		else {
 			vcom_Trace((uint8_t *)"SCHEDULE START\r\n", 16);
 			Schedule current_schedule = ScheduleList_Get_First_Node()->schedule;
 
-			// save current lamp config
+			// Save current lamp config
 			previous_lamp_config.state = Get_State_LampState();
 			previous_lamp_config.brightness = Get_Brightness();
 
-			// configure lamp based on the new schedule
+			// Configure lamp based on the new schedule
 			Send_LampState(current_schedule.lamp_config.state);
 			Send_Brightness(current_schedule.lamp_config.brightness);
 
-			// set next alarm to end of current schedule
+			// Set next alarm to end of current schedule
 			RTC_Set_AlarmB_ScheduleTimestamp(current_schedule.time_end);
 			schedule_active = true;
 		}
@@ -162,7 +99,8 @@ void ScheduleList_Clear(void) {
 }
 
 void ScheduleTimestamp_To_RTC_DateTime(const ScheduleTimestamp *const timestamp,
-		RTC_DateTypeDef *const out_date, RTC_TimeTypeDef *const out_time) {
+									   RTC_DateTypeDef *const out_date,
+									   RTC_TimeTypeDef *const out_time) {
 	out_date->Year = timestamp->year;
 	out_date->Month = timestamp->month;
 	out_date->WeekDay = timestamp->weekday;
@@ -173,11 +111,16 @@ void ScheduleTimestamp_To_RTC_DateTime(const ScheduleTimestamp *const timestamp,
 	out_time->Seconds = timestamp->seconds;
 }
 
-ScheduleTimestamp RTC_DateTime_To_ScheduleTimestamp(
-		const RTC_DateTypeDef *const date, const RTC_TimeTypeDef *const time) {
-	ScheduleTimestamp timestamp = { .year = date->Year, .month = date->Month,
-			.weekday = date->WeekDay, .date = date->Date, .hours = time->Hours,
-			.minutes = time->Minutes, .seconds = time->Seconds };
+ScheduleTimestamp RTC_DateTime_To_ScheduleTimestamp(const RTC_DateTypeDef *const date, const RTC_TimeTypeDef *const time) {
+	ScheduleTimestamp timestamp = {
+		.year = date->Year,
+		.month = date->Month,
+		.weekday = date->WeekDay,
+		.date = date->Date,
+		.hours = time->Hours,
+		.minutes = time->Minutes,
+		.seconds = time->Seconds
+	};
 	return timestamp;
 }
 
@@ -200,8 +143,7 @@ ScheduleFuncStatus ScheduleList_Insert_First(Schedule new_schedule) {
 	if (schedules.size == SCHEDULE_LIST_MAX_LENGTH) {
 		return SCHEDULE_FUNC_ERROR;
 	}
-	ScheduleNode *new_schedule_node = (ScheduleNode*) malloc(
-			sizeof(ScheduleNode));
+	ScheduleNode *new_schedule_node = (ScheduleNode*) malloc(sizeof(ScheduleNode));
 	new_schedule_node->schedule = new_schedule;
 	new_schedule_node->next = schedules.first;
 	schedules.first = new_schedule_node;
@@ -210,8 +152,7 @@ ScheduleFuncStatus ScheduleList_Insert_First(Schedule new_schedule) {
 	return SCHEDULE_FUNC_OK;
 }
 
-ScheduleFuncStatus ScheduleList_Insert_After(ScheduleNode * const schedule_node,
-		Schedule new_schedule) {
+ScheduleFuncStatus ScheduleList_Insert_After(ScheduleNode * const schedule_node, Schedule new_schedule) {
 	if (schedules.size == SCHEDULE_LIST_MAX_LENGTH) {
 		return SCHEDULE_FUNC_ERROR;
 	}

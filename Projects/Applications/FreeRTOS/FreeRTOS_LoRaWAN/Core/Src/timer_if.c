@@ -39,6 +39,8 @@
   */
 extern RTC_HandleTypeDef hrtc;
 
+extern SemaphoreHandle_t sem_process_alarm;
+
 /**
   * @brief Timer driver callbacks handler
   */
