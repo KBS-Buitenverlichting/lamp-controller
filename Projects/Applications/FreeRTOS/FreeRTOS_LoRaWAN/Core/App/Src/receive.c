@@ -326,7 +326,9 @@ void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint
     }
 
     if (status == SCHEDULE_FUNC_OK) {
-        RTC_Set_AlarmB_ScheduleTimestamp(ScheduleList_Get_First_Node()->schedule.time_start);
+    	if(!Get_schedule_active()){
+            RTC_Set_AlarmB_ScheduleTimestamp(ScheduleList_Get_First_Node()->schedule.time_start);
+    	}
         Tx_Set_Ack(SET_TIMESCHEDULE);
     } else {
         const uint8_t params[] = { SET_TIMESCHEDULE };

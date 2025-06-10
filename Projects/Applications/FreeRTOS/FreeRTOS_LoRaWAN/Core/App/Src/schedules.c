@@ -83,6 +83,10 @@ void ScheduleList_Init() {
 	Load_ScheduleList_From_Flash();
 }
 
+bool Get_schedule_active(void){
+	return schedule_active;
+}
+
 uint8_t ScheduleList_Get_Size(void) {
 	return schedules.size;
 }
