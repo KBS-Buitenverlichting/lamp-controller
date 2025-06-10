@@ -4,6 +4,8 @@
 #include "rtc.h"
 #include "stm32wlxx_hal_rtc.h"
 
+extern SemaphoreHandle_t sem_start_battery_read;
+
 /// Brief: Handles incoming LoRaWAN data and calls message interpreter.
 void Process_Rx_Data(const LmHandlerAppData_t *const app_data,
                      const LmHandlerRxParams_t *const params) {

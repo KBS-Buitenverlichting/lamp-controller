@@ -1,10 +1,17 @@
-/*
- * battery.c
+/*********************************************************************
+ * @file   battery.c
+ * @brief  File for handling battery percentage request
  *
- *  Created on: May 9, 2025
- *      Author: Bjorn Wakker
- */
+ * @author KBS Buitenverlichting
+ * @date   9 May 2025
+ *********************************************************************/
 #include "battery.h"
+#include <stdint.h>
+#include "stm32wlxx_hal.h"
+#include "transmit.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
+#include "main.h"
 
 SemaphoreHandle_t sem_start_battery_read;
 
