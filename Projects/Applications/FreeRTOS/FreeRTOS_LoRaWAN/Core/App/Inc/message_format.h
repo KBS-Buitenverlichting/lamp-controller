@@ -38,7 +38,6 @@ typedef enum InstructionSubtypes
 	ACTIVATE_MOTION_SENSOR = 0x02,
 	CHANGE_BRIGHTNESS = 0x03,
 	SEND_BATTERY_STATUS = 0x04,
-	SET_BATTERY_VREFS = 0x05,
 	SYNCHRONIZE_TIME_AND_DATE = 0x06,
 	SET_TIMESCHEDULE = 0x07,
 	SHOW_TIMETABLE = 0x08,
@@ -61,10 +60,7 @@ typedef enum ResponseWithDataSubtypes
 
 typedef enum Warnings
 {
-	NO_WARNING = 0x00,
-	MIN_VREF_BELOW_CUTOFF_BOARD = 0x50,
-	MIN_VREF_ABOVE_MAX_VDD_BOARD = 0x51,
-	MAX_VREF_ABOVE_MAX_VDD_BOARD = 0x52
+	NO_WARNING = 0x00
 } Warning;
 
 typedef enum Errors
