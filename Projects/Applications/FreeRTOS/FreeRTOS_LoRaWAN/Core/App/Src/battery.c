@@ -8,6 +8,8 @@
 
 SemaphoreHandle_t sem_start_battery_read;
 
+extern I2C_HandleTypeDef hi2c2;
+
 void Start_Get_Battery_Level_Task(void const *argument) {
 	const uint8_t MAX17048_READ_ADDR = 0x6C;
 	const uint8_t MAX17048_REG_SOC = 0x04;

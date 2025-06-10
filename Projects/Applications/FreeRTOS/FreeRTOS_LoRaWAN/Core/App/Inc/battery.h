@@ -13,7 +13,6 @@
 #include "semphr.h"
 #include "main.h"
 
-extern I2C_HandleTypeDef hi2c2;
 extern SemaphoreHandle_t sem_start_battery_read;
 
 void Start_Get_Battery_Level_Task(void const *argument);
