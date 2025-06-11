@@ -107,19 +107,13 @@ void ScheduleTimestamp_To_RTC_DateTime(const ScheduleTimestamp* const timestamp,
 ScheduleTimestamp RTC_DateTime_To_ScheduleTimestamp(const RTC_DateTypeDef* const date, const RTC_TimeTypeDef* const time);
 
 /**
- * @brief Checks if two timestamps are the same
- *
- * @param[in] ts1	Timestamp 1
- * @param[in] ts2	Timestamp 2
- *
- * @return True if they are the same, else False
- */
-bool ScheduleTimestamp_Equals(const ScheduleTimestamp* const ts1, const ScheduleTimestamp* const ts2);
-
-/**
  * @brief Initializes the list
  */
 void ScheduleList_Init();
+
+bool Get_Schedule_Active(void);
+
+int8_t ScheduleTimestamp_Compare(const ScheduleTimestamp* a, const ScheduleTimestamp* b);
 
 /**
  * @brief Gets the number of schedules in the list

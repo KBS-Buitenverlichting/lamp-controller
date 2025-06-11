@@ -91,6 +91,10 @@ void ScheduleList_Init() {
 	Load_ScheduleList_From_Flash();
 }
 
+bool Get_Schedule_Active(void){
+	return schedule_active;
+}
+
 uint8_t ScheduleList_Get_Size(void) {
 	return schedules.size;
 }
@@ -125,17 +129,6 @@ ScheduleTimestamp RTC_DateTime_To_ScheduleTimestamp(const RTC_DateTypeDef *const
 		.seconds = time->Seconds
 	};
 	return timestamp;
-}
-
-bool ScheduleTimestamp_Equals(const ScheduleTimestamp* const ts1, const ScheduleTimestamp* const ts2)
-{
-	return (ts1->year == ts2->year &&
-			ts1->month == ts2->month &&
-			ts1->weekday == ts2->weekday &&
-			ts1->date == ts2->date &&
-			ts1->hours == ts2->hours &&
-			ts1->minutes == ts2->minutes &&
-			ts1->seconds == ts2->seconds);
 }
 
 ScheduleNode* ScheduleList_Get_First_Node(void) {
@@ -191,6 +184,18 @@ ScheduleFuncStatus ScheduleList_Remove_After(ScheduleNode * const schedule_node)
 	schedules.size--;
 	Save_ScheduleList_To_Flash();
 	return SCHEDULE_FUNC_OK;
+}
+
+int8_t ScheduleTimestamp_Compare(const ScheduleTimestamp* a, const ScheduleTimestamp* b)
+{
+    if (a->year != b->year)       return a->year - b->year;
+    if (a->month != b->month)     return a->month - b->month;
+    if (a->date != b->date)       return a->date - b->date;
+    if (a->hours != b->hours)     return a->hours - b->hours;
+    if (a->minutes != b->minutes) return a->minutes - b->minutes;
+    if (a->seconds != b->seconds) return a->seconds - b->seconds;
+
+    return 0; // Equal
 }
 
 bool Save_ScheduleList_To_Flash(void)
@@ -255,6 +260,7 @@ bool Load_ScheduleList_From_Flash(void) {
     for (int8_t i = stored_size - 1; i >= 0; i--) {
         ScheduleList_Insert_First(temp_array[i]);
     }
+    RTC_Set_AlarmB_ScheduleTimestamp(ScheduleList_Get_First_Node()->schedule.time_start);
 
     return true;
 }

@@ -14,6 +14,15 @@
 #include "battery.h"
 #include "schedules.h"
 
+typedef enum {
+    SCHEDULE_VALID_INSERT,
+	SCHEDULE_INVALID_DATA,
+    SCHEDULE_INVALID_OVERLAP_PREVIOUS,
+    SCHEDULE_INVALID_OVERLAP_NEXT,
+    SCHEDULE_LIST_FULL,
+	SCHEDULE_BEFORE_RTC_TIME
+} ScheduleValidationResult;
+
 void Process_Rx_Data(const LmHandlerAppData_t *const app_data, const LmHandlerRxParams_t *const params);
 void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size);
 void Handle_Lamp_Off_Instruction(const uint8_t *const buffer, const uint8_t buffer_size);
@@ -26,3 +35,4 @@ void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, c
 void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint8_t buffer_size);
 void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_t buffer_size);
 void Handle_Remove_Timeschedule_Instruction(const uint8_t *const buffer, const uint8_t buffer_size);
+ScheduleValidationResult ScheduleList_Can_Insert(const Schedule* new_schedule, ScheduleNode** out_insert_after);

@@ -10,5 +10,6 @@
 #include "stdint.h"
 #include "transmit_test.h"
 #include "schedules_test.h"
+#include "schedulelist_insert_test.h"
 
 void Main_Test(void);

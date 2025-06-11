@@ -145,14 +145,139 @@ void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, c
 	}
 }
 
-void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
+ScheduleValidationResult ScheduleList_Can_Insert(const Schedule* new_schedule, ScheduleNode** out_insert_after)
 {
-	// Below is for testing purposes
-	//ScheduleList_Fill_With_Test_Schedules();
-	APP_LOG(TS_OFF, VLEVEL_M, "Set new timeslot\r\n");
-	// Above is for testing purposes
+    if (ScheduleTimestamp_Compare(&new_schedule->time_start, &new_schedule->time_end) >= 0) {
+//			Start and end timestamps are equal, or end time is before start time. Ignoring schedule.
+        return SCHEDULE_INVALID_DATA;
+    }
+
+    if (ScheduleList_Get_Size() == SCHEDULE_LIST_MAX_LENGTH) {
+        return SCHEDULE_LIST_FULL;
+    }
+
+		RTC_TimeTypeDef current_time;
+		RTC_DateTypeDef current_date_1, current_date_2;
+
+		HAL_RTC_GetDate(&hrtc, &current_date_1, RTC_FORMAT_BIN);
+		HAL_RTC_GetTime(&hrtc, &current_time, RTC_FORMAT_BIN);
+		HAL_RTC_GetDate(&hrtc, &current_date_2, RTC_FORMAT_BIN);
+
+		if (memcmp(&current_date_1, &current_date_2, sizeof(RTC_DateTypeDef)) != 0) {
+			HAL_RTC_GetTime(&hrtc, &current_time, RTC_FORMAT_BIN);
+			HAL_RTC_GetDate(&hrtc, &current_date_1, RTC_FORMAT_BIN);
+		}
+
+		ScheduleTimestamp Current_RTC_Time = {
+			.year = current_date_1.Year,
+			.month = current_date_1.Month,
+			.weekday = current_date_1.WeekDay,
+			.date = current_date_1.Date,
+			.hours = current_time.Hours,
+			.minutes = current_time.Minutes,
+			.seconds = current_time.Seconds
+		};
+
+    if(ScheduleTimestamp_Compare(&new_schedule->time_start, &Current_RTC_Time) <= 0){
+    	return SCHEDULE_BEFORE_RTC_TIME;
+    }
+
+    ScheduleNode* current = ScheduleList_Get_First_Node();
+    if (!current || ScheduleTimestamp_Compare(&new_schedule->time_start, &current->schedule.time_start) < 0) {
+        if (current && ScheduleTimestamp_Compare(&new_schedule->time_end, &current->schedule.time_start) >= 0) {
+            return SCHEDULE_INVALID_OVERLAP_NEXT;
+        }
+        *out_insert_after = NULL;
+        return SCHEDULE_VALID_INSERT;
+    }
+//			Check where the start time fits in the linked list
+    while (current->next && ScheduleTimestamp_Compare(&new_schedule->time_start, &current->next->schedule.time_start) > 0) {
+        current = current->next;
+    }
+
+    if (current->next && ScheduleTimestamp_Compare(&new_schedule->time_end, &current->next->schedule.time_start) >= 0) {
+           return SCHEDULE_INVALID_OVERLAP_NEXT;
+       }
+
+
+   if (ScheduleTimestamp_Compare(&new_schedule->time_start, &current->schedule.time_end) <= 0) {
+	   return SCHEDULE_INVALID_OVERLAP_PREVIOUS;
+   }
+
+    *out_insert_after = current;
+    return SCHEDULE_VALID_INSERT;
 }
 
+void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
+{
+    if (buffer_size < SET_TIMESCHEDULE_BYTE_COUNT) {
+        const uint8_t params[] = { SET_TIMESCHEDULE };
+        Tx_Set_Buffer(RESPONSE_OUT, MISSING_DATA, params, sizeof(params));
+        return;
+    }
+    Schedule new_schedule;
+    new_schedule.time_start = (ScheduleTimestamp){
+        .year = buffer[2], .month = buffer[3], .weekday = buffer[4],
+        .date = buffer[5], .hours = buffer[6], .minutes = buffer[7], .seconds = buffer[8]
+    };
+    new_schedule.time_end = (ScheduleTimestamp){
+        .year = buffer[9], .month = buffer[10], .weekday = buffer[11],
+        .date = buffer[12], .hours = buffer[13], .minutes = buffer[14], .seconds = buffer[15]
+    };
+    new_schedule.lamp_config = (LampConfig){
+        .state = buffer[16], .brightness = buffer[17]
+    };
+
+    ScheduleNode* insert_after = NULL;
+    ScheduleValidationResult result = ScheduleList_Can_Insert(&new_schedule, &insert_after);
+
+    if (result == SCHEDULE_INVALID_DATA) {
+        const uint8_t params[] = { SET_TIMESCHEDULE };
+        Tx_Set_Buffer(RESPONSE_OUT, INVALID_DATA, params, sizeof(params));
+        return;
+    }
+
+    if (result == SCHEDULE_INVALID_OVERLAP_PREVIOUS) {
+    	const uint8_t params[] = { SET_TIMESCHEDULE, SCHEDULE_OVERLAP };
+    	Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
+        return;
+    }
+
+    if (result == SCHEDULE_INVALID_OVERLAP_NEXT) {
+    	const uint8_t params[] = { SET_TIMESCHEDULE, SCHEDULE_OVERLAP };
+    	Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
+        return;
+    }
+
+    if (result == SCHEDULE_LIST_FULL) {
+        const uint8_t params[] = { SET_TIMESCHEDULE };
+        Tx_Set_Buffer(RESPONSE_OUT, LIST_FULL, params, sizeof(params));
+        return;
+    }
+    if(result == SCHEDULE_BEFORE_RTC_TIME){
+		const uint8_t params[] = { SET_TIMESCHEDULE, ERROR_SCHEDULE_BEFORE_RTC_TIME };
+		Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION_ERROR, (const uint8_t* const)&params, sizeof(params));
+		return;
+    }
+
+    // Schedule is valid, now insert
+    ScheduleFuncStatus status;
+    if (insert_after == NULL) {
+        status = ScheduleList_Insert_First(new_schedule);
+    } else {
+        status = ScheduleList_Insert_After(insert_after, new_schedule);
+    }
+
+    if (status == SCHEDULE_FUNC_OK) {
+    	if(!Get_Schedule_Active()){
+            RTC_Set_AlarmB_ScheduleTimestamp(ScheduleList_Get_First_Node()->schedule.time_start);
+    	}
+        Tx_Set_Ack(SET_TIMESCHEDULE);
+    } else {
+        const uint8_t params[] = { SET_TIMESCHEDULE };
+        Tx_Set_Buffer(RESPONSE_OUT, LIST_FULL, params, sizeof(params));
+    }
+}
 void Handle_Show_Timetable_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
 	const ScheduleNode* node = ScheduleList_Get_First_Node();
@@ -209,7 +334,7 @@ void Handle_Remove_Timeschedule_Instruction(const uint8_t *const buffer, const u
 	ScheduleNode* node = ScheduleList_Get_First_Node();
 
 	// Check the first node
-	if (ScheduleTimestamp_Equals(&(node->schedule.time_start), &start_time))
+	if (ScheduleTimestamp_Compare(&(node->schedule.time_start), &start_time) == 0)
 	{
 		ScheduleList_Remove_First();
 		Tx_Set_Ack(REMOVE_TIMESCHEDULE);
@@ -222,7 +347,7 @@ void Handle_Remove_Timeschedule_Instruction(const uint8_t *const buffer, const u
 
 		while (node)
 		{
-			if (ScheduleTimestamp_Equals(&(node->schedule.time_start), &start_time))
+			if (ScheduleTimestamp_Compare(&(node->schedule.time_start), &start_time) == 0)
 			{
 				ScheduleList_Remove_After(previous_node);
 				Tx_Set_Ack(REMOVE_TIMESCHEDULE);
