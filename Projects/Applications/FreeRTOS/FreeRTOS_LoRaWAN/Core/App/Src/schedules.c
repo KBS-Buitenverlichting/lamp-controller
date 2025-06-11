@@ -37,8 +37,6 @@ void RTC_Set_AlarmB_ScheduleTimestamp(ScheduleTimestamp ts) {
 }
 
 void Start_Process_Schedules_Task(void const *argument) {
-	// Small delay to give LoRa task time to init the RTC before this task configures Alarm B
-	osDelay(200);
 	ScheduleList_Init();
 
 	for (;;) {
