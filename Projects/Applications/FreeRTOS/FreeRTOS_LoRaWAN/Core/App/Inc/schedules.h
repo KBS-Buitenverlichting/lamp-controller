@@ -111,8 +111,21 @@ ScheduleTimestamp RTC_DateTime_To_ScheduleTimestamp(const RTC_DateTypeDef* const
  */
 void ScheduleList_Init();
 
+/**
+ * @brief Checks if a schedule is running
+ *
+ * @return True if running, else False
+ */
 bool Get_Schedule_Active(void);
 
+/**
+ * @brief Compares two time stamps against each other
+ *
+ * @param[in] a Timeschedule 1
+ * @param[in] b Timeschedule 2
+ *
+ * @return 0 when equals, negative when a < b, positive when a > b
+ */
 int8_t ScheduleTimestamp_Compare(const ScheduleTimestamp* a, const ScheduleTimestamp* b);
 
 /**

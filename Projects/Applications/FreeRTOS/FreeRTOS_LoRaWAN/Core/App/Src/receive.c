@@ -1,21 +1,27 @@
+/*********************************************************************
+ * @file   receive.h
+ * @brief  File for handling received LoRa data
+ *
+ * @author KBS Buitenverlichting
+ * @date   24 April 2025
+ *********************************************************************/
 #include "receive.h"
-#include "lamp_state.h"
-#include "sys_app.h" // Used for APP_LOG to write output to serial
-#include "rtc.h"
+#include "stm32wlxx_hal.h"
 #include "stm32wlxx_hal_rtc.h"
+#include "rtc.h"
 #include "FreeRTOS.h"
 #include "semphr.h"
+#include "lamp_state.h"
 #include "transmit.h"
+#include "message_format.h"
+#include "battery.h"
 
 extern SemaphoreHandle_t sem_start_battery_read;
 
-/// Brief: Handles incoming LoRaWAN data and calls message interpreter.
-void Process_Rx_Data(const LmHandlerAppData_t *const app_data,
-                     const LmHandlerRxParams_t *const params) {
+void Process_Rx_Data(const LmHandlerAppData_t *const app_data, const LmHandlerRxParams_t *const params) {
   Interpret_Message(app_data->Buffer, app_data->BufferSize);
 }
 
-/// Brief: Interprets received message and executes corresponding command.
 void Interpret_Message(const uint8_t *const buffer, const uint8_t buffer_size) {
 	if (buffer_size < MESSAGE_MIN_BYTES) {
 		Tx_Set_Buffer(RESPONSE_OUT, MISSING_DATA, NULL, 0);
@@ -93,7 +99,7 @@ void Handle_Change_Brightness_Instruction(const uint8_t *const buffer, const uin
 
 void Handle_Send_Battery_Status_Instruction(const uint8_t *const buffer, const uint8_t buffer_size)
 {
-	// battery task will perform the actual read, to not block the program
+	// Battery task will perform the actual read, to not block the program
 	xSemaphoreGive(sem_start_battery_read);
 }
 
@@ -102,17 +108,17 @@ void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, c
 	if (buffer_size < TIME_DATE_BYTE_COUNT) {
 		const uint8_t params[] = { SYNCHRONIZE_TIME_AND_DATE };
 		Tx_Set_Buffer(RESPONSE_OUT, MISSING_DATA, (const uint8_t* const)&params, sizeof(params));
-	} else if ( !IS_RTC_YEAR(buffer[2]) ||               // Year (0–99)
-				!IS_RTC_MONTH(buffer[3]) ||              // Month (1–12)
-				!IS_RTC_WEEKDAY(buffer[4]) ||            // Weekday (1–7)
-				!IS_RTC_DATE(buffer[5]) ||               // Day (1–31)
-				!IS_RTC_HOUR24(buffer[6]) ||             // Hours (0–23)
-				!IS_RTC_MINUTES(buffer[7])||             // Minutes (0–59)
-				!IS_RTC_SECONDS(buffer[8]))              // Seconds (0–59)
-				{
-					const uint8_t params[] = { SYNCHRONIZE_TIME_AND_DATE };
-					Tx_Set_Buffer(RESPONSE_OUT, INVALID_DATA, (const uint8_t* const)&params, sizeof(params));
-				}
+	}
+	else if (!IS_RTC_YEAR(buffer[2]) ||               // Year (0–99)
+			 !IS_RTC_MONTH(buffer[3]) ||              // Month (1–12)
+			 !IS_RTC_WEEKDAY(buffer[4]) ||            // Weekday (1–7)
+			 !IS_RTC_DATE(buffer[5]) ||               // Day (1–31)
+			 !IS_RTC_HOUR24(buffer[6]) ||             // Hours (0–23)
+			 !IS_RTC_MINUTES(buffer[7])||             // Minutes (0–59)
+			 !IS_RTC_SECONDS(buffer[8])) {            // Seconds (0–59)
+		const uint8_t params[] = { SYNCHRONIZE_TIME_AND_DATE };
+		Tx_Set_Buffer(RESPONSE_OUT, INVALID_DATA, (const uint8_t* const)&params, sizeof(params));
+	}
 	else {
 		RTC_TimeTypeDef current_time = {0};
 		RTC_DateTypeDef current_date = {0};
@@ -148,7 +154,7 @@ void Handle_Synchronize_Time_And_Date_Instruction(const uint8_t *const buffer, c
 ScheduleValidationResult ScheduleList_Can_Insert(const Schedule* new_schedule, ScheduleNode** out_insert_after)
 {
     if (ScheduleTimestamp_Compare(&new_schedule->time_start, &new_schedule->time_end) >= 0) {
-//			Start and end timestamps are equal, or end time is before start time. Ignoring schedule.
+//		Start and end timestamps are equal, or end time is before start time. Ignoring schedule.
         return SCHEDULE_INVALID_DATA;
     }
 
@@ -190,7 +196,7 @@ ScheduleValidationResult ScheduleList_Can_Insert(const Schedule* new_schedule, S
         *out_insert_after = NULL;
         return SCHEDULE_VALID_INSERT;
     }
-//			Check where the start time fits in the linked list
+//	Check where the start time fits in the linked list
     while (current->next && ScheduleTimestamp_Compare(&new_schedule->time_start, &current->next->schedule.time_start) > 0) {
         current = current->next;
     }
@@ -264,7 +270,8 @@ void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint
     ScheduleFuncStatus status;
     if (insert_after == NULL) {
         status = ScheduleList_Insert_First(new_schedule);
-    } else {
+    }
+    else {
         status = ScheduleList_Insert_After(insert_after, new_schedule);
     }
 
@@ -273,7 +280,8 @@ void Handle_Set_Timeschedule_Instruction(const uint8_t *const buffer, const uint
             RTC_Set_AlarmB_ScheduleTimestamp(ScheduleList_Get_First_Node()->schedule.time_start);
     	}
         Tx_Set_Ack(SET_TIMESCHEDULE);
-    } else {
+    }
+    else {
         const uint8_t params[] = { SET_TIMESCHEDULE };
         Tx_Set_Buffer(RESPONSE_OUT, LIST_FULL, params, sizeof(params));
     }

@@ -1,9 +1,10 @@
-/*
- * message_format.h
+/*********************************************************************
+ * @file   message_format.h
+ * @brief  File for all message format related structs, enums, defines
  *
- *  Created on: May 8, 2025
- *      Author: Bjorn Wakker
- */
+ * @author KBS Buitenverlichting
+ * @date   8 May 2025
+ *********************************************************************/
 #pragma once
 
 #include "lora_app.h"
@@ -24,6 +25,15 @@
 #define TIME_DATE_BYTE_COUNT 9
 #define SET_TIMESCHEDULE_BYTE_COUNT 18
 
+/**
+ * @brief All possible identifiers
+ *
+ * @detail
+ * Message identifiers are used to check what type
+ * of message is being send to or from the module
+ *
+ * @see Documentation TO
+ */
 typedef enum Identifiers
 {
 	INSTRUCTION_IN = 0xAB,
@@ -32,6 +42,15 @@ typedef enum Identifiers
 	MESSAGE_OUT = 0xD1
 } Identifier;
 
+/**
+ * @brief All possible subtypes for instructions
+ *
+ * @detail
+ * Instruction subtypes are used to check what type
+ * of instruction is being send to the module
+ *
+ * @see Documentation TO
+ */
 typedef enum InstructionSubtypes
 {
 	LAMP_OFF = 0x00,
@@ -45,6 +64,15 @@ typedef enum InstructionSubtypes
 	REMOVE_TIMESCHEDULE = 0x0A
 } InstructionSubtype;
 
+/**
+ * @brief All possible subtypes for responses
+ *
+ * @detail
+ * Response subtypes are used to check what type
+ * of response is being send from the module
+ *
+ * @see Documentation TO
+ */
 typedef enum ResponseSubtypes
 {
 	INSTRUCTION_COMPLETED = 0x00,
@@ -52,6 +80,15 @@ typedef enum ResponseSubtypes
 	MISSING_DATA = 0x02
 } ResponseSubtype;
 
+/**
+ * @brief All possible subtypes for responses with data
+ *
+ * @detail
+ * Response with data subtypes are used to check what type
+ * of response data is being send from the module
+ *
+ * @see Documentation TO
+ */
 typedef enum ResponseWithDataSubtypes
 {
 	RESPONDING_TO_INSTRUCTION = 0x00,
@@ -59,11 +96,21 @@ typedef enum ResponseWithDataSubtypes
 	RESPONDING_TO_INSTRUCTION_ERROR = 0x02
 } ResponseWithDataSubtype;
 
+/**
+ * @brief All warning codes
+ *
+ * @see Documentation TO
+ */
 typedef enum Warnings
 {
 	NO_WARNING = 0x00
 } Warning;
 
+/**
+ * @brief All error codes
+ *
+ * @see Documentation TO
+ */
 typedef enum Errors
 {
 	NO_ERROR = 0x00,
