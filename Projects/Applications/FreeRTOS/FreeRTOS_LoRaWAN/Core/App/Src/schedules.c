@@ -9,10 +9,15 @@
 #include <stdbool.h>
 #include "schedules.h"
 #include "usart_if.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
+#include "cmsis_os.h"
 
 SemaphoreHandle_t sem_process_alarm;
 static ScheduleList schedules = { 0 };
 static bool schedule_active = false;
+
+extern LampConfig previous_lamp_config;
 
 void RTC_Set_AlarmB_ScheduleTimestamp(ScheduleTimestamp ts) {
 	RTC_AlarmTypeDef alarm_b = {0};

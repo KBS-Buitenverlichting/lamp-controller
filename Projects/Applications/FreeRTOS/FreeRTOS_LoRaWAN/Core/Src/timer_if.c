@@ -30,6 +30,8 @@
 #include "sys_app.h"
 
 /* USER CODE BEGIN Includes */
+#include "FreeRTOS.h"
+#include "semphr.h"
 #include "schedules.h"
 /* USER CODE END Includes */
 

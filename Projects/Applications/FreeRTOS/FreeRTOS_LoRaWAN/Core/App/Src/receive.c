@@ -3,6 +3,8 @@
 #include "sys_app.h" // Used for APP_LOG to write output to serial
 #include "rtc.h"
 #include "stm32wlxx_hal_rtc.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
 
 extern SemaphoreHandle_t sem_start_battery_read;
 

@@ -1,15 +1,21 @@
-/*
- * lamp_state.c
+/*********************************************************************
+ * @file   lamp_state.c
+ * @brief  File for managing the lamp
  *
- *  Created on: May 8, 2025
- *      Author: Mariëlle
- */
-
+ * @author KBS Buitenverlichting
+ * @date   8 May 2025
+ *********************************************************************/
 #include "lamp_state.h"
 #include "main.h"  // for GPIO control
+#include "message_format.h"
+#include "cmsis_os.h"
+#include "sys_app.h"
+#include "FreeRTOS.h"
+#include "queue.h"
+#include "semphr.h"
+#include "transmit.h"
 
 LampConfig previous_lamp_config = {MOTION_SENSOR, MAX_BRIGHTNESS};
-
 static LampConfig current_lamp_config = {MOTION_SENSOR, MAX_BRIGHTNESS};
 
 static SemaphoreHandle_t state_mutex;
@@ -86,7 +92,6 @@ void Lamp_PWM_Init(void)
   }
 }
 
-///Brief: Initializes lamp state and brightness queues and mutex.
 void LampState_Init(void) {
     state_mutex = xSemaphoreCreateMutex();
     sem_motion_sensor_signal = xSemaphoreCreateBinary();
@@ -112,7 +117,6 @@ LampState Get_State_LampState(void) {
     return copy;
 }
 
-/// Brief: Converts a LampState enum to a string.
 const char* LampState_ToString(const LampState state) {
     switch (state) {
         case OFF: return "Off";
@@ -122,14 +126,12 @@ const char* LampState_ToString(const LampState state) {
     }
 }
 
-/// Brief: Sends a new lamp state to the queue.
 void Send_LampState(const LampState new_state) {
     if (xQueueSend(lamp_state_queue, &new_state, 0) != pdPASS) {
         APP_LOG(TS_OFF, VLEVEL_M, "Failed to enqueue LampState\r\n");
     }
 }
 
-/// Brief: Sends a new brightness value to the queue.
 void Send_Brightness(const uint8_t brightness) {
     if (xQueueSend(brightness_queue, &brightness, 0) != pdPASS) {
         APP_LOG(TS_OFF, VLEVEL_M, "Failed to enqueue brightness\r\n");
@@ -163,7 +165,6 @@ void Set_Duty_Cycle(const uint8_t duty_cycle)
 	__HAL_TIM_SET_COMPARE(&tim17, TIM_CHANNEL_1, duty_cycle); // Set output compare value
 }
 
-/// Brief: Main task loop for handling lamp state and brightness.
 void Start_LampState_Task(void const *argument) {
 	LampState incoming_state;
 	uint8_t incoming_brightness;

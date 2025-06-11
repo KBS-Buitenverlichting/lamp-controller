@@ -41,9 +41,14 @@
 #include "usart_if.h"
 
 /* USER CODE BEGIN Includes */
+#include "FreeRTOS.h"
+#include "semphr.h"
 #include "transmit.h"
 #include "receive.h"
 #include "lamp_state.h"
+
+extern SemaphoreHandle_t sem_motion_sensor_signal;
+
 /* USER CODE END Includes */
 
 /* External variables ---------------------------------------------------------*/
