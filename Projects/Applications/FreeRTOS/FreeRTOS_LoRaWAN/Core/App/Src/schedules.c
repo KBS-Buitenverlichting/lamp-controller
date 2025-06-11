@@ -51,7 +51,6 @@ void Start_Process_Schedules_Task(void const *argument) {
 		}
 
 		if (schedule_active) {
-			vcom_Trace((uint8_t *)"SCHEDULE END\r\n", 14);
 			// Schedule has reached end time, remove it
 			ScheduleList_Remove_First();
 
@@ -69,7 +68,6 @@ void Start_Process_Schedules_Task(void const *argument) {
 			schedule_active = false;
 		}
 		else {
-			vcom_Trace((uint8_t *)"SCHEDULE START\r\n", 16);
 			Schedule current_schedule = ScheduleList_Get_First_Node()->schedule;
 
 			// Save current lamp config

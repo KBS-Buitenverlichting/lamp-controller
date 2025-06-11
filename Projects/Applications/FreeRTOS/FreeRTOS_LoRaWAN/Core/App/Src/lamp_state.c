@@ -99,11 +99,9 @@ void LampState_Init(void) {
     brightness_queue = xQueueCreate(5, sizeof(uint8_t));
 
     if (state_mutex == NULL || lamp_state_queue == NULL) {
-        APP_LOG(TS_OFF, VLEVEL_M, "Error initializing state system!\r\n");
         Error_Handler();
     }
     if (brightness_queue == NULL) {
-        APP_LOG(TS_OFF, VLEVEL_M, "Error initializing brightness system!\r\n");
         Error_Handler();
     }
 }
@@ -117,24 +115,15 @@ LampState Get_State_LampState(void) {
     return copy;
 }
 
-const char* LampState_ToString(const LampState state) {
-    switch (state) {
-        case OFF: return "Off";
-        case ON: return "On";
-        case MOTION_SENSOR: return "Motion Sensor";
-        default: return "Unknown";
-    }
-}
-
 void Send_LampState(const LampState new_state) {
     if (xQueueSend(lamp_state_queue, &new_state, 0) != pdPASS) {
-        APP_LOG(TS_OFF, VLEVEL_M, "Failed to enqueue LampState\r\n");
+        Error_Handler();
     }
 }
 
 void Send_Brightness(const uint8_t brightness) {
     if (xQueueSend(brightness_queue, &brightness, 0) != pdPASS) {
-        APP_LOG(TS_OFF, VLEVEL_M, "Failed to enqueue brightness\r\n");
+        Error_Handler();
     }
 }
 
