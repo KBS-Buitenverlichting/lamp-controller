@@ -20,6 +20,8 @@
 
 #include <stdint.h>
 #include "stm32wlxx_hal.h"
+#include "cmsis_os.h"
+#include "usart_if.h"
 
 #define RTC_N_PREDIV_S 10
 #define RTC_PREDIV_S ((1<<RTC_N_PREDIV_S)-1)

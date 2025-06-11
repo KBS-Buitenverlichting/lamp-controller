@@ -25,6 +25,7 @@ static QueueHandle_t brightness_queue;
 SemaphoreHandle_t sem_motion_sensor_signal;
 
 TIM_HandleTypeDef tim17;
+static TIM_OC_InitTypeDef tim17_oc;
 
 void Lamp_GPIO_Init(void)
 {
@@ -72,7 +73,6 @@ void Lamp_PWM_Init(void)
    * Polarity HIGH (lamp on/ active on high)
    * Fast mode disabled
    */
-  TIM_OC_InitTypeDef tim17_oc;
   tim17_oc.OCMode = TIM_OCMODE_PWM1;
   tim17_oc.Pulse = 0;
   tim17_oc.OCPolarity = TIM_OCPOLARITY_HIGH;

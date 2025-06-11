@@ -17,15 +17,12 @@
  */
 
 #include "main.h"
-#include "stm32wlxx_hal.h"
 #include "stm32wlxx_hal_tim.h"
 #include "stm32wlxx_hal_i2c.h"
-#include "cmsis_os.h"
-#include "usart_if.h"
 #include "app_lorawan.h"
 #include "lamp_state.h"
-#include "schedules.h"
 #include "serial_eui_setter.h"
+#include "schedules.h"
 #include "battery.h"
 
 #ifdef TESTING
