@@ -16,9 +16,9 @@
  * @brief All lamp states
  */
 typedef enum {
-    OFF,
-    ON,
-    MOTION_SENSOR
+	OFF,
+	ON,
+	MOTION_SENSOR
 } LampState;
 
 /**

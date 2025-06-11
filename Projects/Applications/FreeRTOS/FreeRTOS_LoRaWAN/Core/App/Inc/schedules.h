@@ -51,16 +51,15 @@ typedef struct Schedule {
  */
 typedef struct ScheduleNode {
 	Schedule schedule;
-	struct ScheduleNode* next;
+	struct ScheduleNode *next;
 } ScheduleNode;
-
 
 /**
  * @brief Linked-list of schedules
  */
 typedef struct ScheduleList {
 	uint8_t size;
-	ScheduleNode* first;
+	ScheduleNode *first;
 } ScheduleList;
 
 /**
@@ -94,7 +93,7 @@ void Start_Process_Schedules_Task(void const *argument);
  * @param[out] out_date		The date part of the timestamp
  * @param[out] out_time		The time part of the timestamp
  */
-void ScheduleTimestamp_To_RTC_DateTime(const ScheduleTimestamp* const timestamp, RTC_DateTypeDef* const out_date, RTC_TimeTypeDef* const out_time);
+void ScheduleTimestamp_To_RTC_DateTime(const ScheduleTimestamp *const timestamp, RTC_DateTypeDef *const out_date, RTC_TimeTypeDef *const out_time);
 
 /**
  * @brief Converts a rtc formatted time to a timestamp
@@ -104,7 +103,7 @@ void ScheduleTimestamp_To_RTC_DateTime(const ScheduleTimestamp* const timestamp,
  *
  * @return The converted timestamp
  */
-ScheduleTimestamp RTC_DateTime_To_ScheduleTimestamp(const RTC_DateTypeDef* const date, const RTC_TimeTypeDef* const time);
+ScheduleTimestamp RTC_DateTime_To_ScheduleTimestamp(const RTC_DateTypeDef *const date, const RTC_TimeTypeDef *const time);
 
 /**
  * @brief Initializes the list
@@ -126,7 +125,7 @@ bool Get_Schedule_Active(void);
  *
  * @return 0 when equals, negative when a < b, positive when a > b
  */
-int8_t ScheduleTimestamp_Compare(const ScheduleTimestamp* a, const ScheduleTimestamp* b);
+int8_t ScheduleTimestamp_Compare(const ScheduleTimestamp *a, const ScheduleTimestamp *b);
 
 /**
  * @brief Gets the number of schedules in the list
@@ -164,7 +163,7 @@ ScheduleFuncStatus ScheduleList_Insert_First(Schedule new_schedule);
  *
  * @return Execution status
  */
-ScheduleFuncStatus ScheduleList_Insert_After(ScheduleNode* const schedule_node, Schedule new_schedule);
+ScheduleFuncStatus ScheduleList_Insert_After(ScheduleNode *const schedule_node, Schedule new_schedule);
 
 /**
  * @brief Removes the schedule at the front
@@ -180,7 +179,7 @@ ScheduleFuncStatus ScheduleList_Remove_First(void);
  *
  * @return Execution status
  */
-ScheduleFuncStatus ScheduleList_Remove_After(ScheduleNode* const schedule_node);
+ScheduleFuncStatus ScheduleList_Remove_After(ScheduleNode *const schedule_node);
 
 /**
  * @brief Saves the schedule list in flash memory

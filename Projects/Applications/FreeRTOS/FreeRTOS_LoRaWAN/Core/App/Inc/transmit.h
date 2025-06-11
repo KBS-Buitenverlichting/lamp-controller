@@ -28,7 +28,7 @@ void Tx_Clear_Buffer(void);
  *
  * @see Documentation TO
  */
-void Tx_Set_Buffer(const Identifier identifier, const uint8_t subtype, const uint8_t* const parameters, const uint8_t nr_of_parameter_bytes);
+void Tx_Set_Buffer(const Identifier identifier, const uint8_t subtype, const uint8_t *const parameters, const uint8_t nr_of_parameter_bytes);
 
 /**
  * @brief Sets the buffer up for a simple acknowledgement

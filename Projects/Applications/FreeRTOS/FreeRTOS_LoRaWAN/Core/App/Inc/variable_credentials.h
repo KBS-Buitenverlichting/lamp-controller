@@ -19,9 +19,9 @@
  * @brief Structure to hold the EUI data
  */
 typedef struct {
-    uint32_t valid_marker;
-    uint8_t devEUI[EUI_SIZE];
-    uint8_t joinEUI[EUI_SIZE];
+	uint32_t valid_marker;
+	uint8_t devEUI[EUI_SIZE];
+	uint8_t joinEUI[EUI_SIZE];
 } EUIStorage;
 
 /**
@@ -32,7 +32,7 @@ typedef struct {
  *
  * @return True if operation done successfully, else False
  */
-bool Load_EUIs_From_Flash(uint8_t* devEUI, uint8_t* joinEUI);
+bool Load_EUIs_From_Flash(uint8_t *devEUI, uint8_t *joinEUI);
 
 /**
  * @brief Loads dev EUI from flash
@@ -60,4 +60,4 @@ bool Load_JoinEUI_From_Flash(uint8_t *joinEUI);
  *
  * @return True if operation done successfully, else False
  */
-bool Save_EUIs_To_Flash(const uint8_t* devEUI, const uint8_t* joinEUI);
+bool Save_EUIs_To_Flash(const uint8_t *devEUI, const uint8_t *joinEUI);

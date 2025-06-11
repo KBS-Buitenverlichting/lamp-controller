@@ -24,9 +24,9 @@ void Start_Get_Battery_Level_Task(void const *argument) {
 
 	uint8_t rx_buffer[BUFFER_SIZE];
 	sem_start_battery_read = xSemaphoreCreateBinary();
-	for(;;) {
+	for (;;) {
 		// wait for signal to start read
-		if(xSemaphoreTake(sem_start_battery_read, portMAX_DELAY) != pdPASS) {
+		if (xSemaphoreTake(sem_start_battery_read, portMAX_DELAY) != pdPASS) {
 			Error_Handler();
 		}
 		// send read request for address
@@ -34,7 +34,7 @@ void Start_Get_Battery_Level_Task(void const *argument) {
 			Error_Handler();
 		}
 		//HAL_I2C_Master_Receive(&hi2c2, MAX17048_READ_ADDR, (uint8_t *)rx_buffer, BUFFER_SIZE,1000); //Receiving in Blocking mode
-		const uint8_t params[] = { SEND_BATTERY_STATUS, rx_buffer[0], rx_buffer[1]};
-		Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION, (const uint8_t* const)&params, sizeof(params));
+		const uint8_t params[] = { SEND_BATTERY_STATUS, rx_buffer[0], rx_buffer[1] };
+		Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION, (const uint8_t* const ) &params, sizeof(params));
 	}
 }

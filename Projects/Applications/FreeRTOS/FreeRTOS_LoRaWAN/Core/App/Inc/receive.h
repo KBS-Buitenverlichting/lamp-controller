@@ -16,11 +16,11 @@
  * @brief Return codes for schedule insertion check
  */
 typedef enum {
-    SCHEDULE_VALID_INSERT,
+	SCHEDULE_VALID_INSERT,
 	SCHEDULE_INVALID_DATA,
-    SCHEDULE_INVALID_OVERLAP_PREVIOUS,
-    SCHEDULE_INVALID_OVERLAP_NEXT,
-    SCHEDULE_LIST_FULL,
+	SCHEDULE_INVALID_OVERLAP_PREVIOUS,
+	SCHEDULE_INVALID_OVERLAP_NEXT,
+	SCHEDULE_LIST_FULL,
 	SCHEDULE_BEFORE_RTC_TIME
 } ScheduleValidationResult;
 
@@ -82,4 +82,4 @@ void Handle_Remove_Timeschedule_Instruction(const uint8_t *const buffer, const u
 /**
  * @brief Checks if a time schedule can be inserted
  */
-ScheduleValidationResult ScheduleList_Can_Insert(const Schedule* new_schedule, ScheduleNode** out_insert_after);
+ScheduleValidationResult ScheduleList_Can_Insert(const Schedule *new_schedule, ScheduleNode **out_insert_after);

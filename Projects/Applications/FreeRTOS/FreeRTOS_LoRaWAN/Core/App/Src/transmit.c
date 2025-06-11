@@ -11,8 +11,7 @@ uint8_t tx_buffer[LORAWAN_APP_DATA_BUFFER_MAX_SIZE];
 uint8_t tx_buffer_size = 0;
 static LmHandlerAppData_t tx_app_data = { LORAWAN_USER_APP_PORT, 0, tx_buffer };
 
-void Tx_Clear_Buffer(void)
-{
+void Tx_Clear_Buffer(void) {
 	if (tx_buffer_size > LORAWAN_APP_DATA_BUFFER_MAX_SIZE) {
 		tx_buffer_size = LORAWAN_APP_DATA_BUFFER_MAX_SIZE;
 	}
@@ -24,8 +23,7 @@ void Tx_Clear_Buffer(void)
 	tx_buffer_size = 0;
 }
 
-void Tx_Set_Buffer(const Identifier identifier, const uint8_t subtype, const uint8_t* const parameters, const uint8_t nr_of_parameter_bytes)
-{
+void Tx_Set_Buffer(const Identifier identifier, const uint8_t subtype, const uint8_t *const parameters, const uint8_t nr_of_parameter_bytes) {
 	// Check if the message is not to long
 	if (nr_of_parameter_bytes > LORAWAN_APP_DATA_BUFFER_MAX_SIZE) {
 		return;
@@ -42,14 +40,12 @@ void Tx_Set_Buffer(const Identifier identifier, const uint8_t subtype, const uin
 	tx_buffer_size = MESSAGE_MIN_BYTES + nr_of_parameter_bytes;
 }
 
-void Tx_Set_Ack(const InstructionSubtype instruction)
-{
+void Tx_Set_Ack(const InstructionSubtype instruction) {
 	const uint8_t params[] = { instruction };
-	Tx_Set_Buffer(RESPONSE_OUT, INSTRUCTION_COMPLETED, (const uint8_t* const)&params, 1);
+	Tx_Set_Buffer(RESPONSE_OUT, INSTRUCTION_COMPLETED, (const uint8_t* const ) &params, 1);
 }
 
-void Tx_Transmit_Data(void)
-{
+void Tx_Transmit_Data(void) {
 	tx_app_data.BufferSize = tx_buffer_size;
 
 	// Send the data, clear buffer on successfull send

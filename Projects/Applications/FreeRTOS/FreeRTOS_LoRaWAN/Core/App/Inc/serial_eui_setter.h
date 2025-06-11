@@ -20,12 +20,12 @@ extern bool continue_lora;
  * @brief All serial commands
  */
 typedef enum CommandTypes {
-  CMD_UNKNOWN,
-  CMD_DEVEUI,  // !DEVEUI=...
-  CMD_JOINEUI, // !JOINEUI=...
-  CMD_JOIN,    // !JOIN
-  CMD_PRINT,   // !PRINT
-  CMD_STATUS   // !STATUS
+	CMD_UNKNOWN,
+	CMD_DEVEUI,  // !DEVEUI=...
+	CMD_JOINEUI, // !JOINEUI=...
+	CMD_JOIN,    // !JOIN
+	CMD_PRINT,   // !PRINT
+	CMD_STATUS   // !STATUS
 } CommandType;
 
 /**
@@ -38,7 +38,7 @@ void Serial_Init(void);
  *
  * @param[in] rx_char The received data
  */
-void Add_To_Rx_Buffer(const uint8_t* const rx_char);
+void Add_To_Rx_Buffer(const uint8_t *const rx_char);
 
 /**
  * @brief Loads EUIs from flash in to variable

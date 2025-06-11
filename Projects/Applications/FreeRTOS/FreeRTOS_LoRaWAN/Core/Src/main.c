@@ -33,105 +33,105 @@ LPTIM_HandleTypeDef hlptim1;
 I2C_HandleTypeDef hi2c2;
 
 int main(void) {
-  /* Reset all peripherals, Initializes flash interface and SysTick */
-  HAL_Init();
-  SystemClock_Config();
+	/* Reset all peripherals, Initializes flash interface and SysTick */
+	HAL_Init();
+	SystemClock_Config();
 
 #ifdef TESTING
   SystemApp_Init();
   Main_Test();
 #else
-  // Initialize everything
-  I2C2_GPIO_Init();
-  MX_I2C2_Init();
-  MX_LPTIM1_Init();
-  Red_Led_GPIO_Init();
-  Lamp_GPIO_Init();
-  Lamp_PWM_Init();
-  Motion_Sensor_GPIO_Init();
-  LampState_Init();
+	// Initialize everything
+	I2C2_GPIO_Init();
+	MX_I2C2_Init();
+	MX_LPTIM1_Init();
+	Red_Led_GPIO_Init();
+	Lamp_GPIO_Init();
+	Lamp_PWM_Init();
+	Motion_Sensor_GPIO_Init();
+	LampState_Init();
 
-  // Create all tasks
-  osThreadDef(GeneralTask, Start_General_Task, osPriorityLow, 0, 128);
-  osThreadCreate(osThread(GeneralTask), NULL);
+	// Create all tasks
+	osThreadDef(GeneralTask, Start_General_Task, osPriorityLow, 0, 128);
+	osThreadCreate(osThread(GeneralTask), NULL);
 
-  osThreadDef(LoRaWANTask, Start_LoRaWAN_Task, osPriorityNormal, 0, 1024);
-  osThreadCreate(osThread(LoRaWANTask), NULL);
+	osThreadDef(LoRaWANTask, Start_LoRaWAN_Task, osPriorityNormal, 0, 1024);
+	osThreadCreate(osThread(LoRaWANTask), NULL);
 
-  osThreadDef(LampStateTask, Start_LampState_Task, osPriorityNormal, 0, 256);
-  osThreadCreate(osThread(LampStateTask), NULL);
+	osThreadDef(LampStateTask, Start_LampState_Task, osPriorityNormal, 0, 256);
+	osThreadCreate(osThread(LampStateTask), NULL);
 
-  osThreadDef(MotionSensorTask, Start_Motion_Sensor_Task, osPriorityNormal, 0, 128);
-  osThreadCreate(osThread(MotionSensorTask), NULL);
+	osThreadDef(MotionSensorTask, Start_Motion_Sensor_Task, osPriorityNormal, 0, 128);
+	osThreadCreate(osThread(MotionSensorTask), NULL);
 
-  osThreadDef(ProcessSchedulesTask, Start_Process_Schedules_Task, osPriorityNormal, 0, 512);
-  osThreadCreate(osThread(ProcessSchedulesTask), NULL);
+	osThreadDef(ProcessSchedulesTask, Start_Process_Schedules_Task, osPriorityNormal, 0, 512);
+	osThreadCreate(osThread(ProcessSchedulesTask), NULL);
 
-  osThreadDef(GetBatteryLevelTask, Start_Get_Battery_Level_Task, osPriorityNormal, 0, 128);
-  osThreadCreate(osThread(GetBatteryLevelTask), NULL);
+	osThreadDef(GetBatteryLevelTask, Start_Get_Battery_Level_Task, osPriorityNormal, 0, 128);
+	osThreadCreate(osThread(GetBatteryLevelTask), NULL);
 
-  osKernelStart();
+	osKernelStart();
 #endif
 
-  while (1) {
+	while (1) {
 
-  }
+	}
 }
 
 void SystemClock_Config(void) {
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+	RCC_OscInitTypeDef RCC_OscInitStruct = { 0 };
+	RCC_ClkInitTypeDef RCC_ClkInitStruct = { 0 };
 
-  /* Configure LSE Drive Capability */
-  HAL_PWR_EnableBkUpAccess();
-  __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
+	/* Configure LSE Drive Capability */
+	HAL_PWR_EnableBkUpAccess();
+	__HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
 
-  /* Configure the main internal regulator output voltage */
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+	/* Configure the main internal regulator output voltage */
+	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-  /* Initializes the CPU, AHB and APB busses clocks */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSE | RCC_OSCILLATORTYPE_MSI | RCC_OSCILLATORTYPE_LSI;
-  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
-  RCC_OscInitStruct.MSIState = RCC_MSI_ON;
-  RCC_OscInitStruct.MSICalibrationValue = RCC_MSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_11;
-  RCC_OscInitStruct.LSIDiv = RCC_LSI_DIV1;
-  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+	/* Initializes the CPU, AHB and APB busses clocks */
+	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSE | RCC_OSCILLATORTYPE_MSI | RCC_OSCILLATORTYPE_LSI;
+	RCC_OscInitStruct.LSEState = RCC_LSE_ON;
+	RCC_OscInitStruct.MSIState = RCC_MSI_ON;
+	RCC_OscInitStruct.MSICalibrationValue = RCC_MSICALIBRATION_DEFAULT;
+	RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_11;
+	RCC_OscInitStruct.LSIDiv = RCC_LSI_DIV1;
+	RCC_OscInitStruct.LSIState = RCC_LSI_ON;
+	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
 
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
-    Error_Handler();
-  }
+	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
+		Error_Handler();
+	}
 
-  /* Configure the SYSCLKSource, HCLK, PCLK1 and PCLK2 clocks dividers */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK3 | RCC_CLOCKTYPE_HCLK |
-                                RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 |
-                                RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.AHBCLK3Divider = RCC_SYSCLK_DIV1;
+	/* Configure the SYSCLKSource, HCLK, PCLK1 and PCLK2 clocks dividers */
+	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK3 | RCC_CLOCKTYPE_HCLK |
+	RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 |
+	RCC_CLOCKTYPE_PCLK2;
+	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
+	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+	RCC_ClkInitStruct.AHBCLK3Divider = RCC_SYSCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK) {
-    Error_Handler();
-  }
+	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK) {
+		Error_Handler();
+	}
 }
 
 void MX_LPTIM1_Init(void) {
-  hlptim1.Instance = LPTIM1;
-  hlptim1.Init.Clock.Source = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;
-  hlptim1.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV1;
-  hlptim1.Init.Trigger.Source = LPTIM_TRIGSOURCE_SOFTWARE;
-  hlptim1.Init.OutputPolarity = LPTIM_OUTPUTPOLARITY_HIGH;
-  hlptim1.Init.UpdateMode = LPTIM_UPDATE_IMMEDIATE;
-  hlptim1.Init.CounterSource = LPTIM_COUNTERSOURCE_INTERNAL;
-  hlptim1.Init.Input1Source = LPTIM_INPUT1SOURCE_GPIO;
-  hlptim1.Init.Input2Source = LPTIM_INPUT2SOURCE_GPIO;
+	hlptim1.Instance = LPTIM1;
+	hlptim1.Init.Clock.Source = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;
+	hlptim1.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV1;
+	hlptim1.Init.Trigger.Source = LPTIM_TRIGSOURCE_SOFTWARE;
+	hlptim1.Init.OutputPolarity = LPTIM_OUTPUTPOLARITY_HIGH;
+	hlptim1.Init.UpdateMode = LPTIM_UPDATE_IMMEDIATE;
+	hlptim1.Init.CounterSource = LPTIM_COUNTERSOURCE_INTERNAL;
+	hlptim1.Init.Input1Source = LPTIM_INPUT1SOURCE_GPIO;
+	hlptim1.Init.Input2Source = LPTIM_INPUT2SOURCE_GPIO;
 
-  if (HAL_LPTIM_Init(&hlptim1) != HAL_OK) {
-    Error_Handler();
-  }
+	if (HAL_LPTIM_Init(&hlptim1) != HAL_OK) {
+		Error_Handler();
+	}
 }
 
 void I2C2_GPIO_Init(void) {
@@ -188,73 +188,74 @@ void MX_I2C2_Init(void) {
 }
 
 void Red_Led_GPIO_Init(void) {
-  /* GPIO Port B Clock Enable */
-  __HAL_RCC_GPIOB_CLK_ENABLE();
+	/* GPIO Port B Clock Enable */
+	__HAL_RCC_GPIOB_CLK_ENABLE();
 
-  /* Configure GPIO pin : PB5 (red led) */
-  GPIO_InitTypeDef GPIO_InitStruct;
-  GPIO_InitStruct.Pin = GPIO_PIN_5;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	/* Configure GPIO pin : PB5 (red led) */
+	GPIO_InitTypeDef GPIO_InitStruct;
+	GPIO_InitStruct.Pin = GPIO_PIN_5;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 }
 
 void Motion_Sensor_GPIO_Init(void) {
-  /* GPIO Port A Clock Enable */
-  __HAL_RCC_GPIOA_CLK_ENABLE();
+	/* GPIO Port A Clock Enable */
+	__HAL_RCC_GPIOA_CLK_ENABLE();
 
-  /*Configure GPIO pin : PA0 */
-  GPIO_InitTypeDef GPIO_InitStruct;
-  GPIO_InitStruct.Pin = GPIO_PIN_0;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	/*Configure GPIO pin : PA0 */
+	GPIO_InitTypeDef GPIO_InitStruct;
+	GPIO_InitStruct.Pin = GPIO_PIN_0;
+	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  // Enable interupts for detecting pin input changes
-  HAL_NVIC_SetPriority(EXTI0_IRQn, 15, 0);
-  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+	// Enable interupts for detecting pin input changes
+	HAL_NVIC_SetPriority(EXTI0_IRQn, 15, 0);
+	HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 }
 
 void Start_LoRaWAN_Task(void const *argument) {
-  MX_LoRaWAN_Init();
+	MX_LoRaWAN_Init();
 
-  for (;;) {
-    MX_LoRaWAN_Process();
-    osDelay(10);
-  }
+	for (;;) {
+		MX_LoRaWAN_Process();
+		osDelay(10);
+	}
 }
 
 void Start_General_Task(void const *argument) {
-  // Initialize serial and setup callbacks for usart communication
-  vcom_Init(Tx_Done);
-  vcom_ReceiveInit(Rx_Done);
-  Serial_Init();
+	// Initialize serial and setup callbacks for usart communication
+	vcom_Init(Tx_Done);
+	vcom_ReceiveInit(Rx_Done);
+	Serial_Init();
 
-  for (;;) {
-	// Toggle red led as indicator that everything is still running
-	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
-    osDelay(500);
-  }
+	for (;;) {
+		// Toggle red led as indicator that everything is still running
+		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
+		osDelay(500);
+	}
 }
 
 void Rx_Done(uint8_t *rx_char, uint16_t size, uint8_t error) {
-  Add_To_Rx_Buffer(rx_char);
+	Add_To_Rx_Buffer(rx_char);
 }
 
-void Tx_Done(void *arg) {}
+void Tx_Done(void *arg) {
+}
 
 void Error_Handler(void) {
-  __disable_irq();
+	__disable_irq();
 
-  while (1) {
-	// Toggle red led as indicator that an error has occurred
-    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
-    osDelay(100);
-  }
+	while (1) {
+		// Toggle red led as indicator that an error has occurred
+		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
+		osDelay(100);
+	}
 }
 
 #ifdef USE_FULL_ASSERT

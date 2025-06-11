@@ -34,8 +34,7 @@
  *
  * @see Documentation TO
  */
-typedef enum Identifiers
-{
+typedef enum Identifiers {
 	INSTRUCTION_IN = 0xAB,
 	RESPONSE_OUT = 0xC0,
 	RESPONSE_OUT_WITH_DATA = 0xC1,
@@ -51,8 +50,7 @@ typedef enum Identifiers
  *
  * @see Documentation TO
  */
-typedef enum InstructionSubtypes
-{
+typedef enum InstructionSubtypes {
 	LAMP_OFF = 0x00,
 	LAMP_ON = 0x01,
 	ACTIVATE_MOTION_SENSOR = 0x02,
@@ -73,8 +71,7 @@ typedef enum InstructionSubtypes
  *
  * @see Documentation TO
  */
-typedef enum ResponseSubtypes
-{
+typedef enum ResponseSubtypes {
 	INSTRUCTION_COMPLETED = 0x00,
 	INVALID_DATA = 0x01,
 	MISSING_DATA = 0x02
@@ -89,8 +86,7 @@ typedef enum ResponseSubtypes
  *
  * @see Documentation TO
  */
-typedef enum ResponseWithDataSubtypes
-{
+typedef enum ResponseWithDataSubtypes {
 	RESPONDING_TO_INSTRUCTION = 0x00,
 	RESPONDING_TO_INSTRUCTION_WARNING = 0x01,
 	RESPONDING_TO_INSTRUCTION_ERROR = 0x02
@@ -101,8 +97,7 @@ typedef enum ResponseWithDataSubtypes
  *
  * @see Documentation TO
  */
-typedef enum Warnings
-{
+typedef enum Warnings {
 	NO_WARNING = 0x00
 } Warning;
 
@@ -111,8 +106,7 @@ typedef enum Warnings
  *
  * @see Documentation TO
  */
-typedef enum Errors
-{
+typedef enum Errors {
 	NO_ERROR = 0x00,
 	VREFS_NOT_INITIALIZED = 0x50,
 	FAILED_TO_SET_RTC = 0x60,
