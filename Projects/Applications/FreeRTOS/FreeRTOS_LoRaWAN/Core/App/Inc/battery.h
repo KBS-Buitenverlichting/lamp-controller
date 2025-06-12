@@ -1,19 +1,15 @@
-/*
- * battery.h
+/*********************************************************************
+ * @file   battery.h
+ * @brief  File for handling battery percentage request
  *
- *  Created on: May 9, 2025
- *      Author: Bjorn Wakker
- */
+ * @author KBS Buitenverlichting
+ * @date   9 May 2025
+ *********************************************************************/
 #pragma once
 
-#include "stdint.h"
-#include "transmit.h"
-#include "stm32wlxx_hal.h"
-#include "FreeRTOS.h"
-#include "semphr.h"
-#include "main.h"
-
-extern I2C_HandleTypeDef hi2c2;
-extern SemaphoreHandle_t sem_start_battery_read;
-
+/**
+ * @brief Starts the task that handles the battery percentage request and executes it
+ *
+ * @param[in] argument Any argument the function may receive
+ */
 void Start_Get_Battery_Level_Task(void const *argument);

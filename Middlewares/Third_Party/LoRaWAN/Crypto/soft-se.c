@@ -56,6 +56,10 @@
 #include "secure-element-nvm.h"
 #include "se-identity.h"
 #include "variable_credentials.h"
+
+extern uint8_t devEUI[];
+extern uint8_t joinEUI[];
+
 /* Private constants ---------------------------------------------------------*/
 /*!
  * MIC computation offset

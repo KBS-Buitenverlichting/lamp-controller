@@ -30,6 +30,8 @@
 #include "sys_app.h"
 
 /* USER CODE BEGIN Includes */
+#include "FreeRTOS.h"
+#include "semphr.h"
 #include "schedules.h"
 /* USER CODE END Includes */
 
@@ -38,6 +40,8 @@
   * @brief RTC handle
   */
 extern RTC_HandleTypeDef hrtc;
+
+extern SemaphoreHandle_t sem_process_alarm;
 
 /**
   * @brief Timer driver callbacks handler

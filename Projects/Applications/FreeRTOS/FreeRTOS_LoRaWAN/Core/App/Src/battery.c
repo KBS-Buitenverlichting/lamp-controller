@@ -1,12 +1,21 @@
-/*
- * battery.c
+/*********************************************************************
+ * @file   battery.c
+ * @brief  File for handling battery percentage request
  *
- *  Created on: May 9, 2025
- *      Author: Bjorn Wakker
- */
+ * @author KBS Buitenverlichting
+ * @date   9 May 2025
+ *********************************************************************/
 #include "battery.h"
+#include <stdint.h>
+#include "stm32wlxx_hal.h"
+#include "transmit.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
+#include "main.h"
 
 SemaphoreHandle_t sem_start_battery_read;
+
+extern I2C_HandleTypeDef hi2c2;
 
 void Start_Get_Battery_Level_Task(void const *argument) {
 	const uint8_t MAX17048_READ_ADDR = 0x6C;
@@ -15,9 +24,9 @@ void Start_Get_Battery_Level_Task(void const *argument) {
 
 	uint8_t rx_buffer[BUFFER_SIZE];
 	sem_start_battery_read = xSemaphoreCreateBinary();
-	for(;;) {
+	for (;;) {
 		// wait for signal to start read
-		if(xSemaphoreTake(sem_start_battery_read, portMAX_DELAY) != pdPASS) {
+		if (xSemaphoreTake(sem_start_battery_read, portMAX_DELAY) != pdPASS) {
 			Error_Handler();
 		}
 		// send read request for address
@@ -25,7 +34,7 @@ void Start_Get_Battery_Level_Task(void const *argument) {
 			Error_Handler();
 		}
 		//HAL_I2C_Master_Receive(&hi2c2, MAX17048_READ_ADDR, (uint8_t *)rx_buffer, BUFFER_SIZE,1000); //Receiving in Blocking mode
-		const uint8_t params[] = { SEND_BATTERY_STATUS, rx_buffer[0], rx_buffer[1]};
-		Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION, (const uint8_t* const)&params, sizeof(params));
+		const uint8_t params[] = { SEND_BATTERY_STATUS, rx_buffer[0], rx_buffer[1] };
+		Tx_Set_Buffer(RESPONSE_OUT_WITH_DATA, RESPONDING_TO_INSTRUCTION, (const uint8_t* const ) &params, sizeof(params));
 	}
 }
